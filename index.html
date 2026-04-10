@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>설연 Family Shared v34.2 FINAL</title>
+    <title>설연 Family Shared v34.4 FINAL</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -23,7 +23,7 @@
         main { width: 100%; max-width: 1200px; margin: 0 auto; padding: 15px; box-sizing: border-box; }
 
         .page-section { display: none; flex-direction: column; align-items: center; width: 100%; animation: fadeIn 0.3s ease-out; }
-        .page-section.active { display: flex; }
+        .page-section.active { display: flex !important; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .photo-area { width: 100%; position: relative; margin-bottom: 25px; }
@@ -82,6 +82,7 @@
     <div id="lightbox" onclick="this.style.display='none'"><img id="lightbox-img" src=""></div>
 
     <main>
+        <!-- 메인화면 -->
         <section id="main-section" class="page-section active">
             <div class="photo-area">
                 <div class="main-photo-frame" onclick="openPhotoAdjustModal()">
@@ -96,7 +97,7 @@
                 <div class="banner" onclick="showSection('photo-section')"><span class="banner-icon">📸</span><b>사진첩</b></div>
                 <div class="banner" onclick="showSection('travel-section')"><span class="banner-icon">✈️</span><b>여행 & 여가</b></div>
             </div>
-            <div class="footer-info">System Shared v34.2 FINAL<br>License by Jung Wooseol. 2026.04.10</div>
+            <div class="footer-info">System Shared v34.4 FINAL MASTER<br>License by Jung Wooseol. 2026.04.10</div>
         </section>
 
         <section id="schedule-section" class="page-section">
@@ -144,6 +145,7 @@
         <section id="asset-cal-section" class="page-section"><div class="card"><h3 id="asset-cal-title" style="font-size:16px;"></h3><div class="cal-grid" id="asset-cal-grid"></div><button class="btn-action btn-primary" style="margin-top:20px; width:120px;" onclick="showSection('asset-section')">돌아가기</button></div></section>
     </main>
 
+    <!-- 모달 -->
     <div class="modal" id="master-modal">
         <div class="modal-content">
             <h3 id="modal-title" style="margin-top:0; font-size:18px;">저장</h3>
@@ -205,6 +207,7 @@
                 s.docs.forEach(d => { const data = d.data(); if(assetData[data.member]) assetData[data.member].push(data); });
                 if(document.getElementById('asset-section').classList.contains('active')) initAssetCharts();
             });
+            /* 메인 사진 실시간 공유 리스너 */
             db.collection("config").doc("mainPhoto").onSnapshot(doc => {
                 if(doc.exists()) {
                     const data = doc.data();
@@ -230,7 +233,7 @@
                     else { if (h > size) { w *= size / h; h = size; } }
                     canvas.width = w; canvas.height = h;
                     const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
-                    resolve(canvas.toDataURL('image/jpeg', 0.6));
+                    resolve(canvas.toDataURL('image/jpeg', 0.5));
                 };
             });
         }
@@ -245,12 +248,24 @@
             await db.collection("config").doc("mainPhoto").set(updateObj);
         }
 
-        function showSection(id) { document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0, 0); if(id === 'schedule-section') renderSch(); if(id === 'asset-section') initAssetCharts(); }
+        /* 배너 클릭 시 화면 전환 핵심 함수 - 보강 */
+        function showSection(id) { 
+            const sections = document.querySelectorAll('.page-section');
+            sections.forEach(s => s.classList.remove('active')); 
+            const target = document.getElementById(id);
+            if(target) {
+                target.classList.add('active'); 
+                window.scrollTo(0, 0); 
+                if(id === 'schedule-section') renderSch(); 
+                if(id === 'asset-section') initAssetCharts(); 
+            }
+        }
+
         function openPhotoAdjustModal() { resetModal(); document.getElementById('modal-title').innerText = "사진 편집"; document.getElementById('photo-adjust-fields').classList.remove('hidden'); document.getElementById('btn-save').onclick = async () => { await saveMainPhotoConfig(); closeModal(); }; document.getElementById('master-modal').style.display = 'flex'; }
-        async function handleMainPhoto(input) { if(input.files && input.files[0]) { const r = new FileReader(); r.readAsDataURL(input.files[0]); r.onload = async (e) => { const compressed = await compressImage(e.target.result, 1000); await saveMainPhotoConfig(compressed); }; } }
+        async function handleMainPhoto(input) { if(input.files && input.files[0]) { const r = new FileReader(); r.readAsDataURL(input.files[0]); r.onload = async (e) => { const compressed = await compressImage(e.target.result, 1000); document.getElementById('main-photo').src = compressed; }; } }
         function applyPhotoSettings() { const z = document.getElementById('zoom-slider').value, x = document.getElementById('x-slider').value, y = document.getElementById('y-slider').value; const img = document.getElementById('main-photo'); img.style.setProperty('--p-zoom', z); img.style.setProperty('--p-x', x+'%'); img.style.setProperty('--p-y', y+'%'); }
 
-        /* [핵심 수정] 음력 표기: 월.일 형식으로 복구 */
+        /* 음력 표기: 월.일 형식으로 복구 */
         function renderSch() {
             const grid = document.getElementById('sch-grid'); if(!grid) return;
             grid.innerHTML = ""; const y = curViewDate.getFullYear(), m = curViewDate.getMonth();
@@ -265,14 +280,11 @@
                 const dayW = new Date(y, m, d).getDay();
                 let dColor = (dayW === 0 || holidays[mKey]) ? 'var(--danger)' : (dayW === 6 ? 'var(--primary)' : 'inherit');
                 let html = `<div class="date-num" style="color:${dColor}">${d}`;
-                
-                // 음력 날짜 계산기 (임시 월.일 로직 적용)
                 if(dayW === 0) {
-                    const lMonth = (m + (d < 15 ? 1 : 2)) % 12 || 12; // 간이 월 계산
-                    const lDay = (d + 12) % 30 || 30; // 간이 일 계산
+                    const lMonth = (m + (d < 15 ? 1 : 2)) % 12 || 12;
+                    const lDay = (d + 12) % 30 || 30;
                     html += `<span class="lunar-small">(음 ${lMonth}.${lDay})</span>`;
                 }
-                
                 if(holidays[mKey]) html += `<span class="holiday-label">${holidays[mKey]}</span>`;
                 if(specialDays[mKey]) html += `<span class="national-label">${specialDays[mKey]}</span>`;
                 html += `</div>`; cell.innerHTML = html;
