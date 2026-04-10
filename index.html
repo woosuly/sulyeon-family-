@@ -3,413 +3,342 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>설연 Family Dashboard</title>
+    <title>설연 Family Shared Dashboard v18.5 MASTER</title>
+    <!-- Firebase SDK (실시간 공유용) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         :root {
-            --bg: #f4f7f9; --header-bg: #2c3e50; --white: #ffffff;
-            --blue: #3498db; --red: #e74c3c; --gray: #95a5a6; --orange: #e67e22;
-            --ws-bg: #e3f2fd; /* 정우설 연한 하늘색 */
-            --hm-bg: #fce4ec; /* 한미연 연한 분홍색 */
+            --bg: #f8fafc; --header-bg: #0f172a; --white: #ffffff;
+            --primary: #3b82f6; --secondary: #10b981; --danger: #ef4444; 
+            --sky-blue: #87CEEB; --text-main: #1e293b; --text-sub: #64748b;
+            --ws-bg: #eff6ff; --hm-bg: #fff1f2;
             --p-zoom: 1; --p-x: 50%; --p-y: 50%;
         }
-        body { margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; background: var(--bg); color: #333; overflow-x: hidden; }
-        header { height: 60px; background: var(--header-bg); padding: 0 5%; display: flex; align-items: center; position: sticky; top: 0; z-index: 1000; }
-        .logo { font-size: 20px; font-weight: 800; cursor: pointer; }
-        .logo .white { color: white; }
-        .logo .blue { color: #5dade2; }
-        main { width: 100%; max-width: 1200px; margin: 0 auto; padding: 20px; box-sizing: border-box; }
-        .page-section { display: none; flex-direction: column; align-items: center; width: 100%; }
+        body { margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; background: var(--bg); color: var(--text-main); overflow-x: hidden; }
+        header { height: 65px; background: var(--header-bg); padding: 0 5%; display: flex; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .logo { font-size: 20px; font-weight: 800; cursor: pointer; color: white; }
+        .logo .sky { color: var(--sky-blue); }
+
+        main { width: 100%; max-width: 1000px; margin: 0 auto; padding: 25px 20px; box-sizing: border-box; }
+        .page-section { display: none; flex-direction: column; align-items: center; width: 100%; animation: fadeIn 0.3s ease-out; }
         .active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 사진 영역 */
-        .photo-area { width: 100%; max-width: 900px; position: relative; margin-bottom: 30px; }
-        .main-photo-frame { width: 100%; aspect-ratio: 16 / 9; max-height: 500px; background: #ddd; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 4px solid white; cursor: pointer; position: relative; }
-        #main-photo { width: 100%; height: 100%; object-fit: cover; object-position: var(--p-x) var(--p-y); transform: scale(var(--p-zoom)); display: block; }
-        #photo-controls-wrapper { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); border-radius: 20px; justify-content: center; align-items: center; gap: 15px; z-index: 10; }
-        #adjust-panel { display:none; flex-direction: column; gap: 10px; background: white; padding: 20px; border-radius: 20px; position: absolute; z-index: 20; box-shadow: 0 10px 40px rgba(0,0,0,0.3); width: 220px; }
+        /* [v18.3 디자인 완벽 보존] */
+        .banner-container { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; margin-top: 20px; }
+        .banner { background: var(--white); padding: 25px 10px; border-radius: 24px; text-align: center; cursor: pointer; transition: 0.3s; border: 1px solid #f1f5f9; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+        .banner:hover { transform: translateY(-7px); border-color: var(--primary); }
+        .banner-icon { font-size: 30px; margin-bottom: 10px; display: block; }
+        .banner b { display: block; font-size: 15px; color: var(--text-main); }
 
-        /* 배너 */
-        .banner-container { width: 100%; max-width: 900px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
-        .banner { background: var(--white); padding: 25px 15px; border-radius: 20px; text-align: center; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        .banner:hover { transform: translateY(-5px); background: var(--blue); color: white; }
-        .banner-icon { font-size: 32px; margin-bottom: 10px; }
-
-        /* 캘린더 공통 디자인 */
-        .cal-container { width: 100%; max-width: 1100px; background: white; border-radius: 24px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); background: #eee; gap: 1px; border-radius: 15px; overflow: hidden; }
-        .cal-cell { background: white; min-height: 110px; padding: 8px; cursor: pointer; position: relative; display: flex; flex-direction: column; }
-        .date-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; }
-        .date-num { font-weight: 800; font-size: 15px; }
-        .sat { color: var(--blue); }
-        .sun { color: var(--red); }
-        .lunar { font-size: 10px; color: #999; font-weight: normal; }
-        .national-event { background: #f1f2f6; color: var(--gray); font-size: 10px; padding: 2px 5px; border-radius: 4px; margin-bottom: 4px; font-weight: bold; }
-        .holiday-label { color: var(--red); font-size: 10px; font-weight: bold; }
-        .event-bar { font-size: 11px; padding: 3px 6px; border-radius: 5px; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #333; font-weight: 500; }
-
-        /* 자산관리 레이아웃 */
-        .asset-card { background: white; padding: 25px; border-radius: 24px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box; margin-bottom: 20px; }
-        .analysis-row { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; width: 100%; margin-bottom: 20px; }
-        .m-btn { padding: 30px; border-radius: 20px; color: white; cursor: pointer; text-align: center; border: none; font-weight: bold; transition: 0.3s; }
-        .ws-btn { background: var(--blue); } .my-btn { background: var(--orange); }
-
-        /* 모달 시스템 */
-        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index: 2000; justify-content:center; align-items:center; padding: 20px; }
-        .modal-content { background:white; padding:30px; border-radius:24px; width:100%; max-width:400px; box-sizing: border-box; max-height: 90vh; overflow-y: auto; }
-        .field-label { font-size: 12px; color: #666; font-weight: bold; display: block; margin-top: 15px; }
-        input, select, textarea { width: 100%; padding: 12px; margin-top: 8px; border-radius: 10px; border: 1px solid #ddd; font-family: inherit; box-sizing: border-box; }
+        .card { background: white; padding: 25px; border-radius: 28px; box-shadow: 0 5px 20px rgba(0,0,0,0.02); border: 1px solid #f1f5f9; margin-bottom: 25px; width: 100%; box-sizing: border-box; }
+        .btn-action { padding: 12px 18px; border: none; border-radius: 14px; font-weight: 700; cursor: pointer; font-size: 14px; text-align: center; transition: 0.2s; }
+        .btn-primary { background: var(--header-bg); color: white; width: 120px !important; margin: 10px auto; display: block; }
+        .btn-danger { background: var(--danger); color: white; }
         .hidden { display: none !important; }
-        .btn-row { display: flex; gap: 10px; margin-top: 25px; }
-        .btn-action { flex: 1; padding: 12px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 14px; }
+
+        .photo-area { width: 100%; position: relative; margin-bottom: 35px; }
+        .main-photo-frame { width: 100%; aspect-ratio: 16 / 9; max-height: 450px; background: #e2e8f0; border-radius: 28px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(255,255,255,0.8); cursor: pointer; position: relative; }
+        @media (min-width: 1024px) { .main-photo-frame { aspect-ratio: 21 / 9; } }
+        #main-photo { width: 100%; height: 100%; object-fit: cover; object-position: var(--p-x) var(--p-y); transform: scale(var(--p-zoom)); }
+
+        .cal-container { width: 100%; background: white; border-radius: 30px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.03); box-sizing: border-box; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); background: #f1f5f9; gap: 1px; border-radius: 20px; overflow: hidden; border: 1px solid #f1f5f9; }
+        .cal-day-header { padding: 12px; text-align: center; font-weight: 700; background: #f8fafc; font-size: 12px; color: var(--text-sub); }
+        .cal-cell { background: white; min-height: 110px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; position: relative; }
+        .date-num { font-weight: 800; font-size: 15px; display: flex; align-items: baseline; gap: 4px; }
+        .lunar-small { font-size: 10px; color: #999; font-weight: normal; }
+        .holiday-label { font-size: 10px; color: var(--danger); font-weight: bold; position: absolute; top: 8px; right: 8px; }
+        .national-label { font-size: 10px; color: var(--primary); font-weight: bold; position: absolute; top: 8px; right: 8px; }
+        .event-bar { font-size: 11px; padding: 4px 7px; border-radius: 7px; margin-top: 4px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #333; border: 1px solid rgba(0,0,0,0.05); }
+
+        .folder-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; width: 100%; }
+        .folder-card { background: white; border-radius: 20px; border: 1px solid #f1f5f9; overflow: hidden; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+        .folder-cover { width: 100%; aspect-ratio: 1.2; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-size: 40px; overflow: hidden; }
+        .folder-cover img { width: 100%; height: 100%; object-fit: cover; }
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; width: 100%; margin-top: 15px; }
+        .gallery-item { aspect-ratio: 1; border-radius: 15px; overflow: hidden; position: relative; border: 2px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 2000; justify-content: center; align-items: center; padding: 20px; }
+        .modal-content { background: white; padding: 35px; border-radius: 30px; width: 100%; max-width: 450px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+        .field-label { font-size: 12px; color: var(--text-sub); font-weight: 800; display: block; margin-top: 15px; text-transform: uppercase; }
+        input, select, textarea { width: 100%; padding: 14px; margin-top: 8px; border-radius: 14px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 15px; box-sizing: border-box; font-family: inherit; }
+        .btn-row { display: flex; gap: 10px; margin-top: 30px; }
+        .footer-info { width: 100%; text-align: right; margin-top: 45px; font-size: 11px; color: #94a3b8; line-height: 1.6; }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="logo" onclick="showSection('main-section')">
-            <span class="white">설연</span> <span class="blue">Family</span>
-        </div>
-    </header>
+    <header><div class="logo" onclick="showSection('main-section')">설연 <span class="sky">Family</span></div></header>
 
     <main>
-        <!-- [1] 메인 홈 -->
         <section id="main-section" class="page-section active">
             <div class="photo-area">
                 <div class="main-photo-frame" onclick="togglePhotoMenu()">
-                    <img id="main-photo" src="IMAGE_1.PNG" alt="가족사진을 클릭하여 등록하세요" onerror="this.style.display='none';">
-                    <div id="photo-controls-wrapper">
-                        <button class="btn-action" style="background:white; color:#333;" onclick="document.getElementById('photo-upload').click(); event.stopPropagation();">📷 사진 변경</button>
-                        <button class="btn-action" style="background:white; color:#333;" onclick="showAdjustPanel(event)">⚙️ 위치 조절</button>
+                    <img id="main-photo" src="IMAGE_1.PNG">
+                    <div id="photo-controls-wrapper" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,0.3); justify-content:center; align-items:center; gap:12px;">
+                        <button class="btn-action" style="background:white; width:auto;" onclick="triggerFileInput('photo-upload', event)">📷 사진 변경</button>
+                        <button class="btn-action" style="background:white; width:auto;" onclick="showAdjustPanel(event)">⚙️ 위치 조절</button>
                     </div>
                 </div>
-                <div id="adjust-panel" onclick="event.stopPropagation()">
-                    <h4 style="margin:0 0 10px 0;">사진 조절</h4>
-                    <label class="field-label">확대/축소</label>
-                    <input type="range" id="zoom-slider" min="1" max="3" step="0.1" value="1" oninput="applyPhotoSettings()">
-                    <label class="field-label">좌우 이동</label>
-                    <input type="range" id="x-slider" min="0" max="100" step="1" value="50" oninput="applyPhotoSettings()">
-                    <label class="field-label">상하 이동</label>
-                    <input type="range" id="y-slider" min="0" max="100" step="1" value="50" oninput="applyPhotoSettings()">
-                    <button class="btn-action" style="background:#333; color:white; margin-top:10px; width:100%;" onclick="showAdjustPanel(event)">조절 완료 (저장)</button>
+                <div id="adjust-panel" style="display:none; flex-direction: column; background: white; padding: 20px; border-radius: 20px; position: absolute; z-index: 20; box-shadow: 0 10px 40px rgba(0,0,0,0.2); width: 220px; right: 0; top: 105%;">
+                    <label class="field-label">확대</label><input type="range" id="zoom-slider" min="1" max="3" step="0.1" value="1" oninput="applyPhotoSettings()">
+                    <label class="field-label">좌우</label><input type="range" id="x-slider" min="0" max="100" value="50" oninput="applyPhotoSettings()">
+                    <label class="field-label">상하</label><input type="range" id="y-slider" min="0" max="100" value="50" oninput="applyPhotoSettings()">
+                    <button class="btn-action btn-primary" style="margin-top:15px;" onclick="showAdjustPanel(event)">완료</button>
                 </div>
-                <input type="file" id="photo-upload" accept="image/*" style="display:none;" onchange="changePhoto(this)">
+                <input type="file" id="photo-upload" style="display:none;" onchange="handleMainPhoto(this)">
             </div>
             <div class="banner-container">
-                <div class="banner" onclick="showSection('schedule-section')"><span class="banner-icon">📅</span> <b>스케줄</b></div>
-                <div class="banner" onclick="openAssetDashboard()"><span class="banner-icon">💰</span> <b>자산관리</b></div>
-                <div class="banner"><span class="banner-icon">📸</span> <b>사진첩</b></div>
-                <div class="banner"><span class="banner-icon">✈️</span> <b>여행 & 여가</b></div>
+                <div class="banner" onclick="showSection('schedule-section')"><span class="banner-icon">🗓️</span><b>스케줄</b></div>
+                <div class="banner" onclick="showSection('asset-section')"><span class="banner-icon">💰</span><b>가계부</b></div>
+                <div class="banner" onclick="showSection('photo-section')"><span class="banner-icon">📸</span><b>사진첩</b></div>
+                <div class="banner" onclick="showSection('travel-section')"><span class="banner-icon">✈️</span><b>여행 & 여가</b></div>
             </div>
+            <div class="footer-info">System Developed: 2026.04.10<br>Shared Edition v18.5</div>
         </section>
 
-        <!-- [2] 스케줄 캘린더 -->
+        <!-- [스케줄 섹션] -->
         <section id="schedule-section" class="page-section">
             <div class="cal-container">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; width:100%;">
-                    <div style="display:flex; align-items:center; gap:15px;">
-                        <button onclick="changeMonth(-1)" style="border:none; background:none; cursor:pointer; font-size:20px;">◀</button>
-                        <h2 id="sch-label" style="margin:0;"></h2>
-                        <button onclick="changeMonth(1)" style="border:none; background:none; cursor:pointer; font-size:20px;">▶</button>
-                    </div>
-                    <button onclick="showSection('main-section')" class="btn-action" style="background:var(--header-bg); color:white; flex:none; width:100px;">홈으로</button>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <div style="display:flex; align-items:center; gap:15px;"><button onclick="changeMonth(-1)">◀</button><h2 id="sch-label"></h2><button onclick="changeMonth(1)">▶</button></div>
+                    <button onclick="showSection('main-section')" class="btn-action btn-primary">홈으로</button>
                 </div>
                 <div class="cal-grid" id="sch-grid"></div>
             </div>
         </section>
 
-        <!-- [3] 자산관리 대시보드 -->
+        <!-- [가계부 섹션] 차트 복구 완료 -->
         <section id="asset-section" class="page-section">
-            <div class="asset-card"><canvas id="mainAssetChart" height="320"></canvas></div>
-            <div class="analysis-row">
-                <div class="asset-card" style="margin-bottom:0; overflow-y:auto;">
-                    <h4 style="margin:0 0 10px 0;">📊 카테고리 분석표</h4>
-                    <table style="width:100%; border-collapse:collapse; font-size:13px;">
-                        <thead><tr style="border-bottom:2px solid #eee;"><th>항목</th><th>우설</th><th>미연</th><th>합계</th></tr></thead>
-                        <tbody id="asset-analysis-body"></tbody>
-                    </table>
-                </div>
-                <div class="asset-card" style="margin-bottom:0;"><canvas id="typePieChart" height="250"></canvas></div>
+            <div class="card">
+                <h3 style="margin-top:0;">💰 연간 자산 분석</h3>
+                <div style="position:relative; width:100%; height:300px;"><canvas id="mainAssetChart"></canvas></div>
             </div>
-            <div class="member-btn-row" style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; width:100%; margin-top:20px;">
-                <button class="m-btn ws-btn" onclick="openPersonalAsset('정우설')">정우설 자산관리</button>
-                <button class="m-btn my-btn" onclick="openPersonalAsset('한미연')">한미연 자산관리</button>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; width:100%; margin-bottom:20px;">
+                <button class="btn-action" style="background:var(--primary); color:white; padding:20px; border-radius:20px;" onclick="openPersonalAsset('정우설')">우설 가계부</button>
+                <button class="btn-action" style="background:var(--secondary); color:white; padding:20px; border-radius:20px;" onclick="openPersonalAsset('한미연')">미연 가계부</button>
             </div>
-            <button class="btn-action" style="margin-top:20px; width:150px;" onclick="showSection('main-section')">홈으로</button>
+            <button class="btn-action btn-primary" onclick="showSection('main-section')">홈으로</button>
         </section>
 
-        <!-- [4] 개인 자산 입력용 캘린더 -->
-        <section id="asset-cal-section" class="page-section">
-            <div class="cal-container">
-                <h2 id="asset-cal-title" style="text-align:center;"></h2>
-                <div class="cal-grid" id="asset-cal-grid"></div>
-                <button class="btn-action" style="background:#333; color:white; width:100%; margin-top:20px;" onclick="showSection('asset-section')">분석표로 돌아가기</button>
+        <!-- [사진첩 섹션] -->
+        <section id="photo-section" class="page-section">
+            <div id="photo-main-view" style="width:100%;">
+                <div class="card"><div style="display:flex; justify-content:space-between; align-items:center;"><h3>📸 추억 폴더</h3><button class="btn-action btn-primary" style="width:auto;" onclick="openFolderModal()">폴더 생성</button></div><div class="folder-grid" id="folder-container"></div></div>
+                <button class="btn-action btn-primary" onclick="showSection('main-section')">홈으로</button>
             </div>
+            <div id="photo-detail-view" class="hidden" style="width:100%;">
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center;"><button class="btn-action" onclick="backToFolders()">◀ 목록</button><button class="btn-action btn-primary" onclick="triggerFileInput('gallery-upload', event)">사진 추가</button></div>
+                    <h3 id="detail-folder-title"></h3><div class="gallery-grid" id="gallery-container"></div>
+                    <button class="btn-action btn-danger" style="margin-top:40px; width:auto; font-size:12px;" onclick="deleteFolder()">폴더 삭제</button>
+                </div>
+                <button class="btn-action btn-primary" onclick="showSection('main-section')">홈으로</button>
+            </div>
+            <input type="file" id="gallery-upload" style="display:none;" multiple accept="image/*" onchange="handleGalleryUpload(this)">
         </section>
+
+        <!-- [여행 섹션] -->
+        <section id="travel-section" class="page-section">
+            <div class="card"><div style="display:flex; justify-content:space-between; align-items:center;"><h3>✈️ 계획된 여정</h3><button class="btn-action btn-primary" style="width:auto;" onclick="openPlanModal()">계획 등록</button></div><div id="plan-list-container"></div></div>
+            <button class="btn-action btn-primary" onclick="showSection('main-section')">홈으로</button>
+        </section>
+
+        <section id="asset-cal-section" class="page-section"><div class="cal-container"><div style="display:flex; justify-content:center; align-items:center; gap:25px;"><button onclick="changeMonth(-1)">◀</button><h2 id="asset-cal-title"></h2><button onclick="changeMonth(1)">▶</button></div><div class="cal-grid" id="asset-cal-grid"></div><button class="btn-action btn-primary" onclick="showSection('asset-section')">돌아가기</button></div></section>
     </main>
 
-    <!-- [MODAL] 통합 입력창 -->
+    <!-- [MODAL 통합 제어] v18.3 구조 완전 유지 -->
     <div class="modal" id="master-modal">
         <div class="modal-content">
             <h3 id="modal-title">내역 등록</h3>
             <input type="hidden" id="edit-id">
-
-            <!-- 스케줄 필드 -->
-            <div id="sch-fields" class="hidden">
-                <label class="field-label">누구의 일정인가요?</label>
-                <select id="sch-member"><option value="정우설">정우설</option><option value="한미연">한미연</option></select>
-                <label class="field-label">하위 카테고리</label>
-                <select id="sch-category"><option value="가족">가족</option><option value="회사">회사</option><option value="개인">개인</option></select>
+            
+            <div id="sch-fields" class="field-group hidden">
+                <label class="field-label">멤버</label><select id="sch-member"><option value="정우설">정우설</option><option value="한미연">한미연</option></select>
+                <label class="field-label">카테고리</label><select id="sch-category"><option value="가족">가족</option><option value="회사">회사</option><option value="개인">개인</option></select>
                 <label class="field-label">시간</label><input type="time" id="sch-time">
-                <label class="field-label">내용 메모</label><textarea id="sch-memo" rows="3" placeholder="일정 내용을 입력하세요"></textarea>
+                <label class="field-label">내용</label><textarea id="sch-memo" rows="3"></textarea>
             </div>
 
-            <!-- 자산관리 필드 -->
-            <div id="asset-fields" class="hidden">
-                <label class="field-label">구분</label>
-                <select id="as-type" onchange="toggleAssetSub()"><option value="지출">지출</option><option value="수입">수입</option></select>
-                <div id="as-inc-group" class="hidden">
-                    <label class="field-label">항목</label><select id="as-inc-cat"><option>급여</option><option>상여</option><option>주식</option><option>기타</option></select>
-                </div>
-                <div id="as-exp-group">
-                    <label class="field-label">항목</label><select id="as-exp-cat"><option>구매</option><option>생활비</option><option>교통비</option><option>의료비</option><option>용돈</option><option>기타</option></select>
-                    <label class="field-label">결제수단</label><select id="as-pay" onchange="toggleAssetSub()"><option value="카드">카드</option><option value="현금">현금</option></select>
-                    <div id="as-card-group">
-                        <label class="field-label">카드사</label><select id="as-card-type"><option>삼성</option><option>현대</option><option>기업</option><option>카카오</option><option>KB</option><option>기타</option></select>
-                    </div>
-                </div>
+            <div id="asset-fields" class="field-group hidden">
+                <label class="field-label">구분</label><select id="as-type" onchange="toggleAssetSub()"><option value="지출">지출</option><option value="수입">수입</option></select>
+                <div id="as-exp-group"><label class="field-label">항목</label><select id="as-exp-cat"><option>구매</option><option>생활비</option><option>교통비</option><option>의료비</option><option>용돈</option><option>기타</option></select></div>
+                <div id="as-inc-group" class="hidden"><label class="field-label">수입원</label><select id="as-inc-cat"><option>급여</option><option>상여</option><option>주식</option><option>기타</option></select></div>
                 <label class="field-label">금액</label><input type="number" id="as-amt" placeholder="0">
                 <label class="field-label">메모</label><textarea id="as-memo" rows="2"></textarea>
             </div>
 
+            <div id="folder-fields" class="field-group hidden"><label class="field-label">폴더 이름</label><input type="text" id="fold-name"><label class="field-label">폴더 메모</label><textarea id="fold-memo" rows="2"></textarea></div>
+
+            <div id="plan-fields" class="field-group hidden">
+                <label class="field-label">대분류</label><select id="plan-main-type" onchange="togglePlanSub()"><option value="여행">여행</option><option value="여가">여가</option></select>
+                <div id="plan-travel-dates"><label class="field-label">시작 날짜</label><input type="date" id="plan-start-date" onchange="generateDayInputsByDates()"><label class="field-label">종료 날짜</label><input type="date" id="plan-end-date" onchange="generateDayInputsByDates()"></div>
+                <div id="plan-leisure-date" class="hidden"><label class="field-label">일시</label><input type="datetime-local" id="plan-leisure-time"></div>
+                <label class="field-label">장소</label><input type="text" id="plan-loc"><label class="field-label">준비물</label><textarea id="plan-supplies" rows="2" placeholder="준비물 입력"></textarea>
+                <div id="day-schedule-wrap"></div>
+            </div>
+
             <div class="btn-row">
-                <button class="btn-action" id="btn-save" style="background:var(--header-bg); color:white;">저장/수정</button>
-                <button class="btn-action hidden" id="btn-del" style="background:var(--red); color:white;">삭제</button>
-                <button class="btn-action" onclick="closeModal()">취소</button>
+                <button class="btn-action btn-modal btn-primary" id="btn-save">저장</button>
+                <button class="btn-action btn-modal btn-danger hidden" id="btn-del">삭제</button>
+                <button class="btn-action btn-modal" style="background:#e2e8f0;" onclick="closeModal()">취소</button>
             </div>
         </div>
     </div>
 
     <script>
+        // [우설 님 전용 Firebase 설정]
+        const firebaseConfig = {
+            apiKey: "AIzaSyDtrYpOXlOpsjgVlaxmk2SqTTjSdROvGJk",
+            authDomain: "seolyeon-f6d1c.firebaseapp.com",
+            projectId: "seolyeon-f6d1c",
+            storageBucket: "seolyeon-f6d1c.firebasestorage.app",
+            messagingSenderId: "597691100735",
+            appId: "1:597691100735:web:a22fd39931340d07ac128a",
+            measurementId: "G-8VN7ZMKGTW"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         let curViewDate = new Date();
-        let activeDateStr = "";
-        let currentMember = "";
-        let schData = JSON.parse(localStorage.getItem('seolyeon_sch_v15_5')) || [];
-        let assetData = JSON.parse(localStorage.getItem('seolyeon_asset_v15_5')) || { "정우설": [], "한미연": [] };
-        let aChart, pChart;
+        let currentMember = "", currentFolderId = null, activeDateStr = "";
+        let schData = [], assetData = { "정우설": [], "한미연": [] }, albumData = [], planData = [];
+        let aChart;
 
-        const holidays = {"01-01":"신정","03-01":"삼일절","05-05":"어린이날","06-06":"현충일","08-15":"광복절","10-03":"개천절","10-09":"한글날","12-25":"성탄절"};
-        const nationalEvents = {"04-19":"4.19혁명","05-18":"5.18민주화","06-25":"6.25전쟁","10-01":"국군의날"};
+        const holidays = {"01-01":"신정","03-01":"삼일절","05-05":"어린이날","06-06":"현충일","08-15":"광복절","10-03":"개천절","10-09":"한글날","12-25":"성탄절","01-29":"설날","10-05":"추석"};
+        const specialDays = {"04-19":"4.19혁명","05-18":"5.18민주화","10-01":"국군의날", "10-24":"상강"};
 
-        // --- 사진 기능 ---
-        function togglePhotoMenu() { const w = document.getElementById('photo-controls-wrapper'); w.style.display = (w.style.display==='flex')?'none':'flex'; }
-        function showAdjustPanel(e) { e.stopPropagation(); const p = document.getElementById('adjust-panel'); p.style.display = (p.style.display==='flex')?'none':'flex'; }
-        function changePhoto(input) { if (input.files && input.files[0]) { const reader = new FileReader(); reader.onload = (e) => { const img = document.getElementById('main-photo'); img.src = e.target.result; img.style.display = 'block'; localStorage.setItem('family_photo_v15_5', e.target.result); showAdjustPanel(event); }; reader.readAsDataURL(input.files[0]); } }
-        function applyPhotoSettings() {
-            const z = document.getElementById('zoom-slider').value; const x = document.getElementById('x-slider').value; const y = document.getElementById('y-slider').value;
-            const img = document.getElementById('main-photo'); img.style.display = 'block';
-            img.style.setProperty('--p-zoom', z); img.style.setProperty('--p-x', x+'%'); img.style.setProperty('--p-y', y+'%');
-            localStorage.setItem('photo_set_v15_5', JSON.stringify({z, x, y}));
+        function initRealtimeSync() {
+            db.collection("schedules").onSnapshot(s => { schData = s.docs.map(d => d.data()); renderSch(); });
+            db.collection("albums").onSnapshot(s => { albumData = s.docs.map(d => d.data()); renderFolders(); });
+            db.collection("plans").onSnapshot(s => { planData = s.docs.map(d => d.data()); renderPlans(); });
+            db.collection("assets").onSnapshot(s => {
+                assetData = { "정우설": [], "한미연": [] };
+                s.docs.forEach(d => { const data = d.data(); if(assetData[data.member]) assetData[data.member].push(data); });
+                if(document.getElementById('asset-section').classList.contains('active')) { initAssetCharts(); }
+            });
         }
 
-        function showSection(id) {
-            document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            if(id==='schedule-section') renderSch();
-            window.scrollTo(0,0);
-        }
-
-        // --- 스케줄 캘린더 (색상 및 음력/기념일 반영) ---
         function renderSch() {
             const grid = document.getElementById('sch-grid'); grid.innerHTML = "";
-            const y = curViewDate.getFullYear(); const m = curViewDate.getMonth();
+            const y = curViewDate.getFullYear(), m = curViewDate.getMonth();
             document.getElementById('sch-label').innerText = `${y}년 ${m+1}월`;
-
-            ['일','월','화','수','목','금','토'].forEach((n,i)=> {
-                const color = i===0 ? 'var(--red)' : (i===6 ? 'var(--blue)' : '#333');
-                grid.innerHTML += `<div style="padding:10px; text-align:center; font-weight:bold; background:#f9f9f9; color:${color}; font-size:13px;">${n}</div>`;
-            });
-
-            const first = new Date(y, m, 1).getDay(); const last = new Date(y, m+1, 0).getDate();
-            for(let i=0; i<first; i++) grid.innerHTML += `<div></div>`;
-
+            ['SUN','MON','TUE','WED','THU','FRI','SAT'].forEach(d => grid.innerHTML += `<div class="cal-day-header">${d}</div>`);
+            const first = new Date(y, m, 1).getDay(), last = new Date(y, m+1, 0).getDate();
+            for(let i=0; i<first; i++) grid.innerHTML += `<div class="cal-cell" style="background:#fcfcfc;"></div>`;
             for(let d=1; d<=last; d++) {
                 const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
                 const mKey = `${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
                 const dayW = new Date(y, m, d).getDay();
                 const cell = document.createElement('div'); cell.className = 'cal-cell';
-
-                let html = `<div class="date-row">`;
-                let dClass = dayW===0 || holidays[mKey] ? 'sun' : (dayW===6 ? 'sat' : '');
-                html += `<span class="date-num ${dClass}">${d}</span>`;
-                if(dayW===1) html += `<span class="lunar">음 ${m+1}.${d+2}</span>`;
-                html += `</div>`;
-
-                if(nationalEvents[mKey]) html += `<div class="national-event">${nationalEvents[mKey]}</div>`;
-                if(holidays[mKey]) html += `<div class="holiday-label">${holidays[mKey]}</div>`;
-
+                let dColor = (dayW === 0 || holidays[mKey]) ? 'var(--danger)' : (dayW === 6 ? 'var(--primary)' : 'inherit');
+                let html = `<span class="date-num" style="color:${dColor}">${d}`;
+                if(dayW === 1) html += ` <span class="lunar-small">(음 ${(d+12)%30||30})</span>`;
+                html += `</span>`;
+                if(holidays[mKey]) html += `<span class="holiday-label">${holidays[mKey]}</span>`;
+                else if(specialDays[mKey]) html += `<span class="national-label">${specialDays[mKey]}</span>`;
                 cell.innerHTML = html;
-
                 schData.filter(s => s.date === ds).forEach(ev => {
                     const bar = document.createElement('div'); bar.className = 'event-bar';
-                    // 정우설: 연한 하늘색, 한미연: 연한 분홍색
-                    bar.style.backgroundColor = ev.member === '정우설' ? 'var(--ws-bg)' : 'var(--hm-bg)';
-                    bar.innerText = `[${ev.category}] ${ev.time} ${ev.member}`;
-                    bar.onclick = (e) => { e.stopPropagation(); openSchModal(ev); };
+                    bar.style.backgroundColor = ev.category === '여행' ? '#d1fae5' : ev.category === '여가' ? '#fef3c7' : ev.member === '정우설' ? 'var(--ws-bg)' : 'var(--hm-bg)';
+                    bar.innerText = ev.memo.substring(0, 10);
+                    bar.onclick = (e) => { e.stopPropagation(); openSchModal(ev, ds); };
                     cell.appendChild(bar);
                 });
-
                 cell.onclick = () => openSchModal(null, ds);
                 grid.appendChild(cell);
             }
         }
 
-        // --- 자산관리 분석 ---
-        function openAssetDashboard() {
-            showSection('asset-section');
-            updateAssetUI();
-            if(aChart) aChart.destroy(); if(pChart) pChart.destroy();
-            initAssetCharts();
-        }
-
+        // [가계부 차트 로직 복구]
         function initAssetCharts() {
-            const ctx1 = document.getElementById('mainAssetChart').getContext('2d');
+            if(aChart) aChart.destroy();
+            const ctx = document.getElementById('mainAssetChart').getContext('2d');
             let mData = Array.from({length:12}, () => ({i:0, e:0}));
-            ["정우설", "한미연"].forEach(m => assetData[m].forEach(e => {
+            ["정우설", "한미연"].forEach(m => (assetData[m]||[]).forEach(e => {
                 const mon = new Date(e.date).getMonth();
-                const amt = Number(e.amt) || 0;
-                if(e.type==="수입") mData[mon].i += amt; else mData[mon].e += amt;
+                if(e.type==="수입") mData[mon].i += Number(e.amt); else mData[mon].e += Number(e.amt);
             }));
-            aChart = new Chart(ctx1, {
-                data: {
-                    labels: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
-                    datasets: [
-                        { type:'bar', label:'수입', data: mData.map(v=>v.i), backgroundColor:'#2ecc71' },
-                        { type:'bar', label:'지출', data: mData.map(v=>v.e), backgroundColor:'#e74c3c' },
-                        { type:'line', label:'누적손익', data: mData.reduce((a,b,i)=>[...a, (a[i-1]||0)+(b.i-b.e)], []), borderColor:'#3498db', fill:false, tension:0.4 }
-                    ]
-                },
-                options: { responsive:true, maintainAspectRatio:false }
-            });
-
-            const ctx2 = document.getElementById('typePieChart').getContext('2d');
-            const cats = ['구매','생활비','교통비','의료비','용돈','기타'];
-            let cStats = [0,0,0,0,0,0];
-            Object.keys(assetData).forEach(m => assetData[m].forEach(e => { if(e.type==='지출') cStats[cats.indexOf(e.cat)] += Number(e.amt); }));
-            pChart = new Chart(ctx2, {
-                type:'doughnut', data:{ labels:cats, datasets:[{ data:cStats, backgroundColor:['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40'] }]},
+            aChart = new Chart(ctx, {
+                data: { labels: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
+                datasets: [ { type:'bar', label:'수입', data: mData.map(v=>v.i), backgroundColor:'rgba(16, 185, 129, 0.6)', borderRadius:5 },
+                { type:'bar', label:'지출', data: mData.map(v=>v.e), backgroundColor:'rgba(239, 68, 68, 0.6)', borderRadius:5 } ] },
                 options: { responsive:true, maintainAspectRatio:false }
             });
         }
 
-        function updateAssetUI() {
-            const tbody = document.getElementById('asset-analysis-body'); tbody.innerHTML = "";
-            const cats = ['구매','생활비','교통비','의료비','용돈','기타'];
-            cats.forEach(c => {
-                const ws = assetData["정우설"].filter(e=>e.cat===c).reduce((a,b)=>a+Number(b.amt), 0);
-                const hm = assetData["한미연"].filter(e=>e.cat===c).reduce((a,b)=>a+Number(b.amt), 0);
-                if(ws+hm > 0) tbody.innerHTML += `<tr><td>${c}</td><td>${ws.toLocaleString()}</td><td>${hm.toLocaleString()}</td><td><b>${(ws+hm).toLocaleString()}</b></td></tr>`;
-            });
-        }
-
-        function openPersonalAsset(name) {
-            currentMember = name; document.getElementById('asset-cal-title').innerText = `${name} 자산 기록`;
-            showSection('asset-cal-section'); renderAssetCal();
-        }
-
-        function renderAssetCal() {
-            const grid = document.getElementById('asset-cal-grid'); grid.innerHTML = "";
-            const y = curViewDate.getFullYear(); const m = curViewDate.getMonth();
-            const last = new Date(y, m+1, 0).getDate();
-            for(let d=1; d<=last; d++) {
-                const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                const cell = document.createElement('div'); cell.className = 'cal-cell';
-                cell.innerHTML = `<strong>${d}</strong>`;
-                assetData[currentMember].filter(e => e.date === ds).forEach(e => {
-                    const b = document.createElement('div'); b.className = 'event-bar';
-                    b.style.backgroundColor = e.type === '수입' ? '#d4edda' : '#f8d7da';
-                    b.innerText = `${e.amt.toLocaleString()} (${e.cat})`;
-                    b.onclick = (ev) => { ev.stopPropagation(); openAssetModal(e); };
-                    cell.appendChild(b);
-                });
-                cell.onclick = () => openAssetModal(null, ds);
-                grid.appendChild(cell);
-            }
-        }
-
-        // --- 모달 로직 ---
-        function toggleAssetSub() {
-            const t = document.getElementById('as-type').value; const p = document.getElementById('as-pay').value;
-            document.getElementById('as-inc-group').classList.toggle('hidden', t==='지출');
-            document.getElementById('as-exp-group').classList.toggle('hidden', t==='수입');
-            document.getElementById('as-card-group').classList.toggle('hidden', t==='수입' || p==='현금');
-        }
-
-        function openSchModal(data, date) {
-            resetModal(); document.getElementById('sch-fields').classList.remove('hidden');
-            if(data) {
-                document.getElementById('modal-title').innerText = "일정 상세/삭제";
-                document.getElementById('edit-id').value = data.id;
-                document.getElementById('sch-member').value = data.member;
-                document.getElementById('sch-category').value = data.category || '가족';
-                document.getElementById('sch-time').value = data.time;
-                document.getElementById('sch-memo').value = data.memo;
-                document.getElementById('btn-del').classList.remove('hidden');
-                document.getElementById('btn-del').onclick = () => deleteEntry('SCH', data.id);
-            } else { document.getElementById('modal-title').innerText = date + " 일정 등록"; activeDateStr = date; }
-            document.getElementById('btn-save').onclick = () => saveEntry('SCH');
-            document.getElementById('master-modal').style.display='flex';
-        }
-
+        // [가계부 전용 모달 복구]
         function openAssetModal(data, date) {
-            resetModal(); document.getElementById('asset-fields').classList.remove('hidden');
-            if(data) {
-                document.getElementById('modal-title').innerText = "자산 상세/삭제";
+            resetModal(); document.getElementById('modal-title').innerText = data ? "수정" : date + " 등록";
+            document.getElementById('asset-fields').classList.remove('hidden'); activeDateStr = date;
+            if(data){
                 document.getElementById('edit-id').value = data.id;
                 document.getElementById('as-type').value = data.type; toggleAssetSub();
-                if(data.type==='수입') document.getElementById('as-inc-cat').value = data.cat;
-                else { document.getElementById('as-exp-cat').value = data.cat; document.getElementById('as-pay').value = data.pay; }
-                toggleAssetSub(); document.getElementById('as-card-type').value = data.card;
-                document.getElementById('as-amt').value = data.amt; document.getElementById('as-memo').value = data.memo;
+                if(data.type === '수입') document.getElementById('as-inc-cat').value = data.cat;
+                else document.getElementById('as-exp-cat').value = data.cat;
+                document.getElementById('as-amt').value = data.amt;
+                document.getElementById('as-memo').value = data.memo;
                 document.getElementById('btn-del').classList.remove('hidden');
-                document.getElementById('btn-del').onclick = () => deleteEntry('ASSET', data.id);
-            } else { document.getElementById('modal-title').innerText = date + " 자산 기록"; activeDateStr = date; toggleAssetSub(); }
+            }
             document.getElementById('btn-save').onclick = () => saveEntry('ASSET');
-            document.getElementById('master-modal').style.display='flex';
+            document.getElementById('btn-del').onclick = () => deleteEntry('ASSET');
+            document.getElementById('master-modal').style.display = 'flex';
         }
 
-        function saveEntry(mode) {
-            const id = document.getElementById('edit-id').value;
-            if(mode==='SCH') {
-                const data = { id: id ? Number(id) : Date.now(), date: activeDateStr || schData.find(s=>s.id==id).date, member: document.getElementById('sch-member').value, category: document.getElementById('sch-category').value, time: document.getElementById('sch-time').value, memo: document.getElementById('sch-memo').value };
-                if(id) schData[schData.findIndex(s=>s.id==id)] = data; else schData.push(data);
-                localStorage.setItem('seolyeon_sch_v15_5', JSON.stringify(schData)); renderSch();
+        async function saveEntry(mode) {
+            const id = document.getElementById('edit-id').value || "id_" + Date.now();
+            if(mode === 'SCH') {
+                const d = { id, date: activeDateStr, member: document.getElementById('sch-member').value, category: document.getElementById('sch-category').value, time: document.getElementById('sch-time').value, memo: document.getElementById('sch-memo').value };
+                await db.collection("schedules").doc(String(id)).set(d);
             } else {
-                const type = document.getElementById('as-type').value;
-                const data = { id: id ? Number(id) : Date.now(), date: activeDateStr || assetData[currentMember].find(a=>a.id==id).date, type, cat: type==='수입'?document.getElementById('as-inc-cat').value : document.getElementById('as-exp-cat').value, pay: type==='지출'?document.getElementById('as-pay').value:'', card: (type==='지출'&&document.getElementById('as-pay').value==='카드')?document.getElementById('as-card-type').value:'', amt: Number(document.getElementById('as-amt').value), memo: document.getElementById('as-memo').value };
-                if(id) assetData[currentMember][assetData[currentMember].findIndex(a=>a.id==id)] = data; else assetData[currentMember].push(data);
-                localStorage.setItem('seolyeon_asset_v15_5', JSON.stringify(assetData)); renderAssetCal(); updateAssetUI();
+                const t = document.getElementById('as-type').value;
+                const d = { id, date: activeDateStr, member: currentMember, type: t, cat: t==='수입'?document.getElementById('as-inc-cat').value:document.getElementById('as-exp-cat').value, amt: Number(document.getElementById('as-amt').value), memo: document.getElementById('as-memo').value };
+                await db.collection("assets").doc(String(id)).set(d);
             }
             closeModal();
         }
 
-        function deleteEntry(mode, id) {
-            if(!confirm("정말 삭제하시겠습니까?")) return;
-            if(mode==='SCH') { schData = schData.filter(s=>s.id!==id); localStorage.setItem('seolyeon_sch_v15_5', JSON.stringify(schData)); renderSch(); }
-            else { assetData[currentMember] = assetData[currentMember].filter(a=>a.id!==id); localStorage.setItem('seolyeon_asset_v15_5', JSON.stringify(assetData)); renderAssetCal(); updateAssetUI(); }
-            closeModal();
-        }
+        async function deleteEntry(mode) { if(!confirm("삭제할까요?")) return; await db.collection(mode==='SCH'?"schedules":"assets").doc(document.getElementById('edit-id').value).delete(); closeModal(); }
 
-        function resetModal() { document.getElementById('edit-id').value=""; document.getElementById('sch-fields').classList.add('hidden'); document.getElementById('asset-fields').classList.add('hidden'); document.getElementById('btn-del').classList.add('hidden'); document.getElementById('sch-memo').value=""; document.getElementById('as-amt').value=""; document.getElementById('as-memo').value=""; }
+        // [v18.3 공통 유틸리티]
+        function showSection(id) { document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); if(id==='asset-section') initAssetCharts(); }
+        function resetModal() { document.getElementById('edit-id').value=""; document.querySelectorAll('.field-group').forEach(g=>g.classList.add('hidden')); document.querySelectorAll('#master-modal input, #master-modal textarea').forEach(i=>i.value=""); document.getElementById('btn-del').classList.add('hidden'); }
         function closeModal() { document.getElementById('master-modal').style.display='none'; }
-        function changeMonth(n) { curViewDate.setMonth(curViewDate.getMonth() + n); renderSch(); }
+        function toggleAssetSub() { const t=document.getElementById('as-type').value; document.getElementById('as-inc-group').classList.toggle('hidden',t==='지출'); document.getElementById('as-exp-group').classList.toggle('hidden',t==='수입'); }
+        function openPersonalAsset(n) { currentMember=n; showSection('asset-cal-section'); renderAssetCal(); }
+        function renderAssetCal() { const grid=document.getElementById('asset-cal-grid'); grid.innerHTML=""; const y=curViewDate.getFullYear(), m=curViewDate.getMonth(); document.getElementById('asset-cal-title').innerText=`${currentMember} - ${y}년 ${m+1}월`; ['SUN','MON','TUE','WED','THU','FRI','SAT'].forEach(d=>grid.innerHTML+=`<div class="cal-day-header">${d}</div>`); const first=new Date(y,m,1).getDay(), last=new Date(y,m+1,0).getDate(); for(let i=0; i<first; i++) grid.innerHTML+=`<div class="cal-cell"></div>`; for(let d=1; d<=last; d++) { const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; const cell=document.createElement('div'); cell.className='cal-cell'; cell.innerHTML=`<strong>${d}</strong>`; (assetData[currentMember]||[]).filter(e=>e.date===ds).forEach(e=>{ const b=document.createElement('div'); b.className='event-bar'; b.style.backgroundColor=e.type==='수입'?'#ecfdf5':'#fef2f2'; b.innerText=Number(e.amt).toLocaleString(); b.onclick=(ev)=>{ev.stopPropagation(); openAssetModal(e, ds);}; cell.appendChild(b); }); cell.onclick=()=>openAssetModal(null, ds); grid.appendChild(cell); } }
+        function openSchModal(data, date) { resetModal(); document.getElementById('modal-title').innerText=data?"수정":date+" 등록"; document.getElementById('sch-fields').classList.remove('hidden'); activeDateStr=date; if(data){ document.getElementById('edit-id').value=data.id; document.getElementById('sch-member').value=data.member; document.getElementById('sch-category').value=data.category; document.getElementById('sch-time').value=data.time; document.getElementById('sch-memo').value=data.memo; document.getElementById('btn-del').classList.remove('hidden'); } document.getElementById('btn-save').onclick=()=>saveEntry('SCH'); document.getElementById('btn-del').onclick=()=>deleteEntry('SCH'); document.getElementById('master-modal').style.display='flex'; }
+        
+        function openFolderModal() { resetModal(); document.getElementById('modal-title').innerText="폴더 생성"; document.getElementById('folder-fields').classList.remove('hidden'); document.getElementById('btn-save').onclick=async()=>{ const name=document.getElementById('fold-name').value; if(name){ const id="f_"+Date.now(); await db.collection("albums").doc(id).set({id, name, memo:document.getElementById('fold-memo').value, photos:[]}); closeModal(); } }; document.getElementById('master-modal').style.display='flex'; }
+        function renderFolders() { const c=document.getElementById('folder-container'); c.innerHTML=albumData.map(f=>`<div class="folder-card" onclick="openFolderDetail('${f.id}')"><div class="folder-cover">${f.photos.length>0?`<img src="${f.photos[0]}">`:'📁'}</div><div style="padding:15px;"><b>${f.name}</b></div></div>`).join(''); }
+        function openFolderDetail(id) { currentFolderId=id; document.getElementById('photo-main-view').classList.add('hidden'); document.getElementById('photo-detail-view').classList.remove('hidden'); const f=albumData.find(x=>x.id===id); document.getElementById('detail-folder-title').innerText=f.name; renderGallery(); }
+        function backToFolders() { currentFolderId=null; document.getElementById('photo-main-view').classList.remove('hidden'); document.getElementById('photo-detail-view').classList.add('hidden'); }
+        function renderGallery() { const f=albumData.find(x=>x.id===currentFolderId); const c=document.getElementById('gallery-container'); if(f) c.innerHTML=f.photos.map(s=>`<div class="gallery-item"><img src="${s}"></div>`).join(''); }
+        async function handleGalleryUpload(input) { if(input.files && currentFolderId){ const f=albumData.find(x=>x.id===currentFolderId); Array.from(input.files).forEach(file=>{ const r=new FileReader(); r.readAsDataURL(file); r.onload=async(e)=>{ f.photos.push(e.target.result); await db.collection("albums").doc(currentFolderId).update({photos:f.photos}); renderGallery(); }; }); } }
+        async function deleteFolder() { if(confirm("폴더를 삭제할까요?")) { await db.collection("albums").doc(currentFolderId).delete(); backToFolders(); } }
+
+        function openPlanModal() { resetModal(); document.getElementById('modal-title').innerText="계획 등록"; document.getElementById('plan-fields').classList.remove('hidden'); document.getElementById('btn-save').onclick=savePlan; document.getElementById('master-modal').style.display='flex'; }
+        function togglePlanSub() { const t=document.getElementById('plan-main-type').value; document.getElementById('plan-travel-dates').classList.toggle('hidden',t==='여가'); document.getElementById('plan-leisure-date').classList.toggle('hidden',t==='여행'); }
+        function generateDayInputsByDates() { const start=new Date(document.getElementById('plan-start-date').value), end=new Date(document.getElementById('plan-end-date').value), wrap=document.getElementById('day-schedule-wrap'); wrap.innerHTML=""; if(!isNaN(start)&&!isNaN(end)&&end>=start) { for(let i=0; i<=Math.floor((end-start)/86400000); i++) wrap.innerHTML+=`<label class="field-label">Day ${i+1} 일정</label><input type="text" class="day-input">`; } }
+        async function savePlan() { const id="p_"+Date.now(); const mType=document.getElementById('plan-main-type').value, loc=document.getElementById('plan-loc').value; if(mType==='여행'){ const start=document.getElementById('plan-start-date').value; document.querySelectorAll('.day-input').forEach(async(input, idx)=>{ let d=new Date(start); d.setDate(d.getDate()+idx); await db.collection("schedules").add({date:d.toISOString().split('T')[0], category:'여행', member:'가족', memo:`[${loc}] ${input.value}`}); }); await db.collection("plans").doc(id).set({id, mType, sub:document.getElementById('plan-sub-type').value, loc, start, supplies:document.getElementById('plan-supplies').value}); } else { const time=document.getElementById('plan-leisure-time').value; await db.collection("schedules").add({date:time.split('T')[0], category:'여가', member:'가족', memo:`[${loc}]`}); await db.collection("plans").doc(id).set({id, mType, sub:document.getElementById('plan-sub-type').value, loc, time, supplies:document.getElementById('plan-supplies').value}); } closeModal(); }
+        function renderPlans() { const c=document.getElementById('plan-list-container'); c.innerHTML=planData.map(p=>`<div class="card" style="margin-bottom:10px; padding:15px;"><b>[${p.mType}] ${p.sub}</b><br>${p.loc}</div>`).join(''); }
+
+        function triggerFileInput(id,e) { e.stopPropagation(); document.getElementById(id).click(); }
+        function handleMainPhoto(input) { if(input.files&&input.files[0]) { const reader=new FileReader(); reader.readAsDataURL(input.files[0]); reader.onload=(e)=>{ document.getElementById('main-photo').src=e.target.result; localStorage.setItem('family_photo_v18', e.target.result); }; } }
+        function togglePhotoMenu() { const w=document.getElementById('photo-controls-wrapper'); w.style.display=(w.style.display==='flex'?'none':'flex'); }
+        function showAdjustPanel(e) { e.stopPropagation(); const p=document.getElementById('adjust-panel'); p.style.display=(p.style.display==='flex'?'none':'flex'); }
+        function applyPhotoSettings() { const z=document.getElementById('zoom-slider').value, x=document.getElementById('x-slider').value, y=document.getElementById('y-slider').value; const img=document.getElementById('main-photo'); img.style.setProperty('--p-zoom',z); img.style.setProperty('--p-x',x+'%'); img.style.setProperty('--p-y',y+'%'); localStorage.setItem('photo_set_v18',JSON.stringify({z,x,y})); }
+        function changeMonth(n) { curViewDate.setMonth(curViewDate.getMonth()+n); renderSch(); if(document.getElementById('asset-cal-section').classList.contains('active')) renderAssetCal(); }
 
         window.onload = () => {
-            const p = localStorage.getItem('family_photo_v15_5'); if(p) document.getElementById('main-photo').src = p;
-            const s = JSON.parse(localStorage.getItem('photo_set_v15_5')); if(s) { document.getElementById('zoom-slider').value = s.z; document.getElementById('x-slider').value = s.x; document.getElementById('y-slider').value = s.y; applyPhotoSettings(); }
-            renderSch();
+            const p=localStorage.getItem('family_photo_v18'); if(p) document.getElementById('main-photo').src=p;
+            const s=JSON.parse(localStorage.getItem('photo_set_v18')); if(s){ document.getElementById('zoom-slider').value=s.z; document.getElementById('x-slider').value=s.x; document.getElementById('y-slider').value=s.y; applyPhotoSettings(); }
+            initRealtimeSync();
         };
     </script>
 </body>
