@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>설연 Family Shared v21.0 MASTER</title>
+    <title>설연 Family Shared v30.0 MASTER</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -20,66 +20,71 @@
         header { height: 65px; background: var(--header-bg); padding: 0 5%; display: flex; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .logo { font-size: 20px; font-weight: 800; cursor: pointer; color: white; }
         .logo .sky { color: var(--sky-blue); }
-        main { width: 100%; max-width: 1000px; margin: 0 auto; padding: 25px 20px; box-sizing: border-box; }
+        main { width: 100%; max-width: 1200px; margin: 0 auto; padding: 25px 20px; box-sizing: border-box; }
+
         .page-section { display: none; flex-direction: column; align-items: center; width: 100%; animation: fadeIn 0.3s ease-out; }
-        .active { display: flex; }
+        .page-section.active { display: flex; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
+
         .photo-area { width: 100%; position: relative; margin-bottom: 35px; }
-        .main-photo-frame { width: 100%; aspect-ratio: 16 / 9; max-height: 450px; background: #e2e8f0; border-radius: 28px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05); cursor: pointer; position: relative; }
-        #main-photo { width: 100%; height: 100%; object-fit: cover; object-position: var(--p-x) var(--p-y); transform: scale(var(--p-zoom)); }
-        
-        .banner-container { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; margin-top: 20px; }
+        .main-photo-frame { width: 100%; aspect-ratio: 16 / 9; max-height: 550px; background: #e2e8f0; border-radius: 28px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05); cursor: pointer; position: relative; }
+        #main-photo { width: 100%; height: 100%; object-fit: cover; object-position: var(--p-x) var(--p-y); transform: scale(var(--p-zoom)); transition: transform 0.1s; }
+
+        .banner-container { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; }
         .banner { background: var(--white); padding: 25px 10px; border-radius: 24px; text-align: center; cursor: pointer; transition: 0.3s; border: 1px solid #f1f5f9; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
-        .banner-icon { font-size: 30px; margin-bottom: 10px; display: block; }
-        
-        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); background: #f1f5f9; gap: 1px; border-radius: 20px; overflow: hidden; border: 1px solid #f1f5f9; width: 100%; }
-        .cal-day-header { padding: 12px; text-align: center; font-weight: 700; background: #f8fafc; font-size: 12px; color: var(--text-sub); }
-        .cal-cell { background: white; min-height: 110px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; position: relative; }
-        .date-num { font-weight: 800; font-size: 15px; display: flex; align-items: baseline; gap: 4px; }
-        .lunar-small { font-size: 10px; color: #999; font-weight: normal; }
-        .holiday-label { font-size: 10px; color: var(--danger); font-weight: bold; position: absolute; top: 8px; right: 8px; }
-        .national-label { font-size: 10px; color: var(--text-sub); font-weight: bold; position: absolute; top: 8px; right: 8px; }
-        .event-bar { font-size: 11px; padding: 4px 7px; border-radius: 7px; margin-top: 4px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #333; border: 1px solid rgba(0,0,0,0.05); }
+        .banner:hover { transform: translateY(-7px); border-color: var(--primary); }
+        .banner-icon { font-size: 35px; margin-bottom: 10px; display: block; }
+        .banner b { display: block; font-size: 16px; color: var(--text-main); }
 
-        .card { background: white; padding: 25px; border-radius: 28px; box-shadow: 0 5px 20px rgba(0,0,0,0.02); border: 1px solid #f1f5f9; margin-bottom: 25px; width: 100%; box-sizing: border-box; }
-        .btn-action { padding: 12px 18px; border: none; border-radius: 14px; font-weight: 700; cursor: pointer; font-size: 14px; text-align: center; transition: 0.2s; }
-        .btn-primary { background: var(--header-bg); color: white; width: 120px !important; margin: 10px auto; display: block; }
+        /* 버튼 사이즈 규격화 (48px / 120px) */
+        .btn-action { height: 48px; min-width: 120px; padding: 0 20px; border: none; border-radius: 14px; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; }
+        .btn-primary { background: var(--header-bg); color: white; }
         .btn-danger { background: var(--danger); color: white; }
-        
-        .folder-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; width: 100%; }
-        .folder-card { background: white; border-radius: 20px; overflow: hidden; border: 1px solid #f1f5f9; cursor: pointer; text-align: center; }
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; width: 100%; margin-top: 15px; }
-        .gallery-item { aspect-ratio: 1; border-radius: 15px; overflow: hidden; border: 2px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+        .btn-nav { background: #f1f5f9; color: var(--text-main); }
+        .btn-modal-full { width: 100%; flex: 1; }
 
-        .modal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 2000; justify-content: center; align-items: center; padding: 20px; }
-        .modal-content { background: white; padding: 35px; border-radius: 30px; width: 100%; max-width: 450px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
-        .field-label { font-size: 12px; color: var(--text-sub); font-weight: 800; display: block; margin-top: 15px; text-transform: uppercase; }
+        /* 모달 스타일 레이아웃 고정 */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(8px); z-index: 2000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+        .modal-content { background: white; padding: 35px; border-radius: 32px; width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.3); }
+        .field-label { font-size: 13px; color: var(--text-sub); font-weight: 800; display: block; margin-top: 18px; text-transform: uppercase; }
         input, select, textarea { width: 100%; padding: 14px; margin-top: 8px; border-radius: 14px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 15px; box-sizing: border-box; font-family: inherit; }
+
+        /* 캘린더 디자인 (시원한 사이즈) */
+        .card { background: white; padding: 30px; border-radius: 32px; box-shadow: 0 5px 20px rgba(0,0,0,0.02); border: 1px solid #f1f5f9; margin-bottom: 30px; width: 100%; box-sizing: border-box; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); background: #f1f5f9; gap: 1px; border-radius: 24px; overflow: hidden; border: 1px solid #f1f5f9; width: 100%; }
+        .cal-day-header { padding: 15px; text-align: center; font-weight: 700; background: #f8fafc; font-size: 13px; color: var(--text-sub); }
+        .cal-cell { background: white; min-height: 140px; padding: 12px; cursor: pointer; display: flex; flex-direction: column; position: relative; }
+        .date-num { font-weight: 800; font-size: 17px; display: flex; flex-direction: column; }
+        .lunar-small { font-size: 11px; color: #999; margin-top: 2px; }
+        .holiday-label { font-size: 11px; color: var(--danger); font-weight: 800; margin-top: 4px; }
+        .national-label { font-size: 11px; color: #666; font-weight: 600; margin-top: 4px; }
+        .event-bar { font-size: 12px; padding: 5px 9px; border-radius: 9px; margin-top: 6px; font-weight: 600; color: #333; border: 1px solid rgba(0,0,0,0.05); }
+
+        /* 갤러리 및 라이트박스 */
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; width: 100%; margin-top: 15px; }
+        .gallery-item { aspect-ratio: 1; border-radius: 18px; overflow: hidden; border: 3px solid white; position: relative; cursor: zoom-in; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+        .photo-del-btn { position: absolute; top: 8px; right: 8px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 50%; width: 26px; height: 26px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; }
+        #lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 3000; justify-content: center; align-items: center; cursor: zoom-out; }
+        #lightbox img { max-width: 95%; max-height: 95%; border-radius: 12px; }
+
+        .footer-info { width: 100%; text-align: right; margin-top: 50px; font-size: 12px; color: #94a3b8; line-height: 1.6; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
     <header><div class="logo" onclick="showSection('main-section')">설연 <span class="sky">Family</span></div></header>
+    
+    <div id="lightbox" onclick="this.style.display='none'"><img id="lightbox-img" src=""></div>
+
     <main>
-        <!-- 메인 섹션: 사진 & 배너 -->
         <section id="main-section" class="page-section active">
             <div class="photo-area">
-                <div class="main-photo-frame" onclick="togglePhotoMenu()">
+                <div class="main-photo-frame" onclick="openPhotoAdjustModal()">
                     <img id="main-photo" src="IMAGE_1.PNG">
-                    <div id="photo-controls" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,0.3); justify-content:center; align-items:center; gap:12px;">
-                        <button class="btn-action" style="background:white;" onclick="document.getElementById('photo-input').click(); event.stopPropagation();">📷 변경</button>
-                        <button class="btn-action" style="background:white;" onclick="showAdjustPanel(); event.stopPropagation();">⚙️ 조절</button>
-                    </div>
+                    <div style="position:absolute; bottom:20px; right:20px; background:rgba(0,0,0,0.6); color:white; padding:10px 20px; border-radius:25px; font-size:13px; font-weight:700;">📷 사진 편집</div>
                 </div>
-                <div id="adjust-panel" style="display:none; background:white; padding:20px; border-radius:20px; position:absolute; top:105%; right:0; z-index:100; box-shadow:0 10px 30px rgba(0,0,0,0.1); width:200px;">
-                    <label class="field-label">확대</label><input type="range" id="zoom-slider" min="1" max="3" step="0.1" value="1" oninput="applyPhotoSettings()">
-                    <label class="field-label">좌우</label><input type="range" id="x-slider" min="0" max="100" value="50" oninput="applyPhotoSettings()">
-                    <label class="field-label">상하</label><input type="range" id="y-slider" min="0" max="100" value="50" oninput="applyPhotoSettings()">
-                    <button class="btn-action btn-primary" onclick="showAdjustPanel()">완료</button>
-                </div>
-                <input type="file" id="photo-input" style="display:none;" onchange="handleMainPhoto(this)">
+                <input type="file" id="photo-input" style="display:none;" accept="image/*" onchange="handleMainPhoto(this)">
             </div>
             <div class="banner-container">
                 <div class="banner" onclick="showSection('schedule-section')"><span class="banner-icon">🗓️</span><b>스케줄</b></div>
@@ -87,94 +92,95 @@
                 <div class="banner" onclick="showSection('photo-section')"><span class="banner-icon">📸</span><b>사진첩</b></div>
                 <div class="banner" onclick="showSection('travel-section')"><span class="banner-icon">✈️</span><b>여행 & 여가</b></div>
             </div>
+            <div class="footer-info">System Shared v30.0 FINAL ARCHIVE<br>License by Jung Wooseol. 2026.04.10</div>
         </section>
 
-        <!-- 스케줄 섹션: 달력 디테일 복구 -->
         <section id="schedule-section" class="page-section">
             <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                    <div style="display:flex; align-items:center; gap:15px;"><button onclick="changeMonth(-1)">◀</button><h2 id="sch-label"></h2><button onclick="changeMonth(1)">▶</button></div>
-                    <button onclick="showSection('main-section')" class="btn-action btn-primary">홈으로</button>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
+                    <div style="display:flex; align-items:center; gap:20px;"><button onclick="changeMonth(-1)" class="btn-action btn-nav" style="min-width:60px;">◀</button><h2 id="sch-label"></h2><button onclick="changeMonth(1)" class="btn-action btn-nav" style="min-width:60px;">▶</button></div>
+                    <button onclick="showSection('main-section')" class="btn-action btn-nav">홈으로</button>
                 </div>
                 <div class="cal-grid" id="sch-grid"></div>
             </div>
         </section>
 
-        <!-- 가계부 섹션: 정우설/한미연 버튼 복구 -->
         <section id="asset-section" class="page-section">
-            <div class="card"><h3>💰 연간 자산 분석</h3><div style="height:250px;"><canvas id="mainAssetChart"></canvas></div></div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; width:100%; margin-bottom:20px;">
-                <button class="btn-action" style="background:var(--primary); color:white; padding:20px; border-radius:20px;" onclick="openPersonalAsset('정우설')">정우설 가계부</button>
-                <button class="btn-action" style="background:var(--secondary); color:white; padding:20px; border-radius:20px;" onclick="openPersonalAsset('한미연')">한미연 가계부</button>
+            <div class="card"><h3>💰 연간 자산 분석</h3><div style="height:350px;"><canvas id="mainAssetChart"></canvas></div></div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:25px; width:100%; margin-bottom:25px;">
+                <button class="btn-action" style="background:var(--primary); color:white; height:70px; font-size:18px;" onclick="openPersonalAsset('정우설')">정우설 가계부</button>
+                <button class="btn-action" style="background:var(--secondary); color:white; height:70px; font-size:18px;" onclick="openPersonalAsset('한미연')">한미연 가계부</button>
             </div>
             <button class="btn-action btn-primary" onclick="showSection('main-section')">홈으로</button>
         </section>
 
-        <!-- 사진첩 섹션: 등록 버튼 복구 -->
         <section id="photo-section" class="page-section">
             <div id="photo-main-view" style="width:100%;">
-                <div class="card"><div style="display:flex; justify-content:space-between; align-items:center;"><h3>📸 추억 폴더</h3><button class="btn-action btn-primary" style="width:auto;" onclick="openFolderModal()">폴더 생성</button></div><div class="folder-grid" id="folder-container"></div></div>
+                <div class="card"><div style="display:flex; justify-content:space-between; align-items:center;"><h3>📸 추억 아카이브</h3><button class="btn-action btn-primary" onclick="openFolderModal()">폴더 생성</button></div><div class="folder-grid" id="folder-container" style="margin-top:25px;"></div></div>
             </div>
             <div id="photo-detail-view" class="hidden" style="width:100%;">
                 <div class="card">
-                    <div style="display:flex; justify-content:space-between; align-items:center;"><button class="btn-action" onclick="backToFolders()">◀ 목록</button><button class="btn-action btn-primary" onclick="triggerFileInput('gallery-upload')">사진 추가</button></div>
-                    <h3 id="detail-folder-title" style="margin-top:20px;"></h3><div class="gallery-grid" id="gallery-container"></div>
-                    <button class="btn-action btn-danger" style="margin-top:40px; font-size:12px;" onclick="deleteFolder()">폴더 삭제</button>
+                    <div style="display:flex; justify-content:space-between; align-items:center;"><button class="btn-action btn-nav" onclick="backToFolders()">◀ 목록</button><button class="btn-action btn-primary" onclick="document.getElementById('gallery-upload').click()">사진 등록</button></div>
+                    <h3 id="detail-folder-title" style="margin-top:25px;"></h3><div class="gallery-grid" id="gallery-container"></div>
+                    <button class="btn-action btn-danger" style="margin-top:50px; font-size:13px; width:auto;" onclick="deleteFolder()">폴더 삭제</button>
                 </div>
             </div>
             <input type="file" id="gallery-upload" style="display:none;" multiple accept="image/*" onchange="handleGalleryUpload(this)">
-            <button class="btn-action btn-primary" onclick="showSection('main-section')">홈으로</button>
+            <button class="btn-action btn-primary" style="margin-top:20px;" onclick="showSection('main-section')">홈으로</button>
         </section>
 
-        <!-- 여행 & 여가 섹션: 연동 복구 -->
         <section id="travel-section" class="page-section">
             <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center;"><h3>✈️ 계획된 여정</h3><button class="btn-action btn-primary" style="width:auto;" onclick="openPlanModal()">계획 등록</button></div>
-                <div id="plan-list-container"></div>
+                <div style="display:flex; justify-content:space-between; align-items:center;"><h3>✈️ 계획된 여정</h3><button class="btn-action btn-primary" onclick="openPlanModal()">계획 등록</button></div>
+                <div id="plan-list-container" style="margin-top:25px;"></div>
             </div>
             <button class="btn-action btn-primary" onclick="showSection('main-section')">홈으로</button>
         </section>
 
-        <!-- 개별 가계부 달력 섹션 -->
-        <section id="asset-cal-section" class="page-section"><div class="card"><h2 id="asset-cal-title"></h2><div class="cal-grid" id="asset-cal-grid"></div><button class="btn-action btn-primary" style="margin-top:20px;" onclick="showSection('asset-section')">돌아가기</button></div></section>
+        <section id="asset-cal-section" class="page-section"><div class="card"><h2 id="asset-cal-title"></h2><div class="cal-grid" id="asset-cal-grid"></div><button class="btn-action btn-primary" style="margin-top:25px; width:150px;" onclick="showSection('asset-section')">돌아가기</button></div></section>
     </main>
 
-    <!-- 통합 모달 -->
     <div class="modal" id="master-modal">
         <div class="modal-content">
-            <h3 id="modal-title">등록</h3>
+            <h3 id="modal-title" style="margin-top:0;">저장</h3>
             <input type="hidden" id="edit-id">
             
-            <div id="plan-fields" class="field-group hidden">
-                <label class="field-label">대분류</label><select id="plan-main-type" onchange="togglePlanSub()"><option value="여행">여행</option><option value="여가">여가</option></select>
-                <label class="field-label">소분류</label><select id="plan-sub-type"><option>해외</option><option>국내</option><option>캠핑</option><option>등산</option><option>골프</option><option>스크린 골프</option><option>기타</option></select>
-                <div id="plan-travel-dates">
-                    <label class="field-label">시작 날짜</label><input type="date" id="plan-start-date" onchange="generateDayInputs()">
-                    <label class="field-label">종료 날짜</label><input type="date" id="plan-end-date" onchange="generateDayInputs()">
-                </div>
-                <div id="plan-leisure-date" class="hidden"><label class="field-label">일시</label><input type="datetime-local" id="plan-leisure-time"></div>
-                <label class="field-label">장소</label><input type="text" id="plan-loc" placeholder="목적지">
-                <label class="field-label">준비물</label><textarea id="plan-supplies" rows="2" placeholder="준비물"></textarea>
-                <div id="day-schedule-wrap"></div>
+            <div id="photo-adjust-fields" class="field-group hidden">
+                <button class="btn-action btn-primary btn-modal-full" style="margin-bottom:20px;" onclick="document.getElementById('photo-input').click()">📷 사진 변경</button>
+                <label class="field-label">확대</label><input type="range" id="zoom-slider" min="1" max="3" step="0.05" value="1" oninput="applyPhotoSettings()">
+                <label class="field-label">가로 위치</label><input type="range" id="x-slider" min="0" max="100" value="50" oninput="applyPhotoSettings()">
+                <label class="field-label">세로 위치</label><input type="range" id="y-slider" min="0" max="100" value="50" oninput="applyPhotoSettings()">
             </div>
 
             <div id="sch-fields" class="field-group hidden">
-                <label class="field-label">멤버</label><select id="sch-member"><option value="정우설">정우설</option><option value="한미연">한미연</option></select>
-                <label class="field-label">내용</label><textarea id="sch-memo" rows="3"></textarea>
+                <label class="field-label">멤버 선택</label><select id="sch-member"><option value="정우설">정우설</option><option value="한미연">한미연</option><option value="가족">가족</option></select>
+                <label class="field-label">내용</label><textarea id="sch-memo" rows="3" placeholder="내용 입력"></textarea>
+            </div>
+
+            <div id="plan-fields" class="field-group hidden">
+                <label class="field-label">분류</label><select id="plan-main-type" onchange="togglePlanSub()"><option value="여행">여행</option><option value="여가">여가</option></select>
+                <label class="field-label">유형</label><select id="plan-sub-type"><option>해외</option><option>국내</option><option>캠핑</option><option>등산</option><option>골프</option><option>기타</option></select>
+                <div id="plan-travel-dates">
+                    <label class="field-label">시작</label><input type="date" id="plan-start-date" onchange="generateDayInputs()">
+                    <label class="field-label">종료</label><input type="date" id="plan-end-date" onchange="generateDayInputs()">
+                </div>
+                <div id="plan-leisure-date" class="hidden"><label class="field-label">일시</label><input type="datetime-local" id="plan-leisure-time"></div>
+                <label class="field-label">장소</label><input type="text" id="plan-loc">
+                <label class="field-label">준비물</label><textarea id="plan-supplies" rows="2"></textarea>
+                <div id="day-schedule-wrap"></div>
             </div>
 
             <div id="asset-entry-fields" class="field-group hidden">
                 <label class="field-label">구분</label><select id="as-type"><option value="지출">지출</option><option value="수입">수입</option></select>
                 <label class="field-label">금액</label><input type="number" id="as-amt">
-                <label class="field-label">내용</label><input type="text" id="as-memo">
+                <label class="field-label">메모</label><input type="text" id="as-memo">
             </div>
-
             <div id="folder-fields" class="field-group hidden"><label class="field-label">폴더 이름</label><input type="text" id="fold-name"></div>
 
-            <div class="btn-row" style="margin-top:25px; display:flex; gap:10px;">
-                <button class="btn-action btn-primary" id="btn-save">저장</button>
+            <div class="btn-row">
+                <button class="btn-action btn-primary btn-modal-full" id="btn-save">저장</button>
                 <button class="btn-action btn-danger hidden" id="btn-del">삭제</button>
-                <button class="btn-action" style="background:#e2e8f0;" onclick="closeModal()">취소</button>
+                <button class="btn-action btn-nav btn-modal-full" onclick="closeModal()">취소</button>
             </div>
         </div>
     </div>
@@ -193,16 +199,15 @@
         const db = firebase.firestore();
 
         let curViewDate = new Date();
-        let currentMember = "", currentFolderId = null, activeDateStr = "";
         let schData = [], assetData = { "정우설": [], "한미연": [] }, albumData = [], planData = [];
-        let aChart;
+        let aChart, activeDateStr = "", currentMember = "", currentFolderId = null;
 
         const holidays = {"01-01":"신정","03-01":"삼일절","05-05":"어린이날","06-06":"현충일","08-15":"광복절","10-03":"개천절","10-09":"한글날","12-25":"성탄절","01-29":"설날","10-05":"추석"};
         const specialDays = {"04-19":"4.19혁명","05-18":"5.18민주화","10-01":"국군의날", "10-24":"상강"};
 
         function initRealtimeSync() {
             db.collection("schedules").onSnapshot(s => { schData = s.docs.map(d => d.data()); renderSch(); });
-            db.collection("albums").onSnapshot(s => { albumData = s.docs.map(d => d.data()); renderFolders(); });
+            db.collection("albums").onSnapshot(s => { albumData = s.docs.map(d => d.data()); renderFolders(); if(currentFolderId) renderGallery(); });
             db.collection("plans").onSnapshot(s => { planData = s.docs.map(d => d.data()); renderPlans(); });
             db.collection("assets").onSnapshot(s => {
                 assetData = { "정우설": [], "한미연": [] };
@@ -211,7 +216,56 @@
             });
         }
 
-        // [복구] 메인 달력: 휴일 빨간색, 기념일 라벨, 일요일 음력
+        /* [핵심] 사진 압축 로직 (Disappearing 현상 방지) */
+        async function compressImage(base64Str) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.src = base64Str;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width; let height = img.height;
+                    const max_size = 1200; // 최대 해상도 제한
+                    if (width > height) { if (width > max_size) { height *= max_size / width; width = max_size; } }
+                    else { if (height > max_size) { width *= max_size / height; height = max_size; } }
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.7)); // 품질 0.7로 압축
+                };
+            });
+        }
+
+        function showSection(id) {
+            document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(id === 'schedule-section') renderSch();
+            if(id === 'asset-section') initAssetCharts();
+        }
+
+        function openPhotoAdjustModal() {
+            resetModal(); document.getElementById('modal-title').innerText = "사진 편집";
+            document.getElementById('photo-adjust-fields').classList.remove('hidden');
+            const s = JSON.parse(localStorage.getItem('p_set_v30')) || {z:1, x:50, y:50};
+            document.getElementById('zoom-slider').value = s.z; document.getElementById('x-slider').value = s.x; document.getElementById('y-slider').value = s.y;
+            document.getElementById('btn-save').onclick = () => { applyPhotoSettings(); closeModal(); };
+            document.getElementById('master-modal').style.display = 'flex';
+        }
+        async function handleMainPhoto(input) {
+            if(input.files && input.files[0]) {
+                const r = new FileReader(); r.readAsDataURL(input.files[0]);
+                r.onload = async (e) => {
+                    const compressed = await compressImage(e.target.result);
+                    document.getElementById('main-photo').src = compressed;
+                    localStorage.setItem('main_p_v30', compressed);
+                };
+            }
+        }
+        function applyPhotoSettings() { 
+            const z = document.getElementById('zoom-slider').value, x = document.getElementById('x-slider').value, y = document.getElementById('y-slider').value;
+            const img = document.getElementById('main-photo'); img.style.setProperty('--p-zoom', z); img.style.setProperty('--p-x', x+'%'); img.style.setProperty('--p-y', y+'%');
+            localStorage.setItem('p_set_v30', JSON.stringify({z, x, y}));
+        }
+
         function renderSch() {
             const grid = document.getElementById('sch-grid'); if(!grid) return;
             grid.innerHTML = ""; const y = curViewDate.getFullYear(), m = curViewDate.getMonth();
@@ -225,34 +279,44 @@
                 const cell = document.createElement('div'); cell.className = 'cal-cell';
                 const dayW = new Date(y, m, d).getDay();
                 let dColor = (dayW === 0 || holidays[mKey]) ? 'var(--danger)' : (dayW === 6 ? 'var(--primary)' : 'inherit');
-                let html = `<span class="date-num" style="color:${dColor}">${d}`;
-                if(dayW === 0) html += ` <span class="lunar-small">(음 ${(d+12)%30||30})</span>`;
-                html += `</span>`;
+                let html = `<div class="date-num" style="color:${dColor}">${d}`;
+                if(dayW === 0) html += `<span class="lunar-small">(음 ${(d+12)%30||30})</span>`;
                 if(holidays[mKey]) html += `<span class="holiday-label">${holidays[mKey]}</span>`;
-                else if(specialDays[mKey]) html += `<span class="national-label">${specialDays[mKey]}</span>`;
+                if(specialDays[mKey]) html += `<span class="national-label">${specialDays[mKey]}</span>`;
+                html += `</div>`;
                 cell.innerHTML = html;
                 schData.filter(s => s.date === ds).forEach(ev => {
                     const bar = document.createElement('div'); bar.className = 'event-bar';
-                    bar.style.backgroundColor = ev.category === '여행' ? '#d1fae5' : ev.member === '정우설' ? 'var(--ws-bg)' : 'var(--hm-bg)';
-                    bar.innerText = ev.memo;
-                    bar.onclick = (e) => { e.stopPropagation(); openSchModal(ev, ds); };
+                    if(ev.member === '정우설') bar.style.backgroundColor = 'var(--ws-bg)';
+                    else if(ev.member === '한미연') bar.style.backgroundColor = 'var(--hm-bg)';
+                    else if(ev.category === '여행') bar.style.backgroundColor = '#d1fae5';
+                    else bar.style.backgroundColor = '#f1f5f9';
+                    bar.innerText = ev.memo; bar.onclick = (e) => { e.stopPropagation(); openSchModal(ev, ds); };
                     cell.appendChild(bar);
                 });
-                cell.onclick = () => openSchModal(null, ds);
-                grid.appendChild(cell);
+                cell.onclick = () => openSchModal(null, ds); grid.appendChild(cell);
             }
         }
 
-        // [복구] 여행 등록 및 일자별 입력창
-        function generateDayInputs() {
-            const start = document.getElementById('plan-start-date').value, end = document.getElementById('plan-end-date').value, wrap = document.getElementById('day-schedule-wrap');
-            wrap.innerHTML = ""; if(start && end && new Date(end) >= new Date(start)) {
-                for(let i=0; i <= Math.floor((new Date(end)-new Date(start))/86400000); i++) wrap.innerHTML += `<label class="field-label">Day ${i+1} 일정</label><input type="text" class="day-input">`;
-            }
+        function openSchModal(data, date) {
+            resetModal(); document.getElementById('modal-title').innerText = data ? "수정" : date + " 등록";
+            document.getElementById('sch-fields').classList.remove('hidden');
+            activeDateStr = date;
+            if(data) { document.getElementById('edit-id').value = data.id; document.getElementById('sch-member').value = data.member; document.getElementById('sch-memo').value = data.memo; document.getElementById('btn-del').classList.remove('hidden'); }
+            document.getElementById('btn-save').onclick = async () => {
+                const id = document.getElementById('edit-id').value || "sch_" + Date.now();
+                await db.collection("schedules").doc(id).set({ id, date: activeDateStr, member: document.getElementById('sch-member').value, memo: document.getElementById('sch-memo').value, category: '일반' });
+                closeModal();
+            };
+            document.getElementById('btn-del').onclick = async () => { if(confirm("삭제?")) { await db.collection("schedules").doc(document.getElementById('edit-id').value).delete(); closeModal(); } };
+            document.getElementById('master-modal').style.display = 'flex';
         }
+
+        function openPlanModal() { resetModal(); document.getElementById('modal-title').innerText = "계획 등록"; document.getElementById('plan-fields').classList.remove('hidden'); togglePlanSub(); document.getElementById('btn-save').onclick = savePlan; document.getElementById('master-modal').style.display = 'flex'; }
+        function togglePlanSub() { const t=document.getElementById('plan-main-type').value; document.getElementById('plan-travel-dates').classList.toggle('hidden', t==='여가'); document.getElementById('plan-leisure-date').classList.toggle('hidden', t==='여행'); }
+        function generateDayInputs() { const start = document.getElementById('plan-start-date').value, end = document.getElementById('plan-end-date').value, wrap = document.getElementById('day-schedule-wrap'); wrap.innerHTML = ""; if(start && end && new Date(end) >= new Date(start)) { for(let i=0; i <= Math.floor((new Date(end)-new Date(start))/86400000); i++) wrap.innerHTML += `<label class="field-label">Day ${i+1}</label><input type="text" class="day-input">`; } }
         async function savePlan() {
-            const planId = "p_" + Date.now();
-            const mType = document.getElementById('plan-main-type').value, subType = document.getElementById('plan-sub-type').value, loc = document.getElementById('plan-loc').value, supplies = document.getElementById('plan-supplies').value;
+            const planId = "p_" + Date.now(); const mType = document.getElementById('plan-main-type').value, subType = document.getElementById('plan-sub-type').value, loc = document.getElementById('plan-loc').value, supplies = document.getElementById('plan-supplies').value;
             const batch = db.batch();
             if(mType === '여행') {
                 const start = document.getElementById('plan-start-date').value;
@@ -268,17 +332,13 @@
             }
             await batch.commit(); closeModal();
         }
-        async function deletePlan(id) { if(!confirm("달력 일정도 삭제됩니다.")) return; const batch = db.batch(); const schs = await db.collection("schedules").where("planId", "==", id).get(); schs.docs.forEach(d => batch.delete(d.ref)); batch.delete(db.collection("plans").doc(id)); await batch.commit(); }
-        function renderPlans() {
-            const c = document.getElementById('plan-list-container');
-            c.innerHTML = planData.map(p => `<div class="card" style="display:flex; justify-content:space-between; align-items:flex-start; padding:15px; border:1px solid #f1f5f9; margin-bottom:10px;"><div><b>[${p.mType}-${p.subType}] ${p.loc}</b><br><small>${p.start||p.time.split('T')[0]}</small><div style="font-size:12px; margin-top:5px; color:#666;">🎒 준비물: ${p.supplies||'없음'}</div></div><button class="btn-action btn-danger" style="width:auto; padding:5px 10px; font-size:12px;" onclick="deletePlan('${p.id}')">삭제</button></div>`).join('');
-        }
-
-        // [복구] 개별 가계부 달력 및 저장
+        function renderPlans() { const c = document.getElementById('plan-list-container'); c.innerHTML = planData.map(p => `<div class="card" style="display:flex; justify-content:space-between; align-items:flex-start; padding:15px; margin-bottom:10px;"><div><b>[${p.mType}-${p.subType}] ${p.loc}</b><br><small>${p.start||p.time.split('T')[0]}</small><div style="font-size:12px; margin-top:5px; color:#666;">🎒 ${p.supplies||'준비물 없음'}</div></div><button class="btn-action btn-danger" style="min-width:80px; height:40px;" onclick="deletePlan('${p.id}')">삭제</button></div>`).join(''); }
+        async function deletePlan(id) { if(!confirm("삭제?")) return; const batch = db.batch(); const schs = await db.collection("schedules").where("planId", "==", id).get(); schs.docs.forEach(d => batch.delete(d.ref)); batch.delete(db.collection("plans").doc(id)); await batch.commit(); }
+        
         function openPersonalAsset(n) { currentMember = n; showSection('asset-cal-section'); renderAssetCal(); }
         function renderAssetCal() {
             const grid = document.getElementById('asset-cal-grid'); grid.innerHTML = ""; const y = curViewDate.getFullYear(), m = curViewDate.getMonth();
-            document.getElementById('asset-cal-title').innerText = `${currentMember} 가계부 - ${y}년 ${m+1}월`;
+            document.getElementById('asset-cal-title').innerText = `${currentMember} - ${y}년 ${m+1}월`;
             ['SUN','MON','TUE','WED','THU','FRI','SAT'].forEach(d => grid.innerHTML += `<div class="cal-day-header">${d}</div>`);
             const first = new Date(y, m, 1).getDay(), last = new Date(y, m+1, 0).getDate();
             for(let i=0; i<first; i++) grid.innerHTML += `<div class="cal-cell"></div>`;
@@ -291,32 +351,41 @@
                 cell.onclick = () => openAssetEntryModal(null, ds); grid.appendChild(cell);
             }
         }
-        function openAssetEntryModal(data, date) { resetModal(); document.getElementById('modal-title').innerText = data?"가계부 수정":date+" 등록"; document.getElementById('asset-entry-fields').classList.remove('hidden'); activeDateStr = date; if(data) { document.getElementById('edit-id').value = data.id; document.getElementById('as-type').value = data.type; document.getElementById('as-amt').value = data.amt; document.getElementById('as-memo').value = data.memo; document.getElementById('btn-del').classList.remove('hidden'); } document.getElementById('btn-save').onclick = saveAssetEntry; document.getElementById('btn-del').onclick = deleteAssetEntry; document.getElementById('master-modal').style.display='flex'; }
-        async function saveAssetEntry() { const id = document.getElementById('edit-id').value || "as_"+Date.now(); await db.collection("assets").doc(id).set({ id, member: currentMember, date: activeDateStr, type: document.getElementById('as-type').value, amt: Number(document.getElementById('as-amt').value), memo: document.getElementById('as-memo').value }); closeModal(); renderAssetCal(); }
-        async function deleteAssetEntry() { if(!confirm("삭제할까요?")) return; await db.collection("assets").doc(document.getElementById('edit-id').value).delete(); closeModal(); renderAssetCal(); }
+        function openAssetEntryModal(data, date) { resetModal(); document.getElementById('modal-title').innerText = "저장"; document.getElementById('asset-entry-fields').classList.remove('hidden'); activeDateStr = date; if(data) { document.getElementById('edit-id').value = data.id; document.getElementById('as-type').value = data.type; document.getElementById('as-amt').value = data.amt; document.getElementById('as-memo').value = data.memo; document.getElementById('btn-del').classList.remove('hidden'); } document.getElementById('btn-save').onclick = async () => { const id = document.getElementById('edit-id').value || "as_"+Date.now(); await db.collection("assets").doc(id).set({ id, member: currentMember, date: activeDateStr, type: document.getElementById('as-type').value, amt: Number(document.getElementById('as-amt').value), memo: document.getElementById('as-memo').value }); closeModal(); renderAssetCal(); };
+        document.getElementById('btn-del').onclick = async () => { if(confirm("삭제?")) { await db.collection("assets").doc(document.getElementById('edit-id').value).delete(); closeModal(); renderAssetCal(); } }; document.getElementById('master-modal').style.display='flex'; }
 
-        // [복구] 사진첩 폴더 생성 및 업로드
-        function openFolderModal() { resetModal(); document.getElementById('modal-title').innerText = "새 폴더"; document.getElementById('folder-fields').classList.remove('hidden'); document.getElementById('btn-save').onclick = async() => { const name = document.getElementById('fold-name').value; if(name) { const id = "f_"+Date.now(); await db.collection("albums").doc(id).set({ id, name, photos: [] }); closeModal(); } }; document.getElementById('master-modal').style.display='flex'; }
-        function renderFolders() { const c = document.getElementById('folder-container'); c.innerHTML = albumData.map(f => `<div class="folder-card" onclick="openFolderDetail('${f.id}')"><div style="font-size:40px; padding:20px; background:#f1f5f9;">📁</div><div style="padding:10px;"><b>${f.name}</b></div></div>`).join(''); }
+        function renderFolders() { const c = document.getElementById('folder-container'); c.innerHTML = albumData.map(f => `<div class="folder-card" onclick="openFolderDetail('${f.id}')"><div style="font-size:50px; padding:25px; background:#f1f5f9;">📁</div><div style="padding:15px;"><b>${f.name}</b></div></div>`).join(''); }
         function openFolderDetail(id) { currentFolderId = id; document.getElementById('photo-main-view').classList.add('hidden'); document.getElementById('photo-detail-view').classList.remove('hidden'); const f = albumData.find(x => x.id===id); if(f) { document.getElementById('detail-folder-title').innerText = f.name; renderGallery(); } }
         function backToFolders() { currentFolderId = null; document.getElementById('photo-main-view').classList.remove('hidden'); document.getElementById('photo-detail-view').classList.add('hidden'); }
-        function renderGallery() { const f = albumData.find(x => x.id===currentFolderId); const c = document.getElementById('gallery-container'); if(f) c.innerHTML = f.photos.map(s => `<div class="gallery-item"><img src="${s}"></div>`).join(''); }
-        async function handleGalleryUpload(input) { if(input.files && currentFolderId) { const f = albumData.find(x => x.id===currentFolderId); for(let file of Array.from(input.files)) { const r = new FileReader(); r.readAsDataURL(file); await new Promise(res => r.onload = async(e) => { f.photos.push(e.target.result); await db.collection("albums").doc(currentFolderId).update({ photos: f.photos }); renderGallery(); res(); }); } } }
-        async function deleteFolder() { if(confirm("삭제?")) { await db.collection("albums").doc(currentFolderId).delete(); backToFolders(); } }
+        function renderGallery() { const f = albumData.find(x => x.id === currentFolderId); const c = document.getElementById('gallery-container'); if(f) { c.innerHTML = f.photos.map((s, idx) => `<div class="gallery-item" onclick="openLightbox('${s}')"><img src="${s}"><button class="photo-del-btn" onclick="event.stopPropagation(); deleteSinglePhoto(${idx})">×</button></div>`).join(''); } }
+        function openLightbox(src) { document.getElementById('lightbox-img').src = src; document.getElementById('lightbox').style.display = 'flex'; }
+        async function deleteSinglePhoto(idx) { if(!confirm("이 사진만 삭제?")) return; const f = albumData.find(x => x.id === currentFolderId); if(f) { f.photos.splice(idx, 1); await db.collection("albums").doc(currentFolderId).update({ photos: f.photos }); } }
+        
+        /* [수정] 사진첩 업로드 시 압축 적용 (삭제 현상 방지 핵심) */
+        async function handleGalleryUpload(input) {
+            if(input.files && currentFolderId) {
+                const f = albumData.find(x => x.id === currentFolderId);
+                for(let file of Array.from(input.files)) {
+                    const r = new FileReader(); r.readAsDataURL(file);
+                    r.onload = async(e) => {
+                        const compressed = await compressImage(e.target.result);
+                        f.photos.push(compressed);
+                        try {
+                            await db.collection("albums").doc(currentFolderId).update({ photos: f.photos });
+                        } catch(err) {
+                            alert("사진이 너무 많아 더 이상 저장할 수 없습니다. 새 폴더를 만들어주세요.");
+                        }
+                    };
+                }
+                input.value = "";
+            }
+        }
+        function openFolderModal() { resetModal(); document.getElementById('folder-fields').classList.remove('hidden'); document.getElementById('modal-title').innerText = "폴더 생성"; document.getElementById('btn-save').onclick = async() => { const name = document.getElementById('fold-name').value; if(name) { const id = "f_"+Date.now(); await db.collection("albums").doc(id).set({ id, name, photos: [] }); closeModal(); } }; document.getElementById('master-modal').style.display = 'flex'; }
+        async function deleteFolder() { if(confirm("폴더 전체 삭제?")) { await db.collection("albums").doc(currentFolderId).delete(); backToFolders(); } }
 
-        // [복구] 사진 설정 및 유틸리티
-        function togglePhotoMenu() { const c = document.getElementById('photo-controls'); c.style.display = (c.style.display==='flex'?'none':'flex'); }
-        function showAdjustPanel() { const p = document.getElementById('adjust-panel'); p.style.display = (p.style.display==='flex'?'none':'flex'); }
-        function handleMainPhoto(input) { if(input.files && input.files[0]) { const reader = new FileReader(); reader.readAsDataURL(input.files[0]); reader.onload = (e) => { document.getElementById('main-photo').src = e.target.result; localStorage.setItem('main_p_v21', e.target.result); }; } }
-        function applyPhotoSettings() { const z = document.getElementById('zoom-slider').value, x = document.getElementById('x-slider').value, y = document.getElementById('y-slider').value; const img = document.getElementById('main-photo'); img.style.setProperty('--p-zoom', z); img.style.setProperty('--p-x', x+'%'); img.style.setProperty('--p-y', y+'%'); localStorage.setItem('p_set_v21', JSON.stringify({z, x, y})); }
-        function showSection(id) { document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); if(id==='schedule-section') renderSch(); if(id==='asset-section') initAssetCharts(); }
-        function openPlanModal() { resetModal(); document.getElementById('plan-fields').classList.remove('hidden'); togglePlanSub(); document.getElementById('btn-save').onclick = savePlan; document.getElementById('master-modal').style.display='flex'; }
-        function togglePlanSub() { const t=document.getElementById('plan-main-type').value; document.getElementById('plan-travel-dates').classList.toggle('hidden', t==='여가'); document.getElementById('plan-leisure-date').classList.toggle('hidden', t==='여행'); }
-        function openSchModal(data, date) { resetModal(); document.getElementById('sch-fields').classList.remove('hidden'); activeDateStr = date; if(data) { document.getElementById('edit-id').value=data.id; document.getElementById('sch-memo').value=data.memo; document.getElementById('btn-del').classList.remove('hidden'); } document.getElementById('btn-save').onclick=()=>alert("연동된 계획은 해당 리스트에서 관리하세요."); document.getElementById('master-modal').style.display='flex'; }
-        function resetModal() { document.querySelectorAll('.field-group').forEach(g=>g.classList.add('hidden')); document.querySelectorAll('input, textarea').forEach(i=>i.value=""); document.getElementById('day-schedule-wrap').innerHTML=""; document.getElementById('btn-del').classList.add('hidden'); }
+        function resetModal() { document.querySelectorAll('.field-group').forEach(g=>g.classList.add('hidden')); document.querySelectorAll('#master-modal input, #master-modal textarea').forEach(i=>i.value=""); document.getElementById('day-schedule-wrap').innerHTML=""; document.getElementById('btn-del').classList.add('hidden'); }
         function closeModal() { document.getElementById('master-modal').style.display='none'; }
         function changeMonth(n) { curViewDate.setMonth(curViewDate.getMonth()+n); renderSch(); if(document.getElementById('asset-cal-section').classList.contains('active')) renderAssetCal(); }
-        function triggerFileInput(id) { document.getElementById(id).click(); }
         function initAssetCharts() {
             if(aChart) aChart.destroy(); const ctx = document.getElementById('mainAssetChart').getContext('2d'); let mData = Array.from({length:12}, () => ({i:0, e:0}));
             ["정우설", "한미연"].forEach(m => (assetData[m]||[]).forEach(e => { const mon = new Date(e.date).getMonth(); if(e.type==="수입") mData[mon].i += Number(e.amt); else mData[mon].e += Number(e.amt); }));
@@ -324,9 +393,11 @@
         }
 
         window.onload = () => {
-            const p = localStorage.getItem('main_p_v21'); if(p) document.getElementById('main-photo').src = p;
-            const s = JSON.parse(localStorage.getItem('p_set_v21')); if(s) { document.getElementById('zoom-slider').value=s.z; document.getElementById('x-slider').value=s.x; document.getElementById('y-slider').value=s.y; applyPhotoSettings(); }
-            renderSch(); initRealtimeSync();
+            const p = localStorage.getItem('main_p_v30'); if(p) document.getElementById('main-photo').src = p;
+            const s = JSON.parse(localStorage.getItem('p_set_v30')); if(s) { 
+                document.getElementById('zoom-slider').value = s.z; document.getElementById('x-slider').value = s.x; document.getElementById('y-slider').value = s.y; applyPhotoSettings(); 
+            }
+            initRealtimeSync();
         };
     </script>
 </body>
