@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>설연 Family Shared v44.0</title>
+    <title>설연 Family Shared v45.0</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -16,13 +16,17 @@
             --ws-bg: #eff6ff; --hm-bg: #fff1f2;
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; background: var(--bg); color: var(--text-main); overflow-x: hidden; }
+        /* [수정] 전체 화면 스크롤 보장 */
+        html, body { height: 100%; margin: 0; padding: 0; }
+        body { font-family: 'Pretendard', sans-serif; background: var(--bg); color: var(--text-main); overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+        
         header { height: 60px; background: var(--header-bg); padding: 0 5%; display: flex; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .logo { font-size: 18px; font-weight: 800; cursor: pointer; color: white; }
         .logo .sky { color: var(--sky-blue); }
-        main { width: 100%; max-width: 1200px; margin: 0 auto; padding: 15px; }
+        
+        /* [수정] 메인 컨테이너 스크롤 짤림 방지 */
+        main { width: 100%; max-width: 1200px; margin: 0 auto; padding: 15px; min-height: calc(100vh - 60px); }
 
-        /* 섹션 제어 - 무조건 display:flex 보장 */
         .page-section { display: none; width: 100%; flex-direction: column; align-items: center; animation: fadeIn 0.3s ease-out; }
         .page-section.active { display: flex !important; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -38,7 +42,7 @@
         .banner-icon { font-size: 32px; margin-bottom: 10px; display: block; }
         .banner b { font-size: 15px; color: var(--text-main); }
 
-        .btn-action { height: 48px; min-width: 120px; padding: 0 20px; border: none; border-radius: 14px; font-weight: 700; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: 0.2s; white-space: nowrap; }
+        .btn-action { height: 48px; min-width: 110px; padding: 0 20px; border: none; border-radius: 14px; font-weight: 700; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: 0.2s; white-space: nowrap; }
         .btn-primary { background: var(--header-bg); color: white; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-nav { background: #f1f5f9; color: var(--text-main); }
@@ -56,12 +60,18 @@
         .national-label { color: #666; font-size: 9px; font-weight: 600; margin-top: 2px; }
         .event-bar { font-size: 10px; padding: 4px 6px; border-radius: 6px; margin-top: 4px; font-weight: 600; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+        /* [수정] 모달 내 스크롤 및 레이아웃 */
         .modal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); z-index: 2000; justify-content: center; align-items: center; padding: 15px; }
-        .modal-content { background: white; padding: 25px; border-radius: 28px; width: 100%; max-width: 450px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
+        .modal-content { background: white; padding: 25px; border-radius: 28px; width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
         .field-label { font-size: 12px; color: var(--text-sub); font-weight: 800; display: block; margin-top: 15px; text-transform: uppercase; }
         input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; border-radius: 10px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 14px; outline: none; }
         .btn-row { margin-top: 25px; display: flex; gap: 10px; width: 100%; }
         .btn-modal-full { flex: 1; }
+
+        .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; }
+        @media (min-width: 768px) { .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); } }
+        .gallery-item { aspect-ratio: 1; border-radius: 12px; overflow: hidden; border: 2px solid white; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .photo-del-btn { position: absolute; top: 5px; right: 5px; background: rgba(239, 68, 68, 0.9); color: white; border-radius: 50%; width: 22px; height: 22px; border: none; font-size: 12px; cursor: pointer; }
 
         #lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 3000; justify-content: center; align-items: center; }
         #lightbox img { max-width: 95%; max-height: 95%; border-radius: 10px; }
@@ -74,6 +84,7 @@
     <div id="lightbox" onclick="this.style.display='none'"><img id="lightbox-img" src=""></div>
 
     <main>
+        <!-- 메인화면 -->
         <section id="main-section" class="page-section active">
             <div class="photo-area">
                 <div class="main-photo-frame" onclick="openPhotoAdjustModal()">
@@ -88,31 +99,40 @@
                 <div class="banner" onclick="showSection('photo-section')"><span class="banner-icon">📸</span><b>사진첩</b></div>
                 <div class="banner" onclick="showSection('travel-section')"><span class="banner-icon">✈️</span><b>여행 & 여가</b></div>
             </div>
-            <div class="footer-info">System Shared v44.0 STABLE<br>License by Jung Wooseol. 2026.04.10</div>
+            <div class="footer-info">System Shared v45.0 MASTER MASTER<br>License by Jung Wooseol. 2026.04.10</div>
         </section>
 
+        <!-- 스케줄 -->
         <section id="schedule-section" class="page-section"><div class="card"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; width:100%;"><div style="display:flex; align-items:center; gap:10px;"><button onclick="changeMonth(-1)" class="btn-action btn-nav" style="min-width:45px; height:40px;">◀</button><h3 id="sch-label" style="font-size:16px; margin:0;"></h3><button onclick="changeMonth(1)" class="btn-action btn-nav" style="min-width:45px; height:40px;">▶</button></div><button onclick="showSection('main-section')" class="btn-action btn-nav btn-header">홈으로</button></div><div class="cal-grid" id="sch-grid"></div></div></section>
+        
+        <!-- 가계부 -->
         <section id="asset-section" class="page-section"><div class="card"><h3>💰 연간 자산 분석</h3><div style="height:250px;"><canvas id="mainAssetChart"></canvas></div></div><div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; width:100%; margin-bottom:20px;"><button class="btn-action" style="background:var(--primary); color:white; height:60px;" onclick="openPersonalAsset('정우설')">정우설 가계부</button><button class="btn-action" style="background:var(--secondary); color:white; height:60px;" onclick="openPersonalAsset('한미연')">한미연 가계부</button></div><button class="btn-action btn-primary" style="width:120px;" onclick="showSection('main-section')">홈으로</button></section>
+        
+        <!-- 사진첩 -->
         <section id="photo-section" class="page-section"><div id="photo-main-view" style="width:100%;"><div class="card"><div style="display:flex; justify-content:space-between; align-items:center; width:100%;"><h3>📸 아카이브</h3><button class="btn-action btn-primary btn-header" onclick="openFolderModal()">폴더 생성</button></div><div class="folder-grid" id="folder-container" style="margin-top:20px; display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:15px;"></div></div></div><div id="photo-detail-view" class="hidden" style="width:100%;"><div class="card"><div style="display:flex; justify-content:space-between; align-items:center; width:100%;"><button class="btn-action btn-nav btn-header" onclick="backToFolders()">◀ 목록</button><button class="btn-action btn-primary btn-header" onclick="document.getElementById('gallery-upload').click()">사진 등록</button></div><h3 id="detail-folder-title" style="margin-top:15px; font-size:16px;"></h3><div class="gallery-grid" id="gallery-container"></div><button class="btn-action btn-danger" style="margin-top:30px; font-size:12px; width:auto; height:35px;" onclick="deleteFolder()">폴더 삭제</button></div></div><input type="file" id="gallery-upload" style="display:none;" multiple accept="image/*" onchange="handleGalleryUpload(this)"><button class="btn-action btn-primary" style="margin-top:10px; width:120px;" onclick="showSection('main-section')">홈으로</button></section>
+        
+        <!-- 여행 & 여가 -->
         <section id="travel-section" class="page-section"><div class="card"><div style="display:flex; justify-content:space-between; align-items:center; width:100%;"><h3>✈️ 계획된 여정</h3><button class="btn-action btn-primary btn-header" onclick="openPlanModal()">계획 등록</button></div><div id="plan-list-container" style="margin-top:20px; width:100%;"></div></div><button class="btn-action btn-primary" style="width:120px;" onclick="showSection('main-section')">홈으로</button></section>
+        
         <section id="asset-cal-section" class="page-section"><div class="card"><h3 id="asset-cal-title" style="font-size:16px;"></h3><div class="cal-grid" id="asset-cal-grid"></div><button class="btn-action btn-primary" style="margin-top:20px; width:120px;" onclick="showSection('asset-section')">돌아가기</button></div></section>
     </main>
 
+    <!-- [핵심] 통합 마스터 모달 -->
     <div class="modal" id="master-modal">
         <div class="modal-content">
-            <h3 id="modal-title" style="margin:0; font-size:18px;">저장</h3>
+            <h3 id="modal-title" style="margin:0; font-size:18px;">입력</h3>
             <input type="hidden" id="edit-id">
             
             <div id="photo-adjust-fields" class="field-group hidden">
-                <button class="btn-action btn-primary btn-modal-full" style="margin-bottom:15px; width:100%;" onclick="document.getElementById('photo-input').click()">📷 사진 선택</button>
+                <button class="btn-action btn-primary btn-modal-full" style="margin-bottom:15px;" onclick="document.getElementById('photo-input').click()">📷 사진 선택</button>
                 <label class="field-label">확대</label><input type="range" id="zoom-slider" min="1" max="3" step="0.01" value="1" oninput="applyPhotoSettings()">
                 <label class="field-label">좌우</label><input type="range" id="x-slider" min="0" max="100" value="50" oninput="applyPhotoSettings()">
                 <label class="field-label">상하</label><input type="range" id="y-slider" min="0" max="100" value="50" oninput="applyPhotoSettings()">
             </div>
-            <div id="sch-fields" class="field-group hidden"><label class="field-label">멤버</label><select id="sch-member"><option value="정우설">정우설</option><option value="한미연">한미연</option><option value="가족">가족</option></select><label class="field-label">내용</label><textarea id="sch-memo" rows="3"></textarea></div>
-            <div id="asset-entry-fields" class="field-group hidden"><label class="field-label">구분</label><select id="as-type"><option value="지출">지출</option><option value="수입">수입</option></select><label class="field-label">금액</label><input type="number" id="as-amt"><label class="field-label">메모</label><input type="text" id="as-memo"></div>
-            <div id="folder-fields" class="field-group hidden"><label class="field-label">폴더 명칭</label><input type="text" id="fold-name"></div>
 
+            <div id="sch-fields" class="field-group hidden"><label class="field-label">멤버</label><select id="sch-member"><option value="정우설">정우설</option><option value="한미연">한미연</option><option value="가족">가족</option></select><label class="field-label">내용</label><textarea id="sch-memo" rows="3"></textarea></div>
+
+            <!-- 여행 & 여가 설계도 고정 -->
             <div id="plan-fields" class="field-group hidden">
                 <label class="field-label">구분</label><select id="plan-main-type"><option value="여행">여행</option><option value="여가">여가</option></select>
                 <label class="field-label">유형</label><select id="plan-sub-type"><option>국내여행</option><option>해외여행</option><option>캠핑</option><option>골프</option><option>스크린 골프</option><option>등산</option><option>기타</option></select>
@@ -122,7 +142,15 @@
                 <label class="field-label">준비물 기록</label><textarea id="plan-supplies" rows="3"></textarea>
             </div>
 
-            <div class="btn-row"><button class="btn-action btn-primary btn-modal-full" id="btn-save">저장</button><button class="btn-action btn-danger hidden" id="btn-del">삭제</button><button class="btn-action btn-nav btn-modal-full" onclick="closeModal()">취소</button></div>
+            <div id="asset-entry-fields" class="field-group hidden"><label class="field-label">구분</label><select id="as-type"><option value="지출">지출</option><option value="수입">수입</option></select><label class="field-label">금액</label><input type="number" id="as-amt"><label class="field-label">메모</label><input type="text" id="as-memo"></div>
+            <div id="folder-fields" class="field-group hidden"><label class="field-label">폴더 명칭</label><input type="text" id="fold-name"></div>
+
+            <!-- [수정] CRUD 버튼 세트 -->
+            <div class="btn-row">
+                <button class="btn-action btn-primary btn-modal-full" id="btn-save">저장</button>
+                <button class="btn-action btn-danger hidden" id="btn-del">삭제</button>
+                <button class="btn-action btn-nav btn-modal-full" onclick="closeModal()">취소</button>
+            </div>
         </div>
     </div>
 
@@ -216,28 +244,101 @@
             }
         }
 
+        /* [수정] CRUD 버튼 텍스트 로직 적용 */
+        function openSchModal(data, date) { 
+            resetModal(); 
+            document.getElementById('modal-title').innerText = data ? "일정 수정" : "일정 등록"; 
+            document.getElementById('btn-save').innerText = data ? "수정" : "저장";
+            document.getElementById('sch-fields').classList.remove('hidden'); 
+            activeDateStr = date; 
+            if(data) { 
+                document.getElementById('edit-id').value = data.id; 
+                document.getElementById('sch-member').value = data.member; 
+                document.getElementById('sch-memo').value = data.memo; 
+                document.getElementById('btn-del').classList.remove('hidden'); 
+            } 
+            document.getElementById('btn-save').onclick = async () => { 
+                const id = document.getElementById('edit-id').value || "sch_" + Date.now(); 
+                await db.collection("schedules").doc(id).set({ id, date: activeDateStr, member: document.getElementById('sch-member').value, memo: document.getElementById('sch-memo').value, category: '일반' }); 
+                closeModal(); 
+            }; 
+            document.getElementById('btn-del').onclick = async () => { if(confirm("삭제?")) { await db.collection("schedules").doc(document.getElementById('edit-id').value).delete(); closeModal(); } }; 
+            document.getElementById('master-modal').style.display = 'flex'; 
+        }
+
+        function openAssetEntryModal(data, date) { 
+            resetModal(); 
+            document.getElementById('modal-title').innerText = data ? "가계부 수정" : "가계부 등록"; 
+            document.getElementById('btn-save').innerText = data ? "수정" : "저장";
+            document.getElementById('asset-entry-fields').classList.remove('hidden'); 
+            activeDateStr = date; 
+            if(data) { 
+                document.getElementById('edit-id').value = data.id; 
+                document.getElementById('as-type').value = data.type; 
+                document.getElementById('as-amt').value = data.amt; 
+                document.getElementById('as-memo').value = data.memo; 
+                document.getElementById('btn-del').classList.remove('hidden'); 
+            } 
+            document.getElementById('btn-save').onclick = async () => { 
+                const id = document.getElementById('edit-id').value || "as_"+Date.now(); 
+                await db.collection("assets").doc(id).set({ id, member: currentMember, date: activeDateStr, type: document.getElementById('as-type').value, amt: Number(document.getElementById('as-amt').value), memo: document.getElementById('as-memo').value }); 
+                closeModal(); 
+            }; 
+            document.getElementById('btn-del').onclick = async () => { if(confirm("삭제?")) { await db.collection("assets").doc(document.getElementById('edit-id').value).delete(); closeModal(); } }; 
+            document.getElementById('master-modal').style.display = 'flex';
+        }
+
+        function openPlanModal(data) { 
+            resetModal(); 
+            document.getElementById('modal-title').innerText = data ? "계획 수정" : "계획 등록"; 
+            document.getElementById('btn-save').innerText = data ? "수정" : "저장";
+            document.getElementById('plan-fields').classList.remove('hidden'); 
+            if(data) {
+                document.getElementById('edit-id').value = data.id;
+                document.getElementById('plan-main-type').value = data.mType;
+                document.getElementById('plan-sub-type').value = data.subType;
+                document.getElementById('plan-loc').value = data.loc;
+                document.getElementById('plan-start-date').value = data.start;
+                document.getElementById('plan-end-date').value = data.end;
+                document.getElementById('plan-supplies').value = data.supplies;
+                generateDayInputs();
+                const dInputs = document.querySelectorAll('.day-input');
+                (data.dayMemos||[]).forEach((m, i) => { if(dInputs[i]) dInputs[i].value = m; });
+                document.getElementById('btn-del').classList.remove('hidden');
+            }
+            document.getElementById('btn-save').onclick = savePlan; 
+            document.getElementById('btn-del').onclick = async () => { if(confirm("삭제?")) { await deletePlan(document.getElementById('edit-id').value); closeModal(); } };
+            document.getElementById('master-modal').style.display = 'flex'; 
+        }
+
+        async function savePlan() {
+            const planId = document.getElementById('edit-id').value || "p_" + Date.now(); 
+            const mType = document.getElementById('plan-main-type').value, subType = document.getElementById('plan-sub-type').value, loc = document.getElementById('plan-loc').value, start = document.getElementById('plan-start-date').value, end = document.getElementById('plan-end-date').value, supplies = document.getElementById('plan-supplies').value;
+            const dayMemos = Array.from(document.querySelectorAll('.day-input')).map(i => i.value); 
+            const batch = db.batch();
+            // 기존 일정 데이터 청소 (수정 시 중복 방지)
+            const oldSchs = await db.collection("schedules").where("planId", "==", planId).get();
+            oldSchs.docs.forEach(d => batch.delete(d.ref));
+            
+            batch.set(db.collection("plans").doc(planId), { id: planId, mType, subType, loc, start, end, supplies, dayMemos });
+            dayMemos.forEach((memo, idx) => { let d = new Date(start); d.setDate(d.getDate() + idx); batch.set(db.collection("schedules").doc("sch_"+planId+idx), { planId, date: d.toISOString().split('T')[0], category: '여행', member: '가족', memo: `[${subType}] ${loc}: ${memo}` }); });
+            await batch.commit(); closeModal();
+        }
+
+        function renderPlans() {
+            const c = document.getElementById('plan-list-container'); c.innerHTML = ""; 
+            if(!planData || planData.length === 0) { c.innerHTML = "<p style='text-align:center; color:#999; padding:20px;'>등록된 계획이 없습니다.</p>"; return; }
+            c.innerHTML = planData.map(p => `<div class="card" style="padding:15px; margin-bottom:10px;" onclick="openPlanModal(${JSON.stringify(p).replace(/"/g, '&quot;')})"><div style="display:flex; justify-content:space-between; align-items:flex-start;"><div><b>[${p.subType}] ${p.loc}</b><br><small>${p.start} ~ ${p.end}</small><div style="font-size:12px; margin-top:5px; color:#666;">🎒 ${p.supplies || '없음'}</div></div><span style="font-size:12px; color:var(--primary); font-weight:800;">클릭 시 수정</span></div></div>`).join('');
+        }
+
+        /* 기타 전역 함수 */
         function generateDayInputs() {
             const start = document.getElementById('plan-start-date').value; const end = document.getElementById('plan-end-date').value; const wrap = document.getElementById('day-schedule-wrap'); wrap.innerHTML = "";
             if(start && end && new Date(end) >= new Date(start)) { const diffDays = Math.ceil(Math.abs(new Date(end) - new Date(start)) / (1000 * 60 * 60 * 24)) + 1; for(let i=1; i <= diffDays; i++) { wrap.innerHTML += `<label class="field-label">Day ${i} 메모</label><input type="text" class="day-input" placeholder="${i}일차 일정">`; } }
         }
-        function openPlanModal() { resetModal(); document.getElementById('modal-title').innerText = "계획 등록"; document.getElementById('plan-fields').classList.remove('hidden'); document.getElementById('btn-save').onclick = savePlan; document.getElementById('master-modal').style.display = 'flex'; }
-        async function savePlan() {
-            const planId = "p_" + Date.now(); const subType = document.getElementById('plan-sub-type').value, loc = document.getElementById('plan-loc').value, start = document.getElementById('plan-start-date').value, end = document.getElementById('plan-end-date').value, supplies = document.getElementById('plan-supplies').value;
-            const dayMemos = Array.from(document.querySelectorAll('.day-input')).map(i => i.value); const batch = db.batch();
-            batch.set(db.collection("plans").doc(planId), { id: planId, subType, loc, start, end, supplies, dayMemos });
-            dayMemos.forEach((memo, idx) => { let d = new Date(start); d.setDate(d.getDate() + idx); batch.set(db.collection("schedules").doc("sch_"+planId+idx), { planId, date: d.toISOString().split('T')[0], category: '여행', member: '가족', memo: `[${subType}] ${loc}: ${memo}` }); });
-            await batch.commit(); closeModal();
-        }
-        function renderPlans() {
-            const c = document.getElementById('plan-list-container'); c.innerHTML = ""; if(!planData || planData.length === 0) { c.innerHTML = "<p style='text-align:center; color:#999; padding:20px;'>등록된 계획이 없습니다.</p>"; return; }
-            c.innerHTML = planData.map(p => `<div class="card" style="padding:15px; margin-bottom:10px;"><div style="display:flex; justify-content:space-between; align-items:flex-start;"><div><b>[${p.subType}] ${p.loc}</b><br><small>${p.start} ~ ${p.end}</small><div style="font-size:12px; margin-top:5px; color:#666;">🎒 ${p.supplies || '없음'}</div></div><button class="btn-action btn-danger" style="min-width:60px; height:35px; font-size:12px;" onclick="deletePlan('${p.id}')">삭제</button></div></div>`).join('');
-        }
-        async function deletePlan(id) { if(!confirm("삭제하시겠습니까?")) return; const batch = db.batch(); const schs = await db.collection("schedules").where("planId", "==", id).get(); schs.docs.forEach(d => batch.delete(d.ref)); batch.delete(db.collection("plans").doc(id)); await batch.commit(); }
-        
-        function openSchModal(data, date) { resetModal(); document.getElementById('modal-title').innerText = data ? "수정" : "일정 등록"; document.getElementById('sch-fields').classList.remove('hidden'); activeDateStr = date; if(data) { document.getElementById('edit-id').value = data.id; document.getElementById('sch-member').value = data.member; document.getElementById('sch-memo').value = data.memo; document.getElementById('btn-del').classList.remove('hidden'); } document.getElementById('btn-save').onclick = async () => { const id = document.getElementById('edit-id').value || "sch_" + Date.now(); await db.collection("schedules").doc(id).set({ id, date: activeDateStr, member: document.getElementById('sch-member').value, memo: document.getElementById('sch-memo').value, category: '일반' }); closeModal(); }; document.getElementById('btn-del').onclick = async () => { if(confirm("삭제?")) { await db.collection("schedules").doc(document.getElementById('edit-id').value).delete(); closeModal(); } }; document.getElementById('master-modal').style.display = 'flex'; }
+        async function deletePlan(id) { const batch = db.batch(); const schs = await db.collection("schedules").where("planId", "==", id).get(); schs.docs.forEach(d => batch.delete(d.ref)); batch.delete(db.collection("plans").doc(id)); await batch.commit(); }
         function openPersonalAsset(n) { currentMember = n; showSection('asset-cal-section'); renderAssetCal(); }
         function renderAssetCal() { const grid = document.getElementById('asset-cal-grid'); grid.innerHTML = ""; const y = curViewDate.getFullYear(), m = curViewDate.getMonth(); document.getElementById('asset-cal-title').innerText = `${currentMember} - ${y}년 ${m+1}월`; ['S','M','T','W','T','F','S'].forEach(d => grid.innerHTML += `<div class="cal-day-header">${d}</div>`); const first = new Date(y, m, 1).getDay(), last = new Date(y, m+1, 0).getDate(); for(let i=0; i<first; i++) grid.innerHTML += `<div class="cal-cell"></div>`; for(let d=1; d<=last; d++) { const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; const cell = document.createElement('div'); cell.className = 'cal-cell'; cell.innerHTML = `<strong>${d}</strong>`; (assetData[currentMember]||[]).filter(e => e.date === ds).forEach(e => { const b = document.createElement('div'); b.className = 'event-bar'; b.style.backgroundColor = e.type==='수입'?'#ecfdf5':'#fef2f2'; b.innerText = Number(e.amt).toLocaleString(); b.onclick=(ev)=>{ev.stopPropagation(); openAssetEntryModal(e, ds);}; cell.appendChild(b); }); cell.onclick = () => openAssetEntryModal(null, ds); grid.appendChild(cell); } }
-        function openAssetEntryModal(data, date) { resetModal(); document.getElementById('modal-title').innerText = "가계부"; document.getElementById('asset-entry-fields').classList.remove('hidden'); activeDateStr = date; if(data) { document.getElementById('edit-id').value = data.id; document.getElementById('as-type').value = data.type; document.getElementById('as-amt').value = data.amt; document.getElementById('as-memo').value = data.memo; document.getElementById('btn-del').classList.remove('hidden'); } document.getElementById('btn-save').onclick = async () => { const id = document.getElementById('edit-id').value || "as_"+Date.now(); await db.collection("assets").doc(id).set({ id, member: currentMember, date: activeDateStr, type: document.getElementById('as-type').value, amt: Number(document.getElementById('as-amt').value), memo: document.getElementById('as-memo').value }); closeModal(); }; document.getElementById('btn-del').onclick = async () => { if(confirm("삭제?")) { await db.collection("assets").doc(document.getElementById('edit-id').value).delete(); closeModal(); } }; document.getElementById('master-modal').style.display = 'flex'; }
         function renderFolders() { const c = document.getElementById('folder-container'); c.innerHTML = albumData.map(f => `<div class="banner" style="background:#fff; padding:15px;" onclick="openFolderDetail('${f.id}')"><div style="font-size:30px;">📁</div><b>${f.name}</b></div>`).join(''); }
         function openFolderDetail(id) { currentFolderId = id; document.getElementById('photo-main-view').classList.add('hidden'); document.getElementById('photo-detail-view').classList.remove('hidden'); const f = albumData.find(x => x.id===id); if(f) { document.getElementById('detail-folder-title').innerText = f.name; renderGallery(); } }
         function backToFolders() { currentFolderId = null; document.getElementById('photo-main-view').classList.remove('hidden'); document.getElementById('photo-detail-view').classList.add('hidden'); }
@@ -247,7 +348,7 @@
         async function handleGalleryUpload(input) { if(input.files && currentFolderId) { const f = albumData.find(x => x.id === currentFolderId); for(let file of Array.from(input.files)) { const r = new FileReader(); r.readAsDataURL(file); r.onload = async(e) => { const compressed = await compressImage(e.target.result, 800); f.photos.push(compressed); await db.collection("albums").doc(currentFolderId).update({ photos: f.photos }); }; } input.value = ""; } }
         function openFolderModal() { resetModal(); document.getElementById('folder-fields').classList.remove('hidden'); document.getElementById('modal-title').innerText = "폴더 생성"; document.getElementById('btn-save').onclick = async() => { const name = document.getElementById('fold-name').value; if(name) { const id = "f_"+Date.now(); await db.collection("albums").doc(id).set({ id, name, photos: [] }); closeModal(); } }; document.getElementById('master-modal').style.display = 'flex'; }
         async function deleteFolder() { if(confirm("폴더 전체 삭제?")) { await db.collection("albums").doc(currentFolderId).delete(); backToFolders(); } }
-        function resetModal() { document.querySelectorAll('.field-group').forEach(g=>g.classList.add('hidden')); document.querySelectorAll('#master-modal input, #master-modal textarea, #master-modal select').forEach(i=>i.value=""); document.getElementById('day-schedule-wrap').innerHTML=""; document.getElementById('btn-del').classList.add('hidden'); document.getElementById('master-modal').style.display = 'none'; }
+        function resetModal() { document.querySelectorAll('.field-group').forEach(g=>g.classList.add('hidden')); document.querySelectorAll('#master-modal input, #master-modal textarea, #master-modal select').forEach(i=>i.value=""); document.getElementById('day-schedule-wrap').innerHTML=""; document.getElementById('btn-del').classList.add('hidden'); document.getElementById('btn-save').innerText = "저장"; document.getElementById('master-modal').style.display = 'none'; }
         function closeModal() { document.getElementById('master-modal').style.display = 'none'; }
         function changeMonth(n) { curViewDate.setMonth(curViewDate.getMonth()+n); renderSch(); if(document.getElementById('asset-cal-section').classList.contains('active')) renderAssetCal(); }
         function initAssetCharts() { if(aChart) aChart.destroy(); const ctx = document.getElementById('mainAssetChart').getContext('2d'); let mData = Array.from({length:12}, () => ({i:0, e:0})); ["정우설", "한미연"].forEach(m => (assetData[m]||[]).forEach(e => { const mon = new Date(e.date).getMonth(); if(e.type==="수입") mData[mon].i += Number(e.amt); else mData[mon].e += Number(e.amt); })); aChart = new Chart(ctx, { data: { labels: ['1월','2','3','4','5','6','7','8','9','10','11','12'], datasets: [ { type:'bar', label:'수입', data: mData.map(v=>v.i), backgroundColor:'rgba(16, 185, 129, 0.6)', borderRadius:5 }, { type:'bar', label:'지출', data: mData.map(v=>v.e), backgroundColor:'rgba(239, 68, 68, 0.6)', borderRadius:5 } ] }, options: { responsive:true, maintainAspectRatio:false } }); }
