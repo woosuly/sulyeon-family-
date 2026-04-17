@@ -1,0 +1,25 @@
+{
+  "name": "설연 Family Shared",
+  "short_name": "설연Family",
+  "description": "Jung Wooseol Family App",
+  "start_url": "/sulyeon-family-/",
+  "scope": "/sulyeon-family-/",
+  "display": "standalone",
+  "background_color": "#f0f4f8",
+  "theme_color": "#3a6a96",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/woosuly/sulyeon-family-/main/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://raw.githubusercontent.com/woosuly/sulyeon-family-/main/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
