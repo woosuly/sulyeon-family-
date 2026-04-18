@@ -81,10 +81,11 @@
 
         .page-section { display: none; width: 100%; flex-direction: column; align-items: center; animation: fadeIn 0.3s ease-out; }
         .page-section.active { display: flex !important; min-height: calc(100dvh - 56px); }
+        #main-section.active { height: calc(100dvh - 56px); min-height: unset; overflow: hidden; display: flex; flex-direction: column; align-items: stretch; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         /* ═══ 날짜·날씨 1줄 배너 ═══ */
-        .info-bar { width:100%; margin-bottom:10px; }
+        .info-bar { width:100%; flex-shrink:0; }
         .info-banner {
             width:100%; background:var(--month-header);
             border-radius:18px; padding:12px 18px;
@@ -639,29 +640,30 @@
         /* ── 알림 토스트 (카카오톡 스타일) ── */
         #chat-toast {
             position: fixed;
-            top: 12px;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
-            background: rgba(20,20,30,0.93);
+            transform: translate(-50%, -50%);
+            background: rgba(20,20,30,0.96);
             color: white;
-            padding: 12px 16px;
-            border-radius: 18px;
+            padding: 22px 24px;
+            border-radius: 20px;
             font-size: 13px;
             z-index: 99999;
             display: none;
-            max-width: min(340px, 92vw);
-            width: max-content;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            cursor: pointer;
-            align-items: center;
-            animation: toastSlideIn .3s ease;
+            width: min(340px, 88vw);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+            flex-direction: column;
+            align-items: stretch;
+            gap: 14px;
+            animation: toastPopIn .3s cubic-bezier(.34,1.56,.64,1);
         }
-        @keyframes toastSlideIn {
-            from { opacity:0; transform:translateX(-50%) translateY(-16px); }
-            to   { opacity:1; transform:translateX(-50%) translateY(0); }
+        @keyframes toastPopIn {
+            from { opacity:0; transform:translate(-50%, -50%) scale(.85); }
+            to   { opacity:1; transform:translate(-50%, -50%) scale(1); }
         }
+
 
         /* ── 채팅 아이콘 버튼 바 ── */
         .chat-icon-btn {
@@ -894,6 +896,84 @@
         .smart-ev-item { display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;margin-bottom:6px;background:#f8fafc;font-size:12px; }
         .smart-ev-dot  { width:8px;height:8px;border-radius:50%;flex-shrink:0; }
         
+
+
+
+        /* ── 통번역 모드 버튼 ── */
+        .tr-mode-btn {
+            padding: 14px 8px; border-radius: 14px;
+            border: 1.5px solid #e2e8f0; background: white;
+            cursor: pointer; transition: all .15s;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .tr-mode-btn.active {
+            border-color: var(--month-header);
+            background: var(--month-grad-a);
+        }
+        @keyframes trPulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.2);opacity:0.7} }
+        @keyframes timW{0%{height:12px;opacity:0.4}100%{height:40px;opacity:1}}
+        /* ── 통번역 엔진 ── */
+        .tr-box {
+            background: white; border-radius: 14px;
+            padding: 12px 14px; margin-bottom: 10px;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+        }
+        .tr-box-label {
+            font-size: 11px; font-weight: 800; color: #64748b;
+            letter-spacing: .4px; margin-bottom: 8px;
+        }
+        .tr-chip-group { display: flex; flex-wrap: wrap; gap: 6px; }
+        .tr-chip {
+            padding: 6px 12px; border-radius: 20px;
+            border: 1.5px solid #e2e8f0; background: white;
+            font-size: 12px; font-weight: 600; color: #475569;
+            cursor: pointer; transition: all .15s;
+        }
+        .tr-chip.active {
+            background: var(--month-header); border-color: var(--month-header);
+            color: white;
+        }
+        .tr-situation-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 9px 12px; border-radius: 10px;
+            border: 1.5px solid #e2e8f0; background: white;
+            cursor: pointer; transition: all .15s; font-size: 13px;
+        }
+        .tr-situation-item.active {
+            border-color: var(--month-header);
+            background: var(--month-grad-a); font-weight: 700;
+        }
+        .tr-situation-item .tr-sit-cnt {
+            font-size: 10px; color: #94a3b8; flex-shrink: 0; margin-left: 6px;
+        }
+
+        /* ── 메인 슬라이드 구조 ── */
+        .main-slide-wrap {
+            flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; width: 100%;
+        }
+        .main-slide-dots {
+            display: flex; justify-content: center; gap: 6px;
+            padding: 6px 0 2px; flex-shrink: 0;
+        }
+        .main-slide-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: #cbd5e1; transition: background .25s, transform .25s; cursor: pointer;
+        }
+        .main-slide-dot.active { background: var(--month-header); transform: scale(1.25); }
+        .main-slide-track {
+            flex: 1; display: flex;
+            overflow-x: scroll; overflow-y: hidden;
+            min-height: 0; scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .main-slide-track::-webkit-scrollbar { display: none; }
+        .main-slide-page {
+            min-width: 100%; width: 100%; flex-shrink: 0;
+            overflow-y: hidden; scroll-snap-align: start;
+            display: flex; flex-direction: column;
+        }
+
         /* ── 메인 대시보드 ── */
         .main-dashboard {
             width: 100%;
@@ -1158,8 +1238,16 @@
                         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
                     });
                 }
-                // Firestore에 구독 정보 저장 (기기 식별)
-                const token = localStorage.getItem('chatUser') || 'unknown';
+                // chatUser 있을 때까지 대기 (최대 30초)
+                let token = localStorage.getItem('chatUser');
+                let tries = 0;
+                while (!token && tries < 30) {
+                    await new Promise(r => setTimeout(r, 1000));
+                    token = localStorage.getItem('chatUser');
+                    tries++;
+                }
+                if (!token) { console.warn('[Push] chatUser 없음, 구독 저장 스킵'); return; }
+
                 const subKey = 'push_' + token + '_' + btoa(sub.endpoint).slice(-16).replace(/[^a-zA-Z0-9]/g,'');
                 if (typeof db !== 'undefined') {
                     await db.collection('pushTokens').doc(subKey).set({
@@ -1168,11 +1256,30 @@
                         auth:   btoa(String.fromCharCode(...new Uint8Array(sub.getKey('auth')))),
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
+                    console.log('[Push] 구독 저장 완료:', token);
                 }
-                console.log('[Push] 구독 완료');
             } catch(e) {
                 console.warn('[SW] 오류:', e);
             }
+        }
+
+        // 프로필 선택 후 Push 재등록 (chatUser 변경 시)
+        async function reRegisterPush() {
+            if (!swReg) return;
+            try {
+                const sub = await swReg.pushManager.getSubscription();
+                if (!sub) return;
+                const token = localStorage.getItem('chatUser');
+                if (!token) return;
+                const subKey = 'push_' + token + '_' + btoa(sub.endpoint).slice(-16).replace(/[^a-zA-Z0-9]/g,'');
+                await db.collection('pushTokens').doc(subKey).set({
+                    token, endpoint: sub.endpoint,
+                    p256dh: btoa(String.fromCharCode(...new Uint8Array(sub.getKey('p256dh')))),
+                    auth:   btoa(String.fromCharCode(...new Uint8Array(sub.getKey('auth')))),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                console.log('[Push] 재등록 완료:', token);
+            } catch(e) { console.warn('[Push 재등록]', e); }
         }
 
         // Firebase 초기화 후 SW 등록 (defer)
@@ -1223,6 +1330,8 @@
         <!-- 오른쪽: 테마버튼 + 프로필 -->
         <div style="display:flex;align-items:center;gap:8px;">
             <button id="theme-color-btn" onclick="openThemeColorModal()" title="테마 색상 변경">🎨</button>
+            <button id="family-auth-btn" onclick="familyAuthToggle()" title="가족 인증"
+                style="background:rgba(255,255,255,0.18);border:none;border-radius:16px;padding:5px 10px;cursor:pointer;font-size:14px;color:white;">🔑</button>
             <div id="header-profile" onclick="openProfileModal()"
                 style="cursor:pointer;display:flex;align-items:center;gap:6px;
                        background:rgba(255,255,255,0.18);border-radius:20px;
@@ -1265,7 +1374,7 @@
             </div>
 
             <!-- 주간날씨 팝업 -->
-            <div id="weekly-weather-modal" class="sch-detail-modal hidden">
+            <div id="weekly-weather-modal" class="sch-detail-modal hidden" style="flex-shrink:0;">
                 <div class="sch-detail-content" style="max-width:420px;">
                     <div class="sch-detail-header">
                         <div style="font-weight:800;font-size:16px;">🌤 주간 날씨 <span id="weekly-city" style="font-size:13px;color:#94a3b8;font-weight:500;"></span></div>
@@ -1275,11 +1384,19 @@
                 </div>
             </div>
 
-            <!-- ② 메인 대시보드 -->
-            <div class="main-dashboard">
-
-                <!-- ── 왼쪽: 일정 + 여행 ── -->
-                <div class="dash-left">
+            <!-- ② 슬라이드 래퍼 -->
+            <div class="main-slide-wrap">
+                <div class="main-slide-dots">
+                    <div class="main-slide-dot active" onclick="goMainSlide(0)"></div>
+                    <div class="main-slide-dot" onclick="goMainSlide(1)"></div>
+                </div>
+                <div class="main-slide-track" id="main-slide-track">
+                    <!-- Page 1 -->
+                    <div class="main-slide-page">
+                        <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;min-height:0;-webkit-overflow-scrolling:touch;">
+                        <div class="main-dashboard">
+                        <!-- 왼쪽 -->
+                        <div class="dash-left">
 
                     <!-- 일정 카드 (오늘 + 이번달 중요) -->
                     <div class="dash-card dash-schedule" onclick="showSection('schedule-section')">
@@ -1345,33 +1462,75 @@
                         <!-- 그래프 ↔ 하단 간격 통일(10px) -->
                         <div style="font-size:7px;color:#94a3b8;padding-top:10px;text-align:right;flex-shrink:0;">TAP →</div>
                     </div>
-                </div>
-            </div>
+                        </div><!-- /dash-right -->
+                        </div><!-- /main-dashboard -->
+                        <!-- 배너 5개 -->
+                        <div class="banner-container">
+                            <div class="banner" onclick="showSection('schedule-section')"><span class="banner-icon">📅</span><b>일정</b></div>
+                            <div class="banner" onclick="showSection('asset-section')"><span class="banner-icon">💰</span><b>가계부</b></div>
+                            <div class="banner" onclick="showSection('photo-section')"><span class="banner-icon">📸</span><b>앨범</b></div>
+                            <div class="banner" onclick="showSection('travel-section')"><span class="banner-icon">✈️</span><b>여행<br>&amp; 여가</b></div>
+                            <div class="banner" onclick="showSection('chat-section')">
+                                <div class="chat-banner-wrap"><span class="banner-icon">🫧</span><span class="chat-badge" id="chat-unread-badge"></span></div>
+                                <b>채팅</b>
+                            </div>
+                        </div>
+                        <div class="footer-info">Family Shared v51.0 &nbsp;·&nbsp; Jung Wooseol 2026</div>
+                        </div><!-- /scroll -->
+                    </div><!-- /page1 -->
 
-            <!-- 배너 5개: 스마트관리 / 일정 / 가계부 / 앨범 / 여행 -->
-            <div class="banner-container">
-                <div class="banner" onclick="showSection('schedule-section')">
-                    <span class="banner-icon">📅</span><b>일정</b>
-                </div>
-                <div class="banner" onclick="showSection('asset-section')">
-                    <span class="banner-icon">💰</span><b>가계부</b>
-                </div>
-                <div class="banner" onclick="showSection('photo-section')">
-                    <span class="banner-icon">📸</span><b>앨범</b>
-                </div>
-                <div class="banner" onclick="showSection('travel-section')">
-                    <span class="banner-icon">✈️</span><b>여행<br>&amp; 여가</b>
-                </div>
-                <div class="banner" onclick="showSection('chat-section')">
-                    <div class="chat-banner-wrap">
-                        <span class="banner-icon">🫧</span>
-                        <span class="chat-badge" id="chat-unread-badge"></span>
-                    </div>
-                    <b>채팅</b>
-                </div>
-            </div>
+                    <!-- Page 2: 티모시 번역기 v3 -->
+                    <div class="main-slide-page" id="translator-page">
+                        <div style="flex:1;overflow-y:auto;padding:0 14px 20px;-webkit-overflow-scrolling:touch;">
+                            <!-- 언어 선택 바 -->
+                            <div style="display:flex;align-items:center;gap:8px;padding:10px 0 8px;">
+                                <button id="tim-src-btn" onclick="timOpenLang('src')" style="flex:1;padding:12px 8px;border-radius:14px;border:1.5px solid #e2e8f0;background:white;cursor:pointer;text-align:center;">
+                                    <div id="tim-src-flag" style="font-size:26px;">🇰🇷</div>
+                                    <div id="tim-src-name" style="font-size:10px;font-weight:700;color:#475569;margin-top:3px;">KOR</div>
+                                </button>
+                                <button onclick="timSwap()" style="width:36px;height:36px;border-radius:50%;border:1.5px solid #e2e8f0;background:white;font-size:16px;cursor:pointer;flex-shrink:0;">⇄</button>
+                                <button id="tim-tgt-btn" onclick="timOpenLang('tgt')" style="flex:1;padding:12px 8px;border-radius:14px;border:1.5px solid var(--month-header);background:var(--month-grad-a);cursor:pointer;text-align:center;">
+                                    <div id="tim-tgt-flag" style="font-size:26px;">🇮🇹</div>
+                                    <div id="tim-tgt-name" style="font-size:10px;font-weight:700;color:#475569;margin-top:3px;">ITA</div>
+                                </button>
+                            </div>
+                            <!-- 통역 마이크 -->
+                            <div style="background:white;border-radius:16px;border:1.5px solid #e2e8f0;padding:18px 14px;margin-bottom:10px;text-align:center;">
+                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                                    <span style="font-size:9px;font-weight:800;color:#94a3b8;letter-spacing:1px;">INTERPRETATION</span>
+                                    <span style="font-size:9px;font-weight:700;color:#22c55e;">● ONLINE</span>
+                                </div>
+                                <div onclick="timOpenMic()" style="width:90px;height:90px;border-radius:50%;background:rgba(59,130,246,0.06);display:flex;align-items:center;justify-content:center;margin:0 auto;cursor:pointer;">
+                                    <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:26px;color:white;box-shadow:0 4px 16px rgba(59,130,246,0.3);">🎙</div>
+                                </div>
+                                <div style="font-size:11px;color:#94a3b8;margin-top:8px;">아이콘을 누르면 대화 시작</div>
+                            </div>
+                            <!-- 사진번역 / 상황별 -->
+                            <div style="display:flex;gap:8px;margin-bottom:10px;">
+                                <button onclick="document.getElementById('tim-gallery-input').click()" style="flex:1;padding:14px;border-radius:14px;border:1.5px solid #e2e8f0;background:white;cursor:pointer;display:flex;align-items:center;gap:8px;">
+                                    <div style="width:36px;height:36px;border-radius:10px;background:#eff6ff;display:flex;align-items:center;justify-content:center;font-size:16px;">🖼</div>
+                                    <span style="font-size:13px;font-weight:700;">사진번역</span>
+                                </button>
+                                <button onclick="timOpenSit()" style="flex:1;padding:14px;border-radius:14px;border:1.5px solid #e2e8f0;background:white;cursor:pointer;display:flex;align-items:center;gap:8px;">
+                                    <div style="width:36px;height:36px;border-radius:10px;background:#fef3c7;display:flex;align-items:center;justify-content:center;font-size:16px;">📋</div>
+                                    <span style="font-size:13px;font-weight:700;">상황별</span>
+                                </button>
+                            </div>
+                            <!-- 결과 영역 (넉넉하게) -->
+                            <div id="tim-output" style="min-height:200px;"></div>
+                            <!-- 직접 입력 -->
+                            <div style="background:white;border-radius:12px;border:1.5px solid #e2e8f0;padding:10px;margin-top:8px;">
+                                <div style="display:flex;gap:6px;">
+                                    <textarea id="tim-input" rows="1" placeholder="번역할 문장 입력..." style="flex:1;border:1.5px solid #e2e8f0;border-radius:10px;padding:9px 10px;font-size:13px;font-family:inherit;resize:none;outline:none;"></textarea>
+                                    <button onclick="timTranslate()" style="padding:9px 14px;border-radius:10px;background:#1e293b;border:none;color:white;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;">번역하기 →</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!-- /page2 -->
 
-            <div class="footer-info">Family Shared v51.0 &nbsp;·&nbsp; Jung Wooseol 2026</div>
+
+                </div><!-- /slide-track -->
+            </div><!-- /slide-wrap -->
         </section>
 
 
@@ -2011,7 +2170,7 @@
         </div>
 
         <!-- 알림 토스트 -->
-        <div id="chat-toast" onclick="document.getElementById('chat-toast').style.display='none';showSection('chat-section');"></div>
+        <div id="chat-toast"></div>
 
         <section id="asset-cal-section" class="page-section">
             <div class="card" style="padding:clamp(12px,2vw,20px);">
@@ -2361,6 +2520,7 @@
             initClock();
             initWeather();
             initRealtimeSync();
+            initMainSlide();
             setTimeout(initChatListener, 1000); // 앱 시작 시 채팅 리스너 (뱃지/알림)
             initProfile(); // 프로필 초기화 (저장값 없으면 모달 표시)
         };
@@ -2576,6 +2736,8 @@
             localStorage.setItem('chatUser', name);
             applyProfile(name);
             closeProfileModal();
+            // Push 구독 재등록 (token 업데이트)
+            if (typeof reRegisterPush === 'function') reRegisterPush();
         }
 
         function applyProfile(name) {
@@ -2929,11 +3091,21 @@
                 return;
             }
 
+            // ⚡ 먼저 input 비우고 포커스 유지 (키보드 튕김 방지)
+            const hadMedia = !!chatPendingType;
+            const pendingType = chatPendingType;
+            const pendingLoc  = chatPendingLocation;
+            if (input && !chatEditId) {
+                input.value = '';
+                input.style.height = '44px';
+                input.focus(); // 서버 응답 기다리기 전에 포커스 유지
+            }
+
             try {
-                if (chatPendingType && !chatEditId) {
-                    if (chatPendingType === 'location') {
+                if (hadMedia && !chatEditId) {
+                    if (pendingType === 'location') {
                         await db.collection('messages').add({
-                            type: 'location', location: chatPendingLocation,
+                            type: 'location', location: pendingLoc,
                             text: '', sender: chatUser,
                             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                             isRead: false
@@ -2941,14 +3113,14 @@
                     } else {
                         const url = await uploadAndSendMedia();
                         await db.collection('messages').add({
-                            type: chatPendingType, mediaUrl: url,
+                            type: pendingType, mediaUrl: url,
                             text: text || '', sender: chatUser,
                             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                             isRead: false
                         });
                     }
                     cancelChatMedia();
-                    if (input) { input.value = ''; input.style.height = 'auto'; }
+                    if (input) input.focus();
                     return;
                 }
 
@@ -2959,14 +3131,15 @@
                         text, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     cancelChatEdit();
+                    if (input) { input.value = ''; input.style.height = '44px'; input.focus(); }
                 } else {
                     await db.collection('messages').add({
                         type: 'text', text, sender: chatUser,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                         isRead: false
                     });
+                    if (input) input.focus();
                 }
-                if (input) { input.value = ''; input.style.height = 'auto'; }
                 const ep = document.getElementById('chat-emoji-panel');
                 if (ep) ep.style.display = 'none';
 
@@ -3016,10 +3189,22 @@
             chatMessages.forEach(m => {
                 if (m.sender !== chatUser && m.sender !== 'AI' && !m.isRead) {
                     batch.update(db.collection('messages').doc(m.id), { isRead: true });
+                    m.isRead = true; // 로컬도 즉시 반영
                     changed = true;
                 }
             });
             if (changed) batch.commit().catch(e => console.error('markRead:', e));
+
+            // 뱃지 즉시 0으로
+            updateChatBadge(0);
+
+            // SW 알림 + PWA 앱 뱃지 모두 닫기
+            if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_NOTIF' });
+            }
+            if ('clearAppBadge' in navigator) {
+                navigator.clearAppBadge().catch(() => {});
+            }
         }
 
         /* ── Storage 업로드 ── */
@@ -3543,24 +3728,28 @@
         function showChatToast(msg, sender) {
             const toast = document.getElementById('chat-toast');
             if (!toast) return;
-            const preview = (msg||'').length > 28 ? (msg||'').slice(0,28)+'…' : (msg||'');
+            const preview = (msg||'').length > 40 ? (msg||'').slice(0,40)+'…' : (msg||'');
             toast.innerHTML = `
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <div style="width:36px;height:36px;border-radius:50%;background:var(--month-grad-a);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="width:48px;height:48px;border-radius:50%;background:var(--month-grad-a);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;">
                         ${sender === '정우설' ? '👨' : '👩'}
                     </div>
-                    <div style="min-width:0;">
-                        <div style="font-size:12px;font-weight:700;color:white;margin-bottom:1px;">${escHtml(sender)}</div>
-                        <div style="font-size:11px;color:rgba(255,255,255,0.85);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(preview)}</div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:14px;font-weight:800;color:white;margin-bottom:3px;">💬 ${escHtml(sender)}</div>
+                        <div style="font-size:12px;color:rgba(255,255,255,0.9);word-break:break-word;line-height:1.4;">${escHtml(preview)}</div>
                     </div>
-                </div>`;
+                </div>
+                <button onclick="document.getElementById('chat-toast').style.display='none';showSection('chat-section');"
+                    style="width:100%;background:var(--month-header);border:none;border-radius:12px;padding:11px;font-size:13px;font-weight:800;color:white;cursor:pointer;">
+                    📩 채팅창으로 이동
+                </button>`;
             toast.style.display = 'flex';
             toast.style.opacity = '1';
             clearTimeout(toast._timer);
             toast._timer = setTimeout(() => {
                 toast.style.opacity = '0';
                 setTimeout(() => { toast.style.display = 'none'; toast.style.opacity = '1'; }, 400);
-            }, 4000);
+            }, 5000);
         }
 
         function triggerChatNotif(msg, sender) {
@@ -3879,6 +4068,22 @@ function initRealtimeSync() {
 
         // 뒤로가기 버튼 → 우선순위: 모달 > 팝업 > 라이트박스 > 폴더 > 섹션
         window.addEventListener('popstate', e => {
+            // 번역/통역 모달 닫기
+            const trModals = ['camera','photo','text'];
+            for (const m of trModals) {
+                const el = document.getElementById('tr-modal-' + m);
+                if (el && el.style.display === 'flex') { el.style.display = 'none'; return; }
+            }
+            const authM = document.getElementById('family-auth-modal');
+            if (authM && authM.style.display === 'flex') { authM.style.display = 'none'; return; }
+            const setPwM = document.getElementById('family-setpw-modal');
+            if (setPwM && setPwM.style.display === 'flex') { setPwM.style.display = 'none'; return; }
+            for(var mid of ['tim-lang-modal','tim-mic-modal','tim-sit-modal']){var el=document.getElementById(mid);if(el&&el.style.display==='flex'){el.style.display='none';if(mid==='tim-mic-modal'){if(timSR)try{timSR.abort();}catch(e){}}return;}}
+            const setting = document.getElementById('tr-setting-modal');
+            if (setting && setting.style.display === 'flex') { setting.style.display = 'none'; return; }
+            const live = document.getElementById('tr-live-modal');
+            if (live && live.style.display === 'flex') { trStopLiveChat(); return; }
+        
             const state = e.state || {};
 
             // 1. 마스터 모달 (가계부 입력, 일정 입력 등)
@@ -5362,6 +5567,232 @@ function initRealtimeSync() {
 
 
         // ── 메인 대시보드 렌더 ──────────────────────────────────────────
+
+        // ════════════════════════════════════════════════════════
+        // 🌐 통번역 엔진
+        // ════════════════════════════════════════════════════════
+
+        // ── API 키 + 가족 인증 ──
+        var _GCLOUD_KEY='AQ.Ab8RN6LTFpJbCDc2z07hQ725mbEIq_d-tpyU88T8Qjnfg2UI_w';
+        function getApiKey(){return _GCLOUD_KEY;}
+        function isFamilyAuthed(){return localStorage.getItem('familyAuthed')==='yes';}
+        function familyAuthToggle(){if(isFamilyAuthed()){if(confirm('로그아웃?')){localStorage.removeItem('familyAuthed');updateAuthUI();}}else{openFamilyAuthModal();}}
+        function openFamilyAuthModal(){var m=document.getElementById('family-auth-modal');if(m){m.style.display='flex';document.getElementById('family-pw-input').value='';history.pushState({fa:1},'');}}
+        function submitFamilyAuth(){var pw=(document.getElementById('family-pw-input').value||'').trim();var st=localStorage.getItem('familyPassword')||'240719';if(pw===st){localStorage.setItem('familyAuthed','yes');document.getElementById('family-auth-modal').style.display='none';updateAuthUI();alert('✅ 인증 완료!');}else{alert('❌ 틀림');document.getElementById('family-pw-input').value='';}}
+        function openSetPasswordModal(){document.getElementById('family-setpw-modal').style.display='flex';document.getElementById('family-setpw-input').value='';}
+        function saveNewPassword(){var pw=(document.getElementById('family-setpw-input').value||'').trim();if(!pw||pw.length<4){alert('4자리 이상');return;}localStorage.setItem('familyPassword',pw);document.getElementById('family-setpw-modal').style.display='none';alert('✅ 변경됨');}
+        function updateAuthUI(){var btn=document.getElementById('family-auth-btn');if(btn)btn.textContent=isFamilyAuthed()?'🔓':'🔑';}
+
+        // ════════ 🐱 티모시 번역기 v3 ════════
+        const TIM_L=[
+            {n:'한국어',s:'KOR',f:'🇰🇷',g:'ko',sr:'ko-KR'},
+            {n:'영어',s:'ENG',f:'🇺🇸',g:'en',sr:'en-US'},
+            {n:'이탈리아어',s:'ITA',f:'🇮🇹',g:'it',sr:'it-IT'},
+            {n:'중국어',s:'CHN',f:'🇨🇳',g:'zh',sr:'zh-CN'},
+            {n:'일본어',s:'JPN',f:'🇯🇵',g:'ja',sr:'ja-JP'},
+            {n:'프랑스어',s:'FRA',f:'🇫🇷',g:'fr',sr:'fr-FR'},
+            {n:'베트남어',s:'VNM',f:'🇻🇳',g:'vi',sr:'vi-VN'},
+            {n:'태국어',s:'THA',f:'🇹🇭',g:'th',sr:'th-TH'},
+            {n:'포르투갈어',s:'POR',f:'🇵🇹',g:'pt',sr:'pt-PT'},
+        ];
+        let timSrc=TIM_L[0],timTgt=TIM_L[2],timSR=null,timLast='';
+        let timSitU=JSON.parse(localStorage.getItem('timSitU')||'{}');
+        const TIM_SIT={
+            '식당':['예약하고 싶습니다','메뉴판 주세요','추천 메뉴가 뭔가요?','이거 매운가요?','알레르기가 있어요','채식 메뉴 있나요?','계산서 부탁합니다','카드 되나요?','포장 가능한가요?','물 주세요','디저트 추천해주세요','와인 추천해주세요','이 요리 재료가 뭔가요?','세트 메뉴 있나요?','어린이 메뉴 있나요?','팁은 포함인가요?','창가 자리 주세요','얼마나 기다려야 하나요?','영수증 주세요','정말 맛있어요'],
+            '호텔':['체크인 하려구요','체크아웃 시간 언제예요?','와이파이 비번 뭔가요?','수건 더 주세요','조식 몇 시부터예요?','방 바꿀 수 있나요?','에어컨 안 돼요','택시 불러주세요','짐 보관 가능한가요?','모닝콜 부탁합니다','전망 좋은 방 주세요','청소 부탁합니다','연박하려구요','근처 식당 추천해주세요','영수증 주세요','금고 사용법 알려주세요','미니바 가격 얼마예요?','룸서비스 주문할게요','늦은 체크아웃 가능한가요?','조용한 방으로 주세요'],
+            '교통':['표 사고 싶어요','이 버스 어디로 가나요?','환승해야 하나요?','막차 몇 시예요?','공항까지 어떻게 가나요?','택시 미터기 켜주세요','여기서 내려주세요','편도 왕복 티켓 주세요','좌석 지정 가능한가요?','다음 정거장 어디예요?','지연되고 있나요?','플랫폼 어디예요?','어린이 요금 있나요?','짐 보관함 있나요?','노선도 있나요?','시간표 알려주세요','분실물 신고할게요','공항 셔틀 있나요?','정기권 있나요?','와이파이 되나요?'],
+            '병원':['아파서 왔어요','열이 나요','여기가 아파요','알레르기 있어요','약 처방해주세요','영어 가능한 의사 있나요?','보험 청구 서류 주세요','응급실 어디예요?','얼마나 기다려야 하나요?','두통이 있어요','속이 안 좋아요','약 복용법 알려주세요','입원해야 하나요?','검사 비용 얼마예요?','다쳤어요','처방전 발급해주세요','약국 어디예요?','전문의 진료 받고 싶어요','진단서 발급 가능한가요?','보험 적용되나요?'],
+            '경찰서':['도움이 필요합니다','지갑 잃어버렸어요','여권 분실했어요','도둑 맞았어요','사고 났어요','대사관 연락해주세요','통역사 필요해요','신고서 작성할게요','CCTV 확인 가능한가요?','분실물 센터 어디예요?','차량 사고 신고입니다','증거 사진 있어요','경찰 보고서 필요해요','임시 서류 발급해주세요','도난 당했어요','보험 서류 주세요','대사관 번호 알려주세요','긴급 연락처 필요해요','범인 인상착의 설명할게요','귀중품 없어졌어요'],
+            '공항':['탑승구 어디예요?','지연됐나요?','수하물 안 나와요','환승 어디서 하나요?','비행기 놓쳤어요','기내 반입 가능한가요?','좌석 업그레이드 가능한가요?','면세점 어디예요?','SIM카드 살 수 있나요?','탑승 시간 언제예요?','게이트 변경됐나요?','출국 수속 어디서 하나요?','세관 신고할 것 있어요','셔틀버스 있나요?','짐 맡길 수 있나요?','환전소 어디예요?','비자 필요한가요?','입국 카드 작성법 알려주세요','수하물 찾는 곳 어디예요?','유모차 대여 가능한가요?'],
+            '쇼핑':['이거 얼마예요?','좀 깎아주세요','다른 색상 있나요?','사이즈 안 맞아요','교환 가능한가요?','환불하고 싶어요','포장해 주세요','세금 환급 되나요?','입어봐도 되나요?','재고 있나요?','현금 할인 있나요?','진품인가요?','배송 가능한가요?','영수증 주세요','선물 포장 부탁해요','품질 보증 있나요?','카드 되나요?','면세 가격인가요?','인기 상품 뭔가요?','추천 상품 알려주세요'],
+        };
+        function timUpdateUI(){
+            var sf=document.getElementById('tim-src-flag'),sn=document.getElementById('tim-src-name');
+            var tf=document.getElementById('tim-tgt-flag'),tn=document.getElementById('tim-tgt-name');
+            if(sf)sf.textContent=timSrc.f;if(sn)sn.textContent=timSrc.s;
+            if(tf)tf.textContent=timTgt.f;if(tn)tn.textContent=timTgt.s;
+        }
+        function timSwap(){var t=timSrc;timSrc=timTgt;timTgt=t;timUpdateUI();}
+        var _timLD='tgt';
+        function timOpenLang(d){_timLD=d;document.getElementById('tim-lang-modal').style.display='flex';history.pushState({timLang:1},'');}
+        function timPickLang(i){if(_timLD==='src')timSrc=TIM_L[i];else timTgt=TIM_L[i];timUpdateUI();document.getElementById('tim-lang-modal').style.display='none';}
+        // Google Translate
+        async function timGT(q,tgt,src){
+            if(!isFamilyAuthed()){openFamilyAuthModal();throw new Error('인증 필요');}
+            var r=await fetch('https://translation.googleapis.com/language/translate/v2?key='+getApiKey(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q:q,target:tgt,source:src||'',format:'text'})});
+            if(!r.ok){var e=await r.json().catch(function(){return{};});throw new Error(e.error&&e.error.message||r.status);}
+            var d=await r.json(),t=d.data&&d.data.translations;
+            return Array.isArray(q)?t.map(function(x){return x.translatedText;}):(t&&t[0]&&t[0].translatedText||'');
+        }
+        // Gemini 1.5 Flash
+        async function timGemini(prompt,img){
+            var parts=[];if(img)parts.push({inline_data:{mime_type:'image/jpeg',data:img}});
+            parts.push({text:prompt});
+            var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+getApiKey(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:parts}]})});
+            if(!r.ok){var ed=await r.json().catch(function(){return{};});throw new Error(r.status===403?'Gemini API 활성화 필요':(ed.error&&ed.error.message||'Gemini '+r.status));}
+            var d=await r.json();return d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0]&&d.candidates[0].content.parts[0].text&&d.candidates[0].content.parts[0].text.trim()||'';
+        }
+        // 발음 (Gemini 전용 — Google 역번역은 뜻을 주므로 사용하지 않음)
+        async function timPron(texts,ln,lc){
+            try{
+                var prompt='당신은 발음 전문가. 아래 '+ln+' 문장들을 번역하지 말고 소리나는 그대로 한글로 적어주세요.\n예시: "hungry"→"헝그리", "Buongiorno"→"본조르노", "merci"→"메르시"\n\n'+texts.map(function(t,i){return(i+1)+'. '+t;}).join('\n')+'\n\nJSON 배열만 출력: ["발음1","발음2",...]';
+                var raw=await timGemini(prompt);
+                var m=raw.match(/\[[\s\S]*?\]/);
+                if(m){var arr=JSON.parse(m[0]);if(arr.length>0)return arr;}
+            }catch(e){console.warn('발음생성실패:',e);}
+            return texts.map(function(){return '';});
+        }
+        function timShow(h){var el=document.getElementById('tim-output');if(el)el.innerHTML=h;}
+        function timLoading(m){return '<div style="text-align:center;padding:28px;"><div style="font-size:36px;animation:trPulse 1.2s ease-in-out infinite;">🐱</div><div style="font-size:13px;color:#64748b;margin-top:8px;font-weight:600;">'+m+'</div></div>';}
+        // 결과 카드: 번역문 → 파란발음(#0000FF, 20% 확대) → 한국어뜻
+        function timCard(trans,pron,meaning,tip){
+            timLast=trans;
+            return '<div style="border-left:3px solid #3b82f6;border-radius:0 16px 16px 0;background:white;padding:20px;margin-top:14px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">'
+                +'<div style="font-size:10px;font-weight:800;color:#3b82f6;letter-spacing:.5px;margin-bottom:6px;">'+timTgt.s+' TRANSLATION</div>'
+                +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">'
+                +'<div style="font-size:24px;font-weight:900;color:#1e293b;line-height:1.4;flex:1;">'+escHtml(trans)+'</div>'
+                +'<button data-txt="'+escHtml(trans)+'" onclick="timSpeak(this.dataset.txt)" style="flex-shrink:0;width:42px;height:42px;border-radius:50%;border:none;background:#eff6ff;font-size:20px;cursor:pointer;">🔊</button></div>'
+                +(pron?'<div style="margin-top:12px;background:#eff6ff;padding:12px 16px;border-radius:12px;font-size:20px;font-weight:800;color:#0000FF;line-height:1.5;">'+escHtml(pron)+'</div>':'')
+                +(meaning&&meaning!==trans?'<div style="margin-top:8px;font-size:14px;color:#64748b;line-height:1.5;">'+escHtml(meaning)+'</div>':'')
+                +(tip?'<div style="margin-top:8px;background:#fef3c7;border-radius:10px;padding:10px 12px;font-size:12px;color:#92400e;line-height:1.5;">💡 '+escHtml(tip)+'</div>':'')
+                +'<div style="text-align:center;font-size:9px;color:#cbd5e1;margin-top:10px;letter-spacing:1px;">SEOLYEON FAMILY PREMIUM</div></div>';
+        }
+        // 직접 입력
+        async function timTranslate(){
+            var text=(document.getElementById('tim-input').value||'').trim();
+            if(!text){alert('번역할 문장을 입력하세요.');return;}
+            timShow(timLoading(timTgt.n+' 번역 중...'));
+            try{
+                var trans=await timGT(text,timTgt.g,timSrc.g);
+                timShow(timLoading('한글 발음 생성 중...'));
+                var pron='',tip='';
+                try{var raw=await timGemini('발음 전문가로서 답해줘. 다음 '+timTgt.n+' 문장을 번역하지 말고 소리나는 대로 한글로 적고, 에티켓 팁도 알려줘.\n문장: "'+trans+'"\n원문: "'+text+'"\nJSON만: {"pronunciation":"한글발음","tip":"에티켓 팁"}');
+                    var m=raw.replace(/```json|```/g,'').match(/\{[\s\S]*?\}/);if(m){var p=JSON.parse(m[0]);pron=p.pronunciation||'';tip=p.tip||'';}
+                }catch(e){console.warn('발음실패:',e);}
+                timShow(timCard(trans,pron,text,tip));
+            }catch(e){timShow('<div style="color:#ef4444;padding:14px;background:#fef2f2;border-radius:12px;font-size:13px;">❌ '+escHtml(e.message)+'</div>');}
+        }
+        // 마이크
+        function timOpenMic(){
+            if(!isFamilyAuthed()){openFamilyAuthModal();return;}
+            document.getElementById('tim-mic-modal').style.display='flex';history.pushState({timMic:1},'');
+            document.getElementById('tim-mic-lang').textContent=timSrc.n+'를 듣고 있습니다';
+            document.getElementById('tim-mic-target').textContent='"'+timTgt.n+'로 통역 준비됨"';
+            timStartSR();
+        }
+        function timCloseMic(){if(timSR)try{timSR.abort();}catch(e){}document.getElementById('tim-mic-modal').style.display='none';}
+        async function timStartSR(){
+            if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){alert('Chrome 필요');return;}
+            if(!window._micGranted){try{var s=await navigator.mediaDevices.getUserMedia({audio:true});s.getTracks().forEach(function(t){t.stop();});window._micGranted=true;}catch(e){alert('마이크 허용 필요');return;}}
+            var SR=window.SpeechRecognition||window.webkitSpeechRecognition;timSR=new SR();timSR.lang=timSrc.sr;timSR.interimResults=true;
+            var st=document.getElementById('tim-mic-status');if(st)st.textContent='"지금 말씀하세요"';
+            var ft='';
+            timSR.onresult=function(e){var interim='';for(var i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)ft+=e.results[i][0].transcript;else interim+=e.results[i][0].transcript;}if(st)st.textContent='"'+(ft+interim||'듣고 있어요...')+'"';};
+            timSR.onerror=function(e){if(st)st.textContent=e.error==='no-speech'?'음성 감지 안됨':'오류: '+e.error;};
+            timSR.start();
+        }
+        async function timStopAndTranslate(){
+            if(timSR)try{timSR.stop();}catch(e){}
+            var st=document.getElementById('tim-mic-status'),wv=document.getElementById('tim-mic-wave');
+            if(wv)wv.style.display='none';
+            setTimeout(async function(){
+                var spoken=(st&&st.textContent||'').replace(/"/g,'').trim();
+                if(!spoken||spoken==='지금 말씀하세요'||spoken.indexOf('오류')===0||spoken==='음성 감지 안됨'){if(st)st.textContent='다시 시도해주세요.';return;}
+                if(st)st.textContent='🐱 번역 중...';
+                try{var trans=await timGT(spoken,timTgt.g,timSrc.g);var prons=await timPron([trans],timTgt.n,timTgt.g);timCloseMic();timShow(timCard(trans,prons[0],spoken,''));timSpeak(trans);}
+                catch(e){if(st)st.textContent='❌ '+e.message;}
+            },500);
+        }
+        // 사진번역 (갤러리→바로번역)
+        async function timGallerySelected(input){
+            var file=input.files[0];if(!file)return;
+            if(!isFamilyAuthed()){openFamilyAuthModal();return;}
+            timShow(timLoading('이미지 분석 중...'));
+            var reader=new FileReader();
+            reader.onload=async function(e){
+                var b64=e.target.result.split(',')[1];
+                try{
+                    var prompt='이 이미지의 모든 텍스트를 추출하고 '+timTgt.n+'와 한국어로 번역해줘. 번역문의 한글 발음(번역하지 말고 소리나는 대로)과 문맥 설명 포함. JSON만: {"extracted":"원문","translated":"번역","korean":"한국어","pronunciation":"한글발음","context":"설명"}';
+                    var raw=await timGemini(prompt,b64);
+                    var clean=raw.replace(/```json|```/g,'').trim();
+                    var m2=clean.match(/\{[\s\S]*?\}/);if(m2)clean=m2[0];
+                    var p=JSON.parse(clean);
+                    var h='<div style="border-left:3px solid #3b82f6;border-radius:0 16px 16px 0;background:white;padding:20px;margin-top:14px;">';
+                    if(p.extracted)h+='<div style="font-size:10px;font-weight:700;color:#94a3b8;margin-bottom:4px;">📝 원문</div><div style="font-size:13px;color:#64748b;margin-bottom:10px;line-height:1.5;">'+escHtml(p.extracted)+'</div>';
+                    if(p.translated)h+='<div style="font-size:10px;font-weight:800;color:#3b82f6;margin-bottom:4px;">'+timTgt.s+' TRANSLATION</div><div style="font-size:22px;font-weight:900;color:#1e293b;line-height:1.4;margin-bottom:10px;">'+escHtml(p.translated)+'</div>';
+                    if(p.pronunciation)h+='<div style="background:#eff6ff;padding:12px 16px;border-radius:12px;font-size:20px;font-weight:800;color:#0000FF;margin-bottom:8px;">'+escHtml(p.pronunciation)+'</div>';
+                    if(p.korean)h+='<div style="font-size:14px;color:#64748b;margin-bottom:8px;">'+escHtml(p.korean)+'</div>';
+                    if(p.context)h+='<div style="background:#fef3c7;border-radius:10px;padding:10px;font-size:12px;color:#92400e;line-height:1.5;">🐱 '+escHtml(p.context)+'</div>';
+                    h+='</div>';timShow(h);
+                }catch(e){
+                    try{var vr=await fetch('https://vision.googleapis.com/v1/images:annotate?key='+getApiKey(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({requests:[{image:{content:b64},features:[{type:'TEXT_DETECTION'}]}]})});
+                        var vd=await vr.json();var ext=vd.responses&&vd.responses[0]&&vd.responses[0].fullTextAnnotation&&vd.responses[0].fullTextAnnotation.text||'';
+                        if(!ext){timShow('<div style="color:#f59e0b;padding:14px;background:#fef3c7;border-radius:12px;">텍스트를 찾지 못했어요.</div>');return;}
+                        var toKo=await timGT(ext,'ko');timShow(timCard(toKo,'',ext,''));
+                    }catch(e2){timShow('<div style="color:#ef4444;padding:14px;background:#fef2f2;border-radius:12px;">❌ '+e2.message+'</div>');}
+                }
+            };reader.readAsDataURL(file);input.value='';
+        }
+        // 상황별
+        function timOpenSit(){if(!isFamilyAuthed()){openFamilyAuthModal();return;}document.getElementById('tim-sit-modal').style.display='flex';history.pushState({timSit:1},'');}
+        async function timLoadCat(cat){
+            document.getElementById('tim-sit-modal').style.display='none';
+            var koList=TIM_SIT[cat]||TIM_SIT['식당'];
+            timShow(timLoading(timTgt.n+' '+cat+' 문장 생성 중...'));
+            timSitU[cat]=(timSitU[cat]||0)+1;localStorage.setItem('timSitU',JSON.stringify(timSitU));
+            try{
+                var trans=await timGT(koList,timTgt.g,'ko');
+                timShow(timLoading('한글 발음 생성 중...'));
+                var prons=await timPron(trans,timTgt.n,timTgt.g);
+                var usage=JSON.parse(localStorage.getItem('timPU')||'{}');
+                var idx=koList.map(function(_,i){return i;}).sort(function(a,b){return(usage[cat+'_'+b]||0)-(usage[cat+'_'+a]||0);});
+                var h='<div style="font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:1px;margin-bottom:10px;">USEFUL PHRASES ('+koList.length+') — '+timTgt.s+'</div>';
+                h+=idx.map(function(i){return '<div style="background:#f8fafc;border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;border:1.5px solid transparent;" data-cat="'+cat+'" data-idx="'+i+'" onclick="timPClick(this)">'
+                    +'<div style="font-size:11px;color:#94a3b8;font-style:italic;margin-bottom:4px;">"'+escHtml(koList[i])+'"</div>'
+                    +'<div style="font-size:16px;font-weight:800;color:#1e293b;line-height:1.4;">'+escHtml(trans[i])+'</div>'
+                    +'<div style="font-size:18px;font-weight:800;color:#0000FF;margin-top:4px;">'+escHtml(prons[i]||'')+'</div></div>';}).join('');
+                timShow(h);
+            }catch(e){timShow('<div style="color:#ef4444;padding:14px;background:#fef2f2;border-radius:12px;">❌ '+e.message+'</div>');}
+        }
+        function timPClick(el){var u=JSON.parse(localStorage.getItem('timPU')||'{}');var cat=el.dataset.cat,idx=el.dataset.idx;u[cat+'_'+idx]=(u[cat+'_'+idx]||0)+1;localStorage.setItem('timPU',JSON.stringify(u));var t=el.querySelector('div:nth-child(2)');if(t)timSpeak(t.textContent);}
+        function timSpeak(text){if(!text)return;window.speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(text);u.lang=timTgt.sr;u.rate=0.85;u.pitch=0.9;var v=window.speechSynthesis.getVoices().find(function(v){return v.lang.indexOf(timTgt.g)===0;})||null;if(v)u.voice=v;window.speechSynthesis.speak(u);}
+        // 초기화
+        window.addEventListener('load',function(){setTimeout(function(){timUpdateUI();var lg=document.getElementById('tim-lang-grid');if(lg)lg.innerHTML=TIM_L.map(function(l,i){return '<div style="padding:14px 8px;border-radius:14px;border:1.5px solid #e2e8f0;background:white;cursor:pointer;text-align:center;" onclick="timPickLang('+i+')"><div style="font-size:28px;">'+l.f+'</div><div style="font-size:11px;font-weight:700;color:#475569;margin-top:4px;">'+l.n+'</div></div>';}).join('');},600);});
+
+        // ── 메인 슬라이드 ──────────────────────────────────────────────
+        let mainSlideIdx = 0;
+
+        function goMainSlide(idx) {
+            const track = document.getElementById('main-slide-track');
+            if (!track) return;
+            mainSlideIdx = idx;
+            track.scrollTo({ left: idx * track.offsetWidth, behavior: 'smooth' });
+            document.querySelectorAll('.main-slide-dot').forEach((d, i) => {
+                d.classList.toggle('active', i === idx);
+            });
+        }
+
+        // 스와이프 감지
+        function initMainSlide() {
+            const track = document.getElementById('main-slide-track');
+            if (!track) return;
+            let startX = 0;
+            track.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+            track.addEventListener('touchend',   e => {
+                const dx = e.changedTouches[0].clientX - startX;
+                if (Math.abs(dx) > 50) goMainSlide(dx < 0 ? 1 : 0);
+            }, { passive: true });
+            // 스크롤로도 dot 동기화
+            track.addEventListener('scroll', () => {
+                const idx = Math.round(track.scrollLeft / track.offsetWidth);
+                if (idx !== mainSlideIdx) {
+                    mainSlideIdx = idx;
+                    document.querySelectorAll('.main-slide-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+            const idcBar=document.getElementById('idc-bar');if(idcBar)idcBar.style.display=idx===0?'':'none';
+                }
+            }, { passive: true });
+        }
+
         function renderMainDashboard() {
             const today    = new Date();
             const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
@@ -5461,13 +5892,13 @@ function initRealtimeSync() {
                     const sorted = catOrder.filter(k=>catMap[k]).map(k=>[k,catMap[k]])
                         .concat(Object.entries(catMap).filter(([k])=>!catOrder.includes(k)))
                         .sort((a,b)=>b[1]-a[1]);
-                    barsEl.style.cssText = 'flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;justify-content:flex-end;gap:20px;';
+                    barsEl.style.cssText = 'flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;max-width:100%;display:flex;flex-direction:column;justify-content:flex-end;gap:4px;padding-right:2px;';
                     barsEl.innerHTML = sorted.map(([k,v])=>{
                         const pct = Math.round(v/total*100);
                         const col = catColors[k]||'#94a3b8';
                         return `<div>
                             <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:9px;margin-bottom:2px;">
-                                <span style="color:#374151;font-weight:700;">${k}</span>
+                                <span style="color:#374151;font-weight:700;font-size:9px;">${k}</span>
                                 <span style="color:#64748b;">${fmt2(v)}<span style="color:#94a3b8;font-size:8px;margin-left:2px;">${pct}%</span></span>
                             </div>
                             <div style="height:5px;background:#f1f5f9;border-radius:3px;overflow:hidden;">
@@ -5898,5 +6329,107 @@ function initRealtimeSync() {
         // showSection에 smart/asset-cal 추가
 
     </script>
+
+    <!-- 통번역 설정 모달 -->
+    <!-- 7-Box 설정 모달 -->
+
+    <!-- 실시간 대화 모달 -->
+    <!-- 실시간 대화 모달 -->
+
+    <!-- 번역 모달: 카메라 -->
+
+    <!-- 번역 모달: 사진첨부 -->
+
+    <!-- 번역 모달: 한글작성 -->
+
+    <!-- 가족 암호 인증 모달 -->
+    <div id="family-auth-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10000;align-items:center;justify-content:center;">
+        <div style="background:white;border-radius:20px;width:min(320px,85vw);padding:28px 22px;text-align:center;">
+            <div style="font-size:40px;margin-bottom:10px;">🔑</div>
+            <div style="font-size:16px;font-weight:900;color:#1e293b;margin-bottom:6px;">설연 Family 인증</div>
+            <div style="font-size:12px;color:#94a3b8;margin-bottom:16px;">가족 암호를 입력해주세요</div>
+            <input id="family-pw-input" type="password" inputmode="numeric" maxlength="10"
+                placeholder="암호 입력"
+                style="width:100%;border:2px solid #e2e8f0;border-radius:14px;padding:14px;font-size:20px;text-align:center;letter-spacing:8px;box-sizing:border-box;outline:none;font-family:monospace;"
+                onkeydown="if(event.key==='Enter')submitFamilyAuth()">
+            <button onclick="submitFamilyAuth()"
+                style="width:100%;padding:14px;border-radius:14px;background:var(--month-header);border:none;color:white;font-size:15px;font-weight:900;cursor:pointer;margin-top:12px;">🔓 인증하기</button>
+            <button onclick="document.getElementById('family-auth-modal').style.display='none';"
+                style="width:100%;padding:8px;border:none;background:none;color:#94a3b8;font-size:12px;cursor:pointer;margin-top:6px;">취소</button>
+            <div style="margin-top:10px;">
+                <button onclick="openSetPasswordModal()" style="font-size:11px;color:#3b82f6;background:none;border:none;cursor:pointer;">암호 변경</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 암호 변경 모달 -->
+    <div id="family-setpw-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10001;align-items:center;justify-content:center;">
+        <div style="background:white;border-radius:20px;width:min(320px,85vw);padding:24px 22px;text-align:center;">
+            <div style="font-size:16px;font-weight:900;color:#1e293b;margin-bottom:12px;">🔧 암호 변경</div>
+            <input id="family-setpw-input" type="password" inputmode="numeric" maxlength="10"
+                placeholder="새 암호 입력 (4자리 이상)"
+                style="width:100%;border:2px solid #e2e8f0;border-radius:14px;padding:12px;font-size:18px;text-align:center;letter-spacing:6px;box-sizing:border-box;outline:none;font-family:monospace;">
+            <div style="display:flex;gap:8px;margin-top:12px;">
+                <button onclick="document.getElementById('family-setpw-modal').style.display='none';"
+                    style="flex:1;padding:12px;border-radius:12px;background:#f1f5f9;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;">취소</button>
+                <button onclick="saveNewPassword()"
+                    style="flex:2;padding:12px;border-radius:12px;background:var(--month-header);border:none;color:white;font-size:14px;font-weight:800;cursor:pointer;">저장</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 언어 선택 모달 -->
+    <div id="tim-lang-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10000;align-items:flex-end;">
+        <div style="background:white;border-radius:24px 24px 0 0;width:100%;padding:24px 20px 36px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <div style="font-size:18px;font-weight:900;color:#1e293b;">언어 선택</div>
+                <button onclick="document.getElementById('tim-lang-modal').style.display='none'" style="width:32px;height:32px;border-radius:50%;background:#f1f5f9;border:none;font-size:16px;cursor:pointer;">✕</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;" id="tim-lang-grid"></div>
+        </div>
+    </div>
+    <!-- 마이크 모달 -->
+    <div id="tim-mic-modal" style="display:none;position:fixed;inset:0;background:white;z-index:9999;flex-direction:column;align-items:center;justify-content:center;">
+        <div style="text-align:center;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;">
+            <div style="font-size:10px;font-weight:800;color:#3b82f6;letter-spacing:1px;">● LISTENING...</div>
+            <div style="font-size:22px;font-weight:900;color:#1e293b;margin-top:8px;" id="tim-mic-lang"></div>
+            <div style="font-size:12px;color:#3b82f6;margin-top:4px;" id="tim-mic-target"></div>
+            <div id="tim-mic-wave" style="display:flex;align-items:center;justify-content:center;gap:3px;height:50px;margin:16px 0;">
+                <div style="width:4px;border-radius:2px;background:#3b82f6;animation:timW .6s ease-in-out infinite alternate;height:12px;"></div>
+                <div style="width:4px;border-radius:2px;background:#3b82f6;animation:timW .6s ease-in-out infinite alternate .1s;height:12px;"></div>
+                <div style="width:4px;border-radius:2px;background:#3b82f6;animation:timW .6s ease-in-out infinite alternate .2s;height:12px;"></div>
+                <div style="width:4px;border-radius:2px;background:#3b82f6;animation:timW .6s ease-in-out infinite alternate .3s;height:12px;"></div>
+                <div style="width:4px;border-radius:2px;background:#3b82f6;animation:timW .6s ease-in-out infinite alternate .2s;height:12px;"></div>
+                <div style="width:4px;border-radius:2px;background:#3b82f6;animation:timW .6s ease-in-out infinite alternate .1s;height:12px;"></div>
+                <div style="width:4px;border-radius:2px;background:#3b82f6;animation:timW .6s ease-in-out infinite alternate;height:12px;"></div>
+            </div>
+            <div style="width:140px;height:140px;border-radius:50%;border:3px solid rgba(59,130,246,0.15);display:flex;align-items:center;justify-content:center;margin:20px 0;">
+                <div style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:36px;color:white;box-shadow:0 6px 24px rgba(59,130,246,0.4);">🎙</div>
+            </div>
+            <div style="font-size:14px;color:#64748b;font-weight:600;" id="tim-mic-status">"지금 말씀하세요"</div>
+        </div>
+        <div style="padding:20px;width:100%;flex-shrink:0;">
+            <button onclick="timStopAndTranslate()" style="width:100%;padding:16px;border-radius:16px;background:#1e293b;border:none;color:white;font-size:15px;font-weight:800;cursor:pointer;">⏹ 종료 및 번역하기</button>
+            <button onclick="timCloseMic()" style="width:100%;padding:10px;background:none;border:none;color:#94a3b8;font-size:13px;cursor:pointer;margin-top:6px;">CANCEL</button>
+        </div>
+    </div>
+    <!-- 상황별 모달 -->
+    <div id="tim-sit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10000;align-items:flex-end;">
+        <div style="background:white;border-radius:24px 24px 0 0;width:100%;padding:24px 20px 36px;">
+            <div style="width:40px;height:4px;background:#e2e8f0;border-radius:2px;margin:0 auto 16px;"></div>
+            <div style="font-size:18px;font-weight:900;color:#1e293b;margin-bottom:16px;">상황별 문장</div>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
+                <button onclick="timLoadCat('식당')" style="padding:12px;border-radius:12px;border:1.5px solid #e2e8f0;background:white;font-size:13px;font-weight:700;cursor:pointer;">🍽 식당</button>
+                <button onclick="timLoadCat('호텔')" style="padding:12px;border-radius:12px;border:1.5px solid #e2e8f0;background:white;font-size:13px;font-weight:700;cursor:pointer;">🏨 호텔</button>
+                <button onclick="timLoadCat('교통')" style="padding:12px;border-radius:12px;border:1.5px solid #e2e8f0;background:white;font-size:13px;font-weight:700;cursor:pointer;">🚌 교통</button>
+                <button onclick="timLoadCat('병원')" style="padding:12px;border-radius:12px;border:1.5px solid #e2e8f0;background:white;font-size:13px;font-weight:700;cursor:pointer;">🏥 병원</button>
+                <button onclick="timLoadCat('경찰서')" style="padding:12px;border-radius:12px;border:1.5px solid #e2e8f0;background:white;font-size:13px;font-weight:700;cursor:pointer;">🚔 경찰서</button>
+                <button onclick="timLoadCat('공항')" style="padding:12px;border-radius:12px;border:1.5px solid #e2e8f0;background:white;font-size:13px;font-weight:700;cursor:pointer;">✈️ 공항</button>
+                <button onclick="timLoadCat('쇼핑')" style="padding:12px;border-radius:12px;border:1.5px solid #e2e8f0;background:white;font-size:13px;font-weight:700;cursor:pointer;">🛍 쇼핑</button>
+            </div>
+            <button onclick="document.getElementById('tim-sit-modal').style.display='none'" style="width:100%;padding:12px;border-radius:12px;background:#f1f5f9;border:none;color:#64748b;font-size:13px;cursor:pointer;margin-top:14px;">취소</button>
+        </div>
+    </div>
+    <input type="file" id="tim-gallery-input" accept="image/*" style="display:none;" onchange="timGallerySelected(this)">
 </body>
-</html>
