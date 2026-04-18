@@ -5661,21 +5661,15 @@ function initRealtimeSync() {
             if(!text){alert('번역할 문장을 입력하세요.');return;}
             timShow(timLoading(timTgt.n+' 번역 중...'));
             try {
-                // 1. 번역 수행 (Gemini 일꾼)
                 var trans = await timGT(text);
-                
-                // 2. 발음 생성 (이게 들어가야 파란색 글씨가 뜹니다)
                 var prons = await timPron([trans], timTgt.n, timTgt.g);
-                
-                // 3. 화면 표시 (두 번째 칸에 prons[0]를 넣어야 파란 박스가 생깁니다)
                 timShow(timCard(trans, prons[0], text, ''));
-                
-                // 4. 음성 재생
                 timSpeak(trans);
             } catch(e) {
-                console.error("번역 에러:", e);
+                console.error(e);
                 timShow('<div style="color:#ef4444;padding:14px;background:#fef2f2;border-radius:12px;font-size:13px;">❌ ' + escHtml(e.message) + '</div>');
             }
+        }
         // 마이크
         function timOpenMic(){
             if(!isFamilyAuthed()){openFamilyAuthModal();return;}
