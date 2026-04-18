@@ -5573,7 +5573,7 @@ function initRealtimeSync() {
         // ════════════════════════════════════════════════════════
 
         // ── API 키 + 가족 인증 ──
-        var _GCLOUD_KEY='AIzaSyCGOzUiBNSLUxHXqJ-1GN4IHwzb8iNxr9U';
+        var _GCLOUD_KEY='AIzaSyB6jvYxW3h0xT3P-KFBKIERjmVDOVPbl1c';
         function getApiKey(){return _GCLOUD_KEY;}
         function isFamilyAuthed(){return localStorage.getItem('familyAuthed')==='yes';}
         function familyAuthToggle(){if(isFamilyAuthed()){if(confirm('로그아웃?')){localStorage.removeItem('familyAuthed');updateAuthUI();}}else{openFamilyAuthModal();}}
