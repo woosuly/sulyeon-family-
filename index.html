@@ -5661,14 +5661,17 @@ function initRealtimeSync() {
             if(!text){alert('번역할 문장을 입력하세요.');return;}
             timShow(timLoading(timTgt.n+' 번역 중...'));
             try {
-                // 1. 번역 수행
+                // 1. Gemini를 통해 번역 수행
                 var trans = await timGT(text);
                 
-                // 2. 발음 생성 (Gemini 호출)
+                // 2. [핵심] 번역된 이탈리아어를 다시 Gemini에게 보내 '한글 발음'만 따옵니다.
                 var prons = await timPron([trans], timTgt.n, timTgt.g);
                 
-                // 3. 화면에 최종 결과 표시 (발음 포함)
+                // 3. 화면에 표시 (trans는 번역문, prons[0]은 파란색 발음으로 들어갑니다)
                 timShow(timCard(trans, prons[0], text, ''));
+                
+                // 4. 즉시 음성 읽어주기 (선택 사항)
+                timSpeak(trans);
             } catch(e) {
                 timShow('<div style="color:#ef4444;padding:14px;background:#fef2f2;border-radius:12px;font-size:13px;">❌ ' + escHtml(e.message) + '</div>');
             }
@@ -5892,7 +5895,7 @@ function initRealtimeSync() {
                     const sorted = catOrder.filter(k=>catMap[k]).map(k=>[k,catMap[k]])
                         .concat(Object.entries(catMap).filter(([k])=>!catOrder.includes(k)))
                         .sort((a,b)=>b[1]-a[1]);
-                    barsEl.style.cssText = 'flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;max-width:100%;display:flex;flex-direction:column;justify-content:flex-end;gap:18px;padding-right:2px;';
+                    barsEl.style.cssText = 'flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;max-width:100%;display:flex;flex-direction:column;justify-content:flex-end;gap:24px;padding-right:2px;';
                     barsEl.innerHTML = sorted.map(([k,v])=>{
                         const pct = Math.round(v/total*100);
                         const col = catColors[k]||'#94a3b8';
