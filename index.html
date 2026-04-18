@@ -2474,7 +2474,7 @@
     <script>
         // ── Firebase 설정 ──────────────────────────────────────────────
         const firebaseConfig = {
-            apiKey: "AIzaSyB6jvYxW3h0xT3P-KFBKIERjmVDOVPbl1c",
+            apiKey: "AQ.Ab8RN6JPdn7ItfpX9_TeWFs-VmgWILahORT2qh6RIhXwCEwVGA",
             authDomain: "seolyeon-family-seoul.firebaseapp.com",
             projectId: "seolyeon-family-seoul",
             storageBucket: "seolyeon-family-seoul.firebasestorage.app",
@@ -5617,12 +5617,10 @@ function initRealtimeSync() {
         function timOpenLang(d){_timLD=d;document.getElementById('tim-lang-modal').style.display='flex';history.pushState({timLang:1},'');}
         function timPickLang(i){if(_timLD==='src')timSrc=TIM_L[i];else timTgt=TIM_L[i];timUpdateUI();document.getElementById('tim-lang-modal').style.display='none';}
         // Google Translate
-        async function timGT(q,tgt,src){
-            if(!isFamilyAuthed()){openFamilyAuthModal();throw new Error('인증 필요');}
-            var r=await fetch('https://translation.googleapis.com/language/translate/v2?key='+getApiKey(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q:q,target:tgt,source:src||'',format:'text'})});
-            if(!r.ok){var e=await r.json().catch(function(){return{};});throw new Error(e.error&&e.error.message||r.status);}
-            var d=await r.json(),t=d.data&&d.data.translations;
-            return Array.isArray(q)?t.map(function(x){return x.translatedText;}):(t&&t[0]&&t[0].translatedText||'');
+        async function timGT(q, tgt, src) {
+            // 구글 클라우드 번역 API 대신 Gemini 1.5 Flash를 번역 일꾼으로 씁니다.
+            var prompt = `당신은 번역 전문가입니다. 다음 문장을 ${timTgt.n}로 번역만 하세요. 부가설명은 절대 하지 마세요.\n내용: "${q}"`;
+            return await timGemini(prompt);
         }
         // Gemini 1.5 Flash
         async function timGemini(prompt,img){
@@ -5662,16 +5660,18 @@ function initRealtimeSync() {
             var text=(document.getElementById('tim-input').value||'').trim();
             if(!text){alert('번역할 문장을 입력하세요.');return;}
             timShow(timLoading(timTgt.n+' 번역 중...'));
-            try{
-                var trans=await timGT(text,timTgt.g,timSrc.g);
-                timShow(timLoading('한글 발음 생성 중...'));
-                var pron='',tip='';
-                try{var raw=await timGemini('발음 전문가로서 답해줘. 다음 '+timTgt.n+' 문장을 번역하지 말고 소리나는 대로 한글로 적고, 에티켓 팁도 알려줘.\n문장: "'+trans+'"\n원문: "'+text+'"\nJSON만: {"pronunciation":"한글발음","tip":"에티켓 팁"}');
-                    var m=raw.replace(/```json|```/g,'').match(/\{[\s\S]*?\}/);if(m){var p=JSON.parse(m[0]);pron=p.pronunciation||'';tip=p.tip||'';}
-                }catch(e){console.warn('발음실패:',e);}
-                timShow(timCard(trans,pron,text,tip));
-            }catch(e){timShow('<div style="color:#ef4444;padding:14px;background:#fef2f2;border-radius:12px;font-size:13px;">❌ '+escHtml(e.message)+'</div>');}
-        }
+            try {
+                // 1. 번역 수행
+                var trans = await timGT(text);
+                
+                // 2. 발음 생성 (Gemini 호출)
+                var prons = await timPron([trans], timTgt.n, timTgt.g);
+                
+                // 3. 화면에 최종 결과 표시 (발음 포함)
+                timShow(timCard(trans, prons[0], text, ''));
+            } catch(e) {
+                timShow('<div style="color:#ef4444;padding:14px;background:#fef2f2;border-radius:12px;font-size:13px;">❌ ' + escHtml(e.message) + '</div>');
+            }
         // 마이크
         function timOpenMic(){
             if(!isFamilyAuthed()){openFamilyAuthModal();return;}
@@ -5892,7 +5892,7 @@ function initRealtimeSync() {
                     const sorted = catOrder.filter(k=>catMap[k]).map(k=>[k,catMap[k]])
                         .concat(Object.entries(catMap).filter(([k])=>!catOrder.includes(k)))
                         .sort((a,b)=>b[1]-a[1]);
-                    barsEl.style.cssText = 'flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;max-width:100%;display:flex;flex-direction:column;justify-content:flex-end;gap:4px;padding-right:2px;';
+                    barsEl.style.cssText = 'flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;max-width:100%;display:flex;flex-direction:column;justify-content:flex-end;gap:18px;padding-right:2px;';
                     barsEl.innerHTML = sorted.map(([k,v])=>{
                         const pct = Math.round(v/total*100);
                         const col = catColors[k]||'#94a3b8';
