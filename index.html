@@ -5573,7 +5573,7 @@ function initRealtimeSync() {
         // ════════════════════════════════════════════════════════
 
         // ── API 키 + 가족 인증 ──
-        var _GCLOUD_KEY='AIzaSyB6jvYxW3h0xT3P-KFBKIERjmVDOVPbl1c';
+        var _GCLOUD_KEY='AIzaSyCZ2_T7a0yPrCRjNNa8gffBZWEbDKCc7Ho';
         function getApiKey(){return _GCLOUD_KEY;}
         function isFamilyAuthed(){return localStorage.getItem('familyAuthed')==='yes';}
         function familyAuthToggle(){if(isFamilyAuthed()){if(confirm('로그아웃?')){localStorage.removeItem('familyAuthed');updateAuthUI();}}else{openFamilyAuthModal();}}
@@ -5889,7 +5889,7 @@ function initRealtimeSync() {
                     const sorted = catOrder.filter(k=>catMap[k]).map(k=>[k,catMap[k]])
                         .concat(Object.entries(catMap).filter(([k])=>!catOrder.includes(k)))
                         .sort((a,b)=>b[1]-a[1]);
-                    barsEl.style.cssText = 'flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;max-width:100%;display:flex;flex-direction:column;justify-content:flex-end;gap:24px;padding-right:2px;';
+                    barsEl.style.cssText = 'flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;max-width:100%;display:flex;flex-direction:column;justify-content:flex-end;gap:20px;padding-right:2px;';
                     barsEl.innerHTML = sorted.map(([k,v])=>{
                         const pct = Math.round(v/total*100);
                         const col = catColors[k]||'#94a3b8';
