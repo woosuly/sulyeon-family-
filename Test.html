@@ -3,148 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TIMOTHY v2.0 Premium</title>
+    <title>TIMOTHY Premium</title>
     <style>
         :root {
-            --bg-dark: #121826; --card-bg: #1e293b; --primary-blue: #2563eb;
-            --text-white: #ffffff; --text-dim: #94a3b8; --accent-green: #10b981;
+            --primary-blue: #2563eb; --bg-light: #f8fafc; --card-white: #ffffff;
+            --text-dark: #1e293b; --text-gray: #64748b; --accent-blue: #dbeafe;
         }
-        body { margin: 0; background: var(--bg-dark); color: var(--text-white); font-family: sans-serif; overflow-x: hidden; }
-        .container { max-width: 480px; margin: 0 auto; padding: 20px; box-sizing: border-box; }
+        body { margin: 0; background: var(--bg-light); color: var(--text-dark); font-family: 'Pretendard', sans-serif; }
+        .app-container { max-width: 480px; margin: 0 auto; padding: 20px; }
+
+        /* 1. 언어 선택 카드 */
+        .lang-card { background: var(--card-white); border-radius: 20px; padding: 20px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .lang-unit { text-align: center; font-size: 0.8rem; font-weight: bold; color: var(--text-gray); cursor: pointer; }
+        .lang-unit img { width: 32px; display: block; margin: 0 auto 5px; }
+
+        /* 2. 메인 통역 영역 */
+        .interpret-box { background: var(--card-white); border-radius: 30px; padding: 40px 20px; text-align: center; margin-bottom: 20px; position: relative; }
+        .status-dot { position: absolute; top: 20px; right: 20px; font-size: 0.75rem; color: #10b981; font-weight: bold; }
+        .mic-btn-main { width: 90px; height: 90px; border-radius: 50%; border: 8px solid var(--bg-light); background: white; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); cursor: pointer; margin-bottom: 15px; }
         
-        /* 언어 선택 & 스왑 */
-        .lang-section { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); border-radius: 20px; padding: 15px; margin-bottom: 20px; }
-        select { background: none; color: white; border: 1px solid #475569; border-radius: 10px; padding: 8px; font-size: 0.9rem; width: 40%; }
-        .swap-btn { font-size: 1.5rem; color: var(--primary-blue); cursor: pointer; transition: 0.3s; }
+        /* 3. 서브 메뉴 (사진번역/상황별) */
+        .sub-menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .sub-btn { background: var(--card-white); border-radius: 20px; padding: 15px; display: flex; align-items: center; gap: 12px; font-weight: bold; border: none; cursor: pointer; }
+        .icon-circle { width: 35px; height: 35px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
 
-        /* 실시간 통역 & 웨이브 애니메이션 */
-        .mic-section { background: var(--card-bg); border-radius: 25px; padding: 30px 20px; text-align: center; position: relative; margin-bottom: 20px; }
-        .wave-container { display: none; justify-content: center; align-items: center; height: 50px; gap: 5px; margin: 20px 0; }
-        .wave-bar { width: 4px; height: 20px; background: var(--primary-blue); animation: wave 1s infinite; }
-        @keyframes wave { 0%, 100% { height: 10px; } 50% { height: 40px; } }
-        
-        .mic-btn { width: 80px; height: 80px; border-radius: 50%; border: none; background: var(--primary-blue); color: white; font-size: 2rem; box-shadow: 0 0 20px rgba(37, 99, 235, 0.5); cursor: pointer; }
-        .voice-options { margin-top: 15px; font-size: 0.8rem; }
+        /* 4. 번역 결과창 (사진 4, 7 참조) */
+        .result-card { background: var(--card-white); border-radius: 25px; padding: 25px; border-left: 6px solid var(--primary-blue); position: relative; display: none; }
+        .target-text { font-size: 1.5rem; font-weight: 800; margin-bottom: 15px; }
+        .pronun-text { color: var(--primary-blue); font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; }
+        .tip-box { background: #fffbeb; border-radius: 12px; padding: 12px; font-size: 0.8rem; color: #b45309; line-height: 1.4; margin-top: 15px; }
 
-        /* 카메라 스캔 박스 */
-        .cam-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1000; }
-        .scan-box { position: absolute; top: 20%; left: 10%; width: 80%; height: 40%; border: 2px solid var(--accent-green); box-shadow: 0 0 20px var(--accent-green); border-radius: 15px; }
-        .scan-line { width: 100%; height: 2px; background: var(--accent-green); position: absolute; animation: scan 2s infinite; }
-        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+        /* 5. 하단 직접입력 바 */
+        .input-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: white; padding: 15px; box-sizing: border-box; display: flex; gap: 10px; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); }
+        .input-field { flex: 1; background: #f1f5f9; border: none; border-radius: 12px; padding: 12px; }
 
-        /* 상황별 리스트 디자인 */
-        .situ-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 10px; }
-        .situ-item { background: var(--card-bg); padding: 10px 5px; border-radius: 10px; font-size: 0.7rem; text-align: center; cursor: pointer; min-width: 60px; }
-        .situ-item.active { background: var(--primary-blue); }
-
-        .phrase-card { background: white; color: black; border-radius: 15px; padding: 15px; margin-bottom: 10px; position: relative; }
-        .phrase-ko-sub { font-size: 0.75rem; color: #666; }
-        .phrase-target { font-size: 1.1rem; font-weight: bold; margin: 5px 0; }
-        .phrase-pronun { font-size: 0.9rem; color: var(--primary-blue); }
-        .phrase-tip { font-size: 0.75rem; color: #d97706; margin-top: 5px; border-top: 1px solid #eee; padding-top: 5px; }
-
-        /* 하단 수동 입력 */
-        .manual-input { position: sticky; bottom: 0; background: var(--bg-dark); padding: 10px 0; display: flex; gap: 10px; }
-        input[type="text"] { flex: 1; background: var(--card-bg); border: 1px solid #475569; border-radius: 10px; color: white; padding: 12px; }
+        /* 모달 레이어 (언어선택/듣기/카메라) */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; }
+        .bottom-sheet { position: absolute; bottom: 0; width: 100%; background: white; border-radius: 30px 30px 0 0; padding: 30px 20px; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 20px;">TIMOTHY <span style="color:var(--primary-blue); font-size:0.8rem;">v2.0 Hybrid</span></div>
-
-    <div class="lang-section">
-        <select id="startLang">
-            <option value="ko">한국어</option>
-            <option value="en-US">영어(미국)</option>
-            <option value="it">이탈리아어</option>
-            </select>
-        <div class="swap-btn" onclick="swapLang()">⇄</div>
-        <select id="endLang">
-            <option value="it" selected>이탈리아어</option>
-            <option value="en-US">영어(미국)</option>
-            <option value="ko">한국어</option>
-        </select>
+<div class="app-container">
+    <div class="lang-card">
+        <div class="lang-unit" onclick="openModal('langModal')">🇰🇷<br>KOR</div>
+        <div style="color:var(--primary-blue); font-size:1.2rem;">⇄</div>
+        <div class="lang-unit" onclick="openModal('langModal')">🇮🇹<br>ITA</div>
     </div>
 
-    <div class="mic-section">
-        <div id="waveUI" class="wave-container">
-            <div class="wave-bar" style="animation-delay: 0.1s"></div>
-            <div class="wave-bar" style="animation-delay: 0.3s"></div>
-            <div class="wave-bar" style="animation-delay: 0.2s"></div>
-            <div class="wave-bar" style="animation-delay: 0.4s"></div>
+    <div class="interpret-box">
+        <div class="status-dot">● ONLINE</div>
+        <button class="mic-btn-main" onclick="openModal('listenModal')">
+            <span style="font-size: 2.5rem; color: var(--primary-blue);">🎙️</span>
+        </button>
+        <div style="color:var(--text-gray); font-size:0.9rem;">아이콘을 누르면 대화 시작</div>
+    </div>
+
+    <div class="sub-menu-grid">
+        <button class="sub-btn" onclick="openModal('camModal')">
+            <div class="icon-circle" style="background:var(--accent-blue);">📷</div> 사진번역
+        </button>
+        <button class="sub-btn" onclick="location.href='#situ'">
+            <div class="icon-circle" style="background:#fef3c7;">📑</div> 상황별
+        </button>
+    </div>
+
+    <div id="resultArea" class="result-card" style="display: block;">
+        <div class="target-text">Buongiorno!</div>
+        <div class="pronun-text">본 조르노!</div>
+        <div style="color:var(--text-gray); font-size:0.9rem;">좋은 아침입니다!</div>
+        <div class="tip-box">
+            💡 팁: 이 인사는 보통 정오(12시) 전까지만 사용해요.
         </div>
-        <button class="mic-btn" id="micBtn" onclick="toggleMic()">🎤</button>
-        <div class="voice-options">
-            <label><input type="radio" name="gender" value="male"> 남성</label>
-            <label style="margin-left:15px;"><input type="radio" name="gender" value="female" checked> 여성</label>
-        </div>
-    </div>
-
-    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-        <button onclick="openCam()" style="flex:1; padding:15px; border-radius:15px; background:var(--card-bg); color:white; border:none;">📷 사진 스캐닝</button>
-        <button onclick="document.getElementById('fileUp').click()" style="flex:1; padding:15px; border-radius:15px; background:var(--card-bg); color:white; border:none;">📁 사진 업로드</button>
-        <input type="file" id="fileUp" style="display:none">
-    </div>
-
-    <div class="situ-grid">
-        <div class="situ-item active">식당</div><div class="situ-item">호텔</div><div class="situ-item">공항</div>
-        <div class="situ-item">병원</div><div class="situ-item">쇼핑</div><div class="situ-item">경찰서</div>
-    </div>
-
-    <div id="phraseList">
-        <div class="phrase-card">
-            <div class="phrase-ko-sub">메뉴판 좀 주시겠어요?</div>
-            <div class="phrase-target">Posso avere il menu, per favore?</div>
-            <div class="phrase-pronun">뽀쏘 아베레 일 메뉴, 뻬르 파보레?</div>
-            <div class="phrase-tip">💡 팁: 이탈리아 식당에서는 보통 물값(Coperto)을 따로 받으니 놀라지 마세요!</div>
-            <button style="position:absolute; top:15px; right:15px; border:none; background:none; font-size:1.2rem;">🔊</button>
-        </div>
-    </div>
-
-    <div class="manual-input">
-        <input type="text" placeholder="번역할 문장을 입력하세요...">
-        <button style="padding:10px 20px; border-radius:10px; background:var(--primary-blue); color:white; border:none;">번역</button>
+        <button style="position:absolute; top:25px; right:20px; border:none; background:#eff6ff; width:40px; height:40px; border-radius:50%; color:var(--primary-blue);">🔊</button>
     </div>
 </div>
 
-<div id="camLayer" class="cam-overlay">
-    <div class="scan-box"><div class="scan-line"></div></div>
-    <button onclick="closeCam()" style="position:absolute; bottom:50px; left:50%; transform:translateX(-50%); padding:15px 40px; border-radius:30px; background:white; border:none; font-weight:bold;">촬영 및 번역</button>
+<div class="input-bar">
+    <input type="text" class="input-field" placeholder="직접 문장을 입력하세요...">
+    <button style="background:var(--text-dark); color:white; border:none; border-radius:12px; padding:0 20px;">번역</button>
+</div>
+
+<div id="listenModal" class="modal-overlay" onclick="closeModal('listenModal')">
+    <div class="bottom-sheet" onclick="event.stopPropagation()">
+        <div style="text-align:center; margin-bottom:30px;">
+            <div style="color:var(--primary-blue); font-weight:bold; font-size:0.8rem; margin-bottom:10px;">● LISTENING...</div>
+            <h2 style="margin:0;">한국어를 듣고 있습니다</h2>
+            <div style="color:var(--text-gray); font-size:0.9rem; margin-top:5px;">"이탈리아어로 통역 준비됨"</div>
+        </div>
+        <div style="display:flex; justify:center; gap:8px; height:60px; align-items:center;">
+             <div style="width:4px; height:30px; background:var(--primary-blue); border-radius:2px;"></div>
+             <div style="width:4px; height:50px; background:var(--primary-blue); border-radius:2px;"></div>
+             <div style="width:4px; height:40px; background:var(--primary-blue); border-radius:2px;"></div>
+        </div>
+        <button style="width:100%; background:var(--text-dark); color:white; padding:18px; border-radius:15px; border:none; margin-top:30px; font-weight:bold; font-size:1rem;">
+            ⏹️ 종료 및 번역하기
+        </button>
+    </div>
 </div>
 
 <script>
-    let isRecording = false;
-
-    function toggleMic() {
-        const btn = document.getElementById('micBtn');
-        const wave = document.getElementById('waveUI');
-        isRecording = !isRecording;
-        
-        if(isRecording) {
-            btn.innerHTML = "⏹️";
-            btn.style.background = "#ef4444";
-            wave.style.display = "flex";
-        } else {
-            btn.innerHTML = "🎤";
-            btn.style.background = "var(--primary-blue)";
-            wave.style.display = "none";
-            alert("통역 중... (Google Translate API 호출)");
-        }
-    }
-
-    function openCam() { document.getElementById('camLayer').style.display = 'block'; }
-    function closeCam() { 
-        alert("Gemini 1.5가 이미지를 분석 중입니다...");
-        document.getElementById('camLayer').style.display = 'none'; 
-    }
-    function swapLang() {
-        let s = document.getElementById('startLang');
-        let e = document.getElementById('endLang');
-        let temp = s.value;
-        s.value = e.value;
-        e.value = temp;
-    }
+    function openModal(id) { document.getElementById(id).style.display = 'block'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 </script>
 
 </body>
