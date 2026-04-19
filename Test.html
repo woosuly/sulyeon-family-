@@ -46,11 +46,10 @@
 <body>
 
 <div class="app">
-    <div style="font-weight: 900; font-size: 1.1rem; padding-top: 10px;">TIMOTHY <span style="color:var(--primary); font-size: 0.7rem;">v2.0 PREMIUM</span></div>
-
-    <div class="card flex-row" style="justify-content: space-between; align-items: center;" onclick="alert('언어 선택 모달')">
-        <span>🇰🇷 한국어</span> <span style="color:var(--primary)">⇄</span> <span>🇮🇹 이탈리아어</span>
-    </div>
+<div style="display: flex; justify-content: space-between; align-items: center; padding-top: 5px;">
+    <div style="font-weight: 900; font-size: 1.1rem;">TIMOTHY <span style="color:var(--primary); font-size: 0.7rem;">v2.0 PREMIUM</span></div>
+    <button onclick="openModal('settingsModal')" style="background:none; border:none; font-size:1.2rem; cursor:pointer; padding:5px;">⚙️</button>
+</div>
 
     <div class="card" style="text-align: center; padding: 25px 15px;">
         <div style="text-align: right; color: #10b981; font-size: 0.65rem; font-weight: bold;">● ONLINE</div>
@@ -114,15 +113,137 @@
         const area = document.getElementById('situArea');
         area.style.display = (area.style.display === 'none') ? 'block' : 'none';
     }
-    function manualTrans() {
-        document.getElementById('resultCard').style.display = 'block';
-        window.scrollTo(0, document.body.scrollHeight);
+    async function manualTrans() {
+    const input = document.getElementById('manualInput').value;
+    if (!input) return;
+
+    // 결과창 초기화 및 로딩 표시
+    const resCard = document.getElementById('resultCard');
+    resCard.style.display = 'block';
+    document.getElementById('targetTxt').innerText = "AI 분석 중...";
+    document.getElementById('pronunTxt').innerText = "잠시만 기다려주세요";
+    document.getElementById('koTxt').innerText = input;
+
+    // Gemini에게 보낼 프롬프트
+    const targetLang = document.getElementById('curEnd').innerText;
+    const prompt = `
+        문장: "${input}"
+        이 문장을 ${targetLang}로 번역하고, 다음 JSON 형식으로만 정확히 답해줘. (다른 설명 금지)
+        {
+            "target": "번역된 문장",
+            "pronun": "한국인이 읽기 쉬운 한국어 발음",
+            "tip": "여행자를 위한 짧은 문화적 팁이나 사용 주의사항"
+        }
+    `;
+
+    const response = await callGeminiAPI(prompt);
+    
+    if (response) {
+        try {
+            const data = JSON.parse(response);
+            document.getElementById('targetTxt').innerText = data.target;
+            document.getElementById('pronunTxt').innerText = data.pronun;
+            document.getElementById('tipTxt').innerText = "💡 Gemini Tip: " + data.tip;
+            // 번역이 완료되면 자동으로 소리 읽어주기
+            speak();
+        } catch (e) {
+            document.getElementById('targetTxt').innerText = "해석 오류";
+            document.getElementById('tipTxt').innerText = "AI 응답 형식이 올바르지 않습니다. 다시 시도해 주세요.";
+        }
     }
+    window.scrollTo(0, document.body.scrollHeight);
+}
+    // [핵심 엔진] Gemini 1.5 API와 실제로 통신하는 함수
+async function callGeminiAPI(prompt) {
+    const apiKey = localStorage.getItem('GEMINI_API_KEY');
+    
+    if (!apiKey) {
+        alert("⚙️ 설정에서 API 키를 먼저 입력해주세요!");
+        openModal('settingsModal');
+        return null;
+    }
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }]
+            })
+        });
+        const data = await response.json();
+        const rawText = data.candidates[0].content.parts[0].text;
+        // AI가 대답에 포함시킨 마크다운 기호(```json) 등을 깨끗하게 제거
+        return rawText.replace(/```json|```/g, '').trim();
+    } catch (error) {
+        console.error("Gemini 호출 실패:", error);
+        alert("API 호출 중 오류가 발생했습니다. 키를 확인해 주세요.");
+        return null;
+    }
+}
+
+// [목소리 엔진] 번역된 텍스트를 이탈리아어로 읽어주는 함수
+function speak() {
+    const text = document.getElementById('targetTxt').innerText;
+    if (!text || text === "AI 분석 중...") return;
+
+    const msg = new SpeechSynthesisUtterance(text);
+    msg.lang = 'it-IT'; // 이탈리아어 설정
+    
+    // 성별 선택 반영 (Pitch 조절로 여성/남성 느낌 구현)
+    const gender = document.querySelector('input[name="voiceType"]:checked').value;
+    msg.pitch = gender === 'female' ? 1.2 : 0.8; 
+    
+    window.speechSynthesis.speak(msg);
+}
     function setGender(g) {
         document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('active'));
         event.target.classList.add('active');
     }
-</script>
+// 설정 저장 함수
+function saveApiKeys() {
+    const key = document.getElementById('geminiKeyInput').value;
+    if (key.trim().length < 10) {
+        alert("올바른 API 키를 입력해주세요.");
+        return;
+    }
+    localStorage.setItem('GEMINI_API_KEY', key); // 브라우저 메모리에 저장
+    alert("키가 안전하게 저장되었습니다.");
+    closeModal('settingsModal');
+}
 
+// 페이지가 열릴 때 기존에 저장된 키가 있으면 자동으로 채워줌
+window.addEventListener('DOMContentLoaded', () => {
+    const savedKey = localStorage.getItem('GEMINI_API_KEY');
+    if (savedKey) {
+        const input = document.getElementById('geminiKeyInput');
+        if(input) input.value = savedKey;
+    }
+});
+</script>
+<div id="settingsModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 style="margin:0">보안 설정</h3>
+            <button class="close-x" onclick="closeModal('settingsModal')">✕</button>
+        </div>
+        <p style="font-size:0.8rem; color:var(--sub); line-height:1.4;">
+            API 키는 브라우저에만 저장되며, 깃허브에는 노출되지 않습니다.
+        </p>
+        <div style="margin-top:20px;">
+            <label style="font-size:0.85rem; font-weight:bold; display:block; margin-bottom:8px;">Gemini 1.5 API Key</label>
+            <input type="password" id="geminiKeyInput" 
+                   style="width:100%; border:1px solid #ddd; background:#f9f9f9; border-radius:10px; padding:12px; box-sizing:border-box;" 
+                   placeholder="API 키를 입력하세요">
+        </div>
+        <button onclick="saveApiKeys()" 
+                style="width:100%; background:var(--primary); color:white; border:none; padding:15px; border-radius:12px; margin-top:25px; font-weight:bold; cursor:pointer;">
+            설정 저장하기
+        </button>
+    </div>
+</div>
+ 
 </body>
 </html>
