@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TIMOTHY v2.0 - 독립 테스트</title>
+    <style>
+        :root {
+            --bg-dark: #121826;
+            --card-bg: #1e293b;
+            --primary-blue: #2563eb;
+            --text-white: #ffffff;
+            --text-dim: #94a3b8;
+        }
+
+        body {
+            margin: 0; padding: 0;
+            background-color: var(--bg-dark);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: var(--text-white);
+            display: flex; justify: center;
+        }
+
+        .container {
+            width: 100%; max-width: 480px;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+            margin: 0 auto;
+        }
+
+        /* 상단 헤더 */
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding-bottom: 20px;
+        }
+        .logo { font-weight: bold; font-size: 1.2rem; color: #fff; }
+        .logo span { font-size: 0.8rem; color: var(--primary-blue); margin-left: 5px; }
+
+        /* 언어 선택기 (사진 2 참조) */
+        .lang-selector {
+            display: flex; justify-content: space-around; align-items: center;
+            background: var(--card-bg);
+            border-radius: 20px; padding: 20px; margin-bottom: 20px;
+        }
+        .lang-box { text-align: center; cursor: pointer; }
+        .lang-box img { width: 30px; margin-bottom: 5px; }
+        .swap-btn { font-size: 1.5rem; color: var(--primary-blue); cursor: pointer; }
+
+        /* 실시간 통역 버튼 (사진 1 참조) */
+        .mic-section {
+            background: var(--card-bg);
+            border-radius: 20px; padding: 20px; text-align: center; margin-bottom: 20px;
+        }
+        .status-tag { float: right; font-size: 0.7rem; color: var(--text-dim); }
+        .listen-btn {
+            width: 100%; background: var(--primary-blue);
+            color: white; border: none; border-radius: 15px;
+            padding: 15px; font-size: 1rem; font-weight: bold;
+            margin-top: 15px; cursor: pointer;
+        }
+
+        /* 하단 그리드 버튼 */
+        .action-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
+            margin-bottom: 20px;
+        }
+        .action-card {
+            background: var(--card-bg);
+            border-radius: 20px; padding: 20px; text-align: center; cursor: pointer;
+        }
+        .action-card i { font-size: 1.5rem; display: block; margin-bottom: 10px; }
+
+        /* 번역 결과창 (사진 4 참조) */
+        .result-section {
+            background: var(--card-bg);
+            border-radius: 20px; padding: 20px;
+            border-left: 4px solid var(--primary-blue);
+            min-height: 100px;
+        }
+        .result-label { font-size: 0.7rem; color: var(--primary-blue); font-weight: bold; margin-bottom: 10px; }
+
+        /* 카메라 레이어 (테스트용) */
+        #camera-layer {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: black; z-index: 100;
+        }
+        #video-feed { width: 100%; height: 100%; object-fit: cover; }
+        .close-cam { position: absolute; top: 20px; right: 20px; background: white; border: none; padding: 10px; border-radius: 50%; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="logo">TIMOTHY <span>v2.0 Premium</span></div>
+        <div>🔑 👤</div>
+    </div>
+
+    <div class="lang-selector">
+        <div class="lang-box">
+            <div style="font-size: 2rem;">🇰🇷</div>
+            <div>한국어</div>
+        </div>
+        <div class="swap-btn">⇄</div>
+        <div class="lang-box">
+            <div style="font-size: 2rem;">🇮🇹</div>
+            <div>이탈리아어</div>
+        </div>
+    </div>
+
+    <div class="mic-section">
+        <span class="status-tag">대기 중</span>
+        <div style="text-align: left; font-size: 0.9rem; margin-bottom: 10px;">🎙️ 실시간 통역</div>
+        <button class="listen-btn" onclick="startVoice()">🎤 듣기 시작</button>
+    </div>
+
+    <div class="action-grid">
+        <div class="action-card" onclick="openCamera()">
+            <div style="font-size: 1.5rem;">📷</div>
+            <div style="font-size: 0.9rem; margin-top:10px;">사진/촬영</div>
+        </div>
+        <div class="action-card" onclick="alert('상황별 문장 리스트 준비 중')">
+            <div style="font-size: 1.5rem;">📑</div>
+            <div style="font-size: 0.9rem; margin-top:10px;">상황별 문장</div>
+        </div>
+    </div>
+
+    <div class="result-section">
+        <div class="result-label">TRANSLATION RESULT</div>
+        <div id="translated-output" style="color: var(--text-dim);">번역할 문장을 입력하거나 음성을 시작하세요...</div>
+    </div>
+</div>
+
+<div id="camera-layer">
+    <video id="video-feed" autoplay playsinline></video>
+    <button class="close-cam" onclick="closeCamera()">✕</button>
+</div>
+
+<script>
+    // 카메라 실행 로직
+    async function openCamera() {
+        const layer = document.getElementById('camera-layer');
+        const video = document.getElementById('video-feed');
+        layer.style.display = 'block';
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            video.srcObject = stream;
+        } catch (err) {
+            alert("카메라 권한이 필요합니다: " + err);
+            layer.style.display = 'none';
+        }
+    }
+
+    function closeCamera() {
+        const layer = document.getElementById('camera-layer');
+        const video = document.getElementById('video-feed');
+        const stream = video.srcObject;
+        if (stream) {
+            const tracks = stream.getTracks();
+            tracks.forEach(track => track.stop());
+        }
+        layer.style.display = 'none';
+    }
+
+    function startVoice() {
+        const output = document.getElementById('translated-output');
+        output.innerText = "듣는 중... (실제 구현 시 Speech-to-Text API 연동)";
+        output.style.color = "#fff";
+    }
+</script>
+
+</body>
+</html>
