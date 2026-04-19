@@ -2,165 +2,125 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>TIMOTHY v2.0 Premium</title>
     <style>
-        :root { --primary: #2563eb; --bg: #f1f5f9; --card: #ffffff; --text: #1e293b; }
-        body { margin: 0; background: var(--bg); color: var(--text); font-family: sans-serif; padding-bottom: 80px; }
-        .app { max-width: 480px; margin: 0 auto; padding: 20px; box-sizing: border-box; }
+        :root { --primary: #2563eb; --bg: #f8fafc; --card: #ffffff; --text: #1e293b; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: sans-serif; display: flex; flex-direction: column; min-height: 100vh; }
+        .app { max-width: 480px; width: 100%; margin: 0 auto; padding: 15px; flex: 1; display: flex; flex-direction: column; gap: 12px; box-sizing: border-box; }
         
-        /* 공통 카드 스타일 */
-        .card { background: var(--card); border-radius: 20px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 15px; }
-        .btn-flex { display: flex; gap: 10px; margin-bottom: 15px; }
-        .sub-btn { flex: 1; background: var(--card); border: none; border-radius: 15px; padding: 15px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        /* 카드 및 레이아웃 */
+        .card { background: var(--card); border-radius: 20px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.03); }
+        .flex-row { display: flex; gap: 10px; }
+        .sub-btn { flex: 1; background: var(--card); border: none; border-radius: 15px; padding: 12px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.03); font-size: 0.9rem; }
 
-        /* 모달 레이어 */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 3000; }
-        .modal-content { position: absolute; bottom: 0; width: 100%; max-width: 480px; left: 50%; transform: translateX(-50%); background: white; border-radius: 30px 30px 0 0; padding: 30px 20px; box-sizing: border-box; max-height: 80vh; overflow-y: auto; }
-        
-        /* 언어 선택 그리드 */
-        .lang-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; text-align: center; }
-        .lang-item { padding: 15px; border-radius: 15px; border: 1px solid #eee; cursor: pointer; }
-        .lang-item.active { background: var(--primary); color: white; border-color: var(--primary); }
+        /* 결과창 (간격 조절) */
+        .result-box { border-left: 6px solid var(--primary); display: none; position: relative; margin-top: 5px; }
+        .tip-area { background: #fffbeb; color: #92400e; padding: 10px; border-radius: 12px; font-size: 0.8rem; margin-top: 10px; }
 
-        /* 결과 디자인 */
-        .result-box { border-left: 6px solid var(--primary); position: relative; display: none; }
-        .tip-area { background: #fffbeb; color: #92400e; padding: 12px; border-radius: 12px; font-size: 0.85rem; margin-top: 15px; }
+        /* 성별 선택 */
+        .gender-toggle { display: flex; gap: 10px; justify-content: center; font-size: 0.8rem; margin-top: 5px; }
+        .gender-btn { padding: 4px 12px; border-radius: 20px; border: 1px solid #ddd; background: white; cursor: pointer; }
+        .gender-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-        /* 카메라 스캔 효과 */
-        #scanLayer { display: none; position: fixed; inset: 0; background: black; z-index: 4000; }
-        .scan-line { width: 100%; height: 2px; background: #10b981; position: absolute; top: 0; animation: scan 2s infinite; }
+        /* 카메라 반투명 스캔 */
+        #scanOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 5000; display: none; align-items: center; justify-content: center; }
+        .viewfinder { width: 80%; height: 40%; border: 2px solid #10b981; border-radius: 15px; background: transparent; position: relative; box-shadow: 0 0 0 5000px rgba(0,0,0,0.6); }
+        .scan-line { width: 100%; height: 2px; background: #10b981; position: absolute; top: 0; animation: scan 2s infinite linear; }
         @keyframes scan { to { top: 100%; } }
 
-        /* 하단 입력바 */
-        .bottom-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: white; padding: 15px; display: flex; gap: 10px; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); box-sizing: border-box; }
-        input { flex: 1; border: none; background: #f1f5f9; border-radius: 10px; padding: 12px; }
-        .blue-btn { background: #1e293b; color: white; border: none; border-radius: 10px; padding: 0 20px; font-weight: bold; }
+        /* 상황별 10개 버튼 그리드 */
+        .situ-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 10px; }
+        .situ-tab { padding: 8px 2px; border-radius: 8px; border: none; background: #eee; font-size: 0.7rem; cursor: pointer; }
+        .situ-tab.active { background: var(--primary); color: white; }
+
+        /* 문장 리스트 */
+        .phrase-item { background: white; padding: 12px; border-radius: 12px; border-bottom: 1px solid #f1f5f9; margin-bottom: 8px; position: relative; font-size: 0.9rem; }
+
+        /* 하단바 고정 */
+        .bottom-bar { position: sticky; bottom: 0; background: white; padding: 12px 15px; display: flex; gap: 8px; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); }
+        input { flex: 1; border: none; background: #f1f5f9; border-radius: 10px; padding: 12px; font-size: 1rem; }
+        .send-btn { background: #1e293b; color: white; border: none; border-radius: 10px; padding: 0 18px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="app">
-    <div style="font-weight: 900; margin-bottom: 20px;">TIMOTHY <span style="color:var(--primary); font-size: 0.7rem;">v2.0 PREMIUM</span></div>
+    <div style="font-weight: 900; font-size: 1.1rem; padding-top: 10px;">TIMOTHY <span style="color:var(--primary); font-size: 0.7rem;">v2.0 PREMIUM</span></div>
 
-    <div class="card" style="display: flex; justify-content: space-between; align-items: center;" onclick="showModal('langModal')">
-        <div id="dispStart">🇰🇷 한국어</div>
-        <div style="color:var(--primary); font-size: 1.2rem;">⇄</div>
-        <div id="dispEnd">🇮🇹 이탈리아어</div>
+    <div class="card flex-row" style="justify-content: space-between; align-items: center;" onclick="alert('언어 선택 모달')">
+        <span>🇰🇷 한국어</span> <span style="color:var(--primary)">⇄</span> <span>🇮🇹 이탈리아어</span>
     </div>
 
-    <div class="card" style="text-align: center; padding: 40px 20px;">
-        <div style="text-align: right; color: #10b981; font-size: 0.7rem; font-weight: bold;">● ONLINE</div>
-        <button onclick="startVoice()" style="width:80px; height:80px; border-radius:50%; border:none; background:white; box-shadow: 0 10px 20px rgba(0,0,0,0.1); cursor: pointer; margin: 20px 0;">
-            <img src="https://cdn-icons-png.flaticon.com/512/709/709682.png" width="40">
-        </button>
-        <div style="color: #64748b; font-size: 0.85rem;">아이콘을 누르면 대화 시작</div>
+    <div class="card" style="text-align: center; padding: 25px 15px;">
+        <div style="text-align: right; color: #10b981; font-size: 0.65rem; font-weight: bold;">● ONLINE</div>
+        <button onclick="alert('듣기 시작')" style="width:70px; height:70px; border-radius:50%; border:none; background:white; box-shadow: 0 8px 15px rgba(0,0,0,0.1); cursor: pointer; margin: 10px 0;">🎙️</button>
+        <div class="gender-toggle">
+            <button class="gender-btn active" onclick="setGender('F')">여성 목소리</button>
+            <button class="gender-btn" onclick="setGender('M')">남성 목소리</button>
+        </div>
     </div>
 
-    <div class="btn-flex">
-        <button class="sub-btn" onclick="startScan()">📷 사진번역</button>
-        <button class="sub-btn" onclick="showModal('situModal')">📙 상황별</button>
+    <div class="flex-row">
+        <button class="sub-btn" onclick="openScan()">📷 사진번역</button>
+        <button class="sub-btn" onclick="showSitu()">📙 상황별</button>
+    </div>
+
+    <div id="situArea" class="card" style="display:none;">
+        <div class="situ-grid">
+            <button class="situ-tab active">식당</button><button class="situ-tab">호텔</button>
+            <button class="situ-tab">병원</button><button class="situ-tab">공항</button>
+            <button class="situ-tab">관광지</button><button class="situ-tab">상점</button>
+            <button class="situ-tab">쇼핑</button><button class="situ-tab">배달</button>
+            <button class="situ-tab">경찰서</button><button class="situ-tab">옷가게</button>
+        </div>
+        <div id="phraseList" style="max-height: 200px; overflow-y: auto;">
+            <div class="phrase-item">
+                <div style="font-size:0.7rem; color:#666;">계산서 부탁합니다.</div>
+                <div style="font-weight:bold;">Il conto, per favore.</div>
+                <button onclick="alert('음성 재생')" style="position:absolute; top:10px; right:10px; border:none; background:none; font-size:1.1rem;">🔊</button>
+            </div>
+        </div>
     </div>
 
     <div id="resultCard" class="card result-box">
-        <div id="targetTxt" style="font-size: 1.6rem; font-weight: 800; margin-bottom: 10px;"></div>
-        <div id="pronunTxt" style="color: var(--primary); font-weight: bold; font-size: 1rem; margin-bottom: 5px;"></div>
-        <div id="koTxt" style="color: #64748b; font-size: 0.9rem;"></div>
-        <div id="tipTxt" class="tip-area"></div>
-        <button onclick="speak()" style="position:absolute; top:20px; right:20px; border:none; background:#eff6ff; width:45px; height:45px; border-radius:50%; color:var(--primary); font-size: 1.2rem;">🔊</button>
+        <div id="targetTxt" style="font-size: 1.4rem; font-weight: 800; margin-bottom: 5px;">Vorrei confermare...</div>
+        <div id="pronunTxt" style="color: var(--primary); font-weight: bold; font-size: 0.95rem; margin-bottom: 3px;">보레이 꼰뻬르마레...</div>
+        <div id="koTxt" style="color: #64748b; font-size: 0.85rem;">제 예약을 확인하고 싶습니다.</div>
+        <div class="tip-area">💡 Gemini Tip: 'Vorrei'는 매우 정중한 표현입니다.</div>
+        <button onclick="alert('음성 재생')" style="position:absolute; top:15px; right:15px; border:none; background:#eff6ff; width:40px; height:40px; border-radius:50%; color:var(--primary);">🔊</button>
     </div>
 </div>
 
 <div class="bottom-bar">
-    <input type="text" id="manualInput" placeholder="직접 입력...">
-    <button class="blue-btn" onclick="manualTrans()">번역</button>
+    <input type="text" id="manualInput" placeholder="직접 문장을 입력하세요...">
+    <button class="send-btn" onclick="manualTrans()">번역</button>
 </div>
 
-<div id="langModal" class="modal" onclick="closeModal('langModal')">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <h3>번역 언어 선택</h3>
-        <div class="lang-grid">
-            <div class="lang-item" onclick="setLang('ko')">🇰🇷 한국어</div>
-            <div class="lang-item" onclick="setLang('en-US')">🇺🇸 영어(US)</div>
-            <div class="lang-item" onclick="setLang('en-GB')">🇬🇧 영어(UK)</div>
-            <div class="lang-item" onclick="setLang('zh')">🇨🇳 중국어</div>
-            <div class="lang-item" onclick="setLang('ja')">🇯🇵 일어</div>
-            <div class="lang-item active" onclick="setLang('it')">🇮🇹 이탈리아어</div>
-            <div class="lang-item" onclick="setLang('fr')">🇫🇷 프랑스어</div>
-            <div class="lang-item" onclick="setLang('es')">🇪🇸 스페인어</div>
-            <div class="lang-item" onclick="setLang('vi')">🇻🇳 베트남어</div>
-            <div class="lang-item" onclick="setLang('th')">🇹🇭 태국어</div>
-        </div>
+<div id="scanOverlay" onclick="closeScan()">
+    <div class="viewfinder" onclick="event.stopPropagation()">
+        <div class="scan-line"></div>
     </div>
-</div>
-
-<div id="situModal" class="modal" onclick="closeModal('situModal')">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <h3>상황별 문장</h3>
-        <div style="display: flex; gap: 10px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 5px;">
-            <button onclick="loadSitu('식당')" style="flex:0 0 80px; padding:10px; border-radius:10px; border:none; background:var(--primary); color:white;">🍴 식당</button>
-            <button onclick="loadSitu('호텔')" style="flex:0 0 80px; padding:10px; border-radius:10px; border:none; background:#eee;">🏨 호텔</button>
-            <button onclick="loadSitu('병원')" style="flex:0 0 80px; padding:10px; border-radius:10px; border:none; background:#eee;">🏥 병원</button>
-        </div>
-        <div id="situList">
-            </div>
-    </div>
-</div>
-
-<div id="scanLayer">
-    <div class="scan-line"></div>
-    <div style="position: absolute; bottom: 50px; width: 100%; text-align: center;">
-        <button onclick="stopScan()" style="padding: 15px 40px; border-radius: 30px; border: none; font-weight: bold;">촬영 및 분석</button>
+    <div style="position: absolute; bottom: 40px; display: flex; gap: 20px;">
+        <button onclick="alert('갤러리 열기')" style="padding: 12px 25px; border-radius: 25px; border:none; background:white; font-weight:bold;">🖼️ 사진 첨부</button>
+        <button onclick="closeScan(); manualTrans();" style="padding: 12px 25px; border-radius: 25px; border:none; background:var(--primary); color:white; font-weight:bold;">📸 촬영번역</button>
     </div>
 </div>
 
 <script>
-    // 기능 1: 모달 제어
-    function showModal(id) { document.getElementById(id).style.display = 'block'; }
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-
-    // 기능 2: 언어 선택
-    function setLang(code) {
-        const langNames = { it: '🇮🇹 이탈리아어', en: '🇺🇸 영어', ko: '🇰🇷 한국어' /* 생략 */ };
-        document.getElementById('dispEnd').innerText = langNames[code] || "선택 언어";
-        closeModal('langModal');
+    function openScan() { document.getElementById('scanOverlay').style.display = 'flex'; }
+    function closeScan() { document.getElementById('scanOverlay').style.display = 'none'; }
+    function showSitu() { 
+        const area = document.getElementById('situArea');
+        area.style.display = (area.style.display === 'none') ? 'block' : 'none';
     }
-
-    // 기능 3: 카메라 스캔 실행
-    function startScan() { document.getElementById('scanLayer').style.display = 'block'; }
-    function stopScan() { 
-        document.getElementById('scanLayer').style.display = 'none';
-        showResult("Scanning...", "Menu del giorno", "메뉴 델 조르노", "오늘의 메뉴라는 뜻입니다.");
-    }
-
-    // 기능 4: 상황별 문장 로드 (예시 데이터)
-    function loadSitu(cat) {
-        const list = document.getElementById('situList');
-        list.innerHTML = `<div class="lang-item" onclick="showResult('식당','Il conto, per favore','일 꼰또, 뻬르 파보레','계산서 부탁할 때 쓰는 말입니다.')">🍴 계산서 부탁합니다.</div>`;
-        // 실제로는 여기에 15개 문장 반복문
-    }
-
-    // 기능 5: 하단 입력 번역
     function manualTrans() {
-        const input = document.getElementById('manualInput').value;
-        if(!input) return;
-        showResult(input, "Vorrei confermare...", "보레이 꼰뻬르마레...", "정중하게 무언가 확인하고 싶을 때 쓰는 'Vorrei'가 들어간 문장입니다.");
-    }
-
-    // 기능 6: 결과 화면에 뿌리기
-    function showResult(ko, target, pronun, tip) {
         document.getElementById('resultCard').style.display = 'block';
-        document.getElementById('koTxt').innerText = ko;
-        document.getElementById('targetTxt').innerText = target;
-        document.getElementById('pronunTxt').innerText = pronun;
-        document.getElementById('tipTxt').innerText = "💡 Gemini Tip: " + tip;
         window.scrollTo(0, document.body.scrollHeight);
     }
-
-    function speak() {
-        const msg = new SpeechSynthesisUtterance(document.getElementById('targetTxt').innerText);
-        msg.lang = 'it-IT';
-        window.speechSynthesis.speak(msg);
+    function setGender(g) {
+        document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
     }
 </script>
 
