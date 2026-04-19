@@ -6,52 +6,61 @@
     <title>TIMOTHY v2.0 Premium</title>
     <style>
         :root { --primary: #2563eb; --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --sub: #94a3b8; }
-        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Pretendard', sans-serif; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
-        .app { max-width: 480px; width: 100%; margin: 0 auto; padding: 15px; box-sizing: border-box; flex: 1; padding-bottom: 120px; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: sans-serif; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
+        .app { max-width: 480px; width: 100%; margin: 0 auto; padding: 15px; flex: 1; display: flex; flex-direction: column; gap: 10px; box-sizing: border-box; padding-bottom: 120px; }
         
+        /* 1. 헤더 & 설정 */
         .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
         .gear-btn { background: none; border: none; font-size: 1.3rem; cursor: pointer; }
-        .card { background: var(--card); border-radius: 20px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.03); margin-bottom: 12px; position: relative; }
 
-        /* 언어 선택 모달 스타일 수정 */
+        /* 2. 언어 선택 (KR/IT 영문 표기 삭제) */
+        .card { background: var(--card); border-radius: 20px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.03); margin-bottom: 10px; position: relative; }
         .lang-bar { display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; }
         .lang-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .lang-item { padding: 15px 5px; border: 1px solid #eee; border-radius: 15px; text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
+        .lang-item { padding: 12px 5px; border: 1px solid #eee; border-radius: 12px; text-align: center; cursor: pointer; display: flex; flex-direction: column; }
         .lang-item.active { background: var(--primary); color: white; border-color: var(--primary); }
         .lang-ko-name { font-weight: bold; font-size: 0.9rem; }
         .lang-en-name { font-size: 0.7rem; color: #94a3b8; margin-top: 2px; }
         .lang-item.active .lang-en-name { color: rgba(255,255,255,0.7); }
 
-        /* 마이크 & 성별 선택 */
-        .mic-section { text-align: center; padding: 25px 15px; }
-        .mic-btn { width: 75px; height: 75px; border-radius: 50%; border: none; background: white; box-shadow: 0 8px 15px rgba(0,0,0,0.1); cursor: pointer; font-size: 2rem; transition: 0.3s; }
+        /* 3. 마이크 섹션 (성별 버튼 제거) */
+        .mic-section { text-align: center; padding: 30px 15px; }
+        .mic-btn { width: 75px; height: 75px; border-radius: 50%; border: none; background: white; box-shadow: 0 8px 15px rgba(0,0,0,0.1); cursor: pointer; font-size: 2rem; }
         .wave-container { display: none; align-items: center; justify-content: center; gap: 5px; height: 40px; margin: 15px 0; }
         .wave-bar { width: 4px; height: 10px; background: var(--primary); border-radius: 2px; animation: wave 1s infinite ease-in-out; }
         @keyframes wave { 0%, 100% { height: 10px; } 50% { height: 40px; } }
-        .gender-toggle { display: flex; gap: 8px; justify-content: center; margin-top: 15px; }
-        .gender-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid #ddd; background: white; font-size: 0.75rem; cursor: pointer; }
-        .gender-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-        .stop-interpret-btn { display: none; width: 100%; background: #1e293b; color: white; border: none; padding: 15px; border-radius: 15px; font-weight: bold; margin-top: 15px; }
+        .stop-btn { display: none; width: 100%; background: #1e293b; color: white; border: none; padding: 15px; border-radius: 15px; font-weight: bold; margin-top: 15px; cursor: pointer; }
 
-        /* 카메라 스캔 박스 (Viewfinder) */
-        #camLayer { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 10000; align-items: center; justify-content: center; }
-        .viewfinder { width: 85%; height: 35%; border: 2px solid #10b981; border-radius: 20px; position: relative; background: transparent; box-shadow: 0 0 0 5000px rgba(0,0,0,0.4); }
+        /* 4. 카메라/상황 버튼 */
+        .sub-btn-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .sub-btn { flex: 1; background: var(--card); border: none; border-radius: 18px; padding: 15px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.03); }
+
+        /* 5. 카메라 뷰파인더 (외부 불투명, 내부 투명) */
+        #camLayer { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 10000; align-items: center; justify-content: center; }
+        .viewfinder { width: 80%; height: 35%; border: 2px solid #10b981; border-radius: 20px; position: relative; background: transparent; box-shadow: 0 0 0 5000px rgba(0,0,0,0.7); }
         .scan-line { width: 100%; height: 2px; background: #10b981; position: absolute; top: 0; animation: scan 4s infinite linear; box-shadow: 0 0 10px #10b981; }
         @keyframes scan { to { top: 100%; } }
 
-        /* 결과 배너 스타일 */
+        /* 6. 결과 배너 (복구) */
         .result-box { border-left: 6px solid var(--primary); display: none; animation: slideUp 0.3s ease; }
         @keyframes slideUp { from { transform: translateY(15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .res-target { font-size: 1.5rem; font-weight: 800; padding-right: 45px; line-height: 1.2; }
+        .res-ko { color: var(--sub); font-size: 0.8rem; margin: 5px 0; }
         .res-pronun { color: var(--primary); font-weight: bold; font-size: 1.05rem; }
         .res-tip { background: #fffbeb; color: #92400e; padding: 12px; border-radius: 12px; font-size: 0.85rem; margin-top: 15px; line-height: 1.5; }
+
+        /* 7. 상황별 모달 & 리스트 */
+        .situ-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 15px; }
+        .tab-btn { padding: 8px 0; border: none; border-radius: 8px; font-size: 0.75rem; background: #eee; cursor: pointer; }
+        .tab-btn.active { background: var(--primary); color: white; }
+        #situList { max-height: 280px; overflow-y: auto; }
 
         /* 하단바 */
         .bottom-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: white; padding: 12px 15px; display: flex; gap: 8px; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); box-sizing: border-box; }
         #manualInput { flex: 1; border: none; background: #f1f5f9; border-radius: 12px; padding: 12px; font-size: 1rem; outline: none; }
         .send-btn { background: #1e293b; color: white; border: none; border-radius: 12px; padding: 0 18px; font-weight: bold; cursor: pointer; }
 
-        /* 모달 시스템 */
+        /* 모달 공통 */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9000; backdrop-filter: blur(4px); }
         .modal-content { position: absolute; bottom: 0; width: 100%; max-width: 480px; left: 50%; transform: translateX(-50%); background: white; border-radius: 30px 30px 0 0; padding: 25px; box-sizing: border-box; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -67,7 +76,7 @@
     </div>
 
     <div class="card lang-bar" onclick="openModal('langModal')">
-        <span id="curStartDisp">🇰🇷 한국어</span> <span style="color:var(--primary)">⇄</span> <span id="curEndDisp">🇮🇹 이탈리아어</span>
+        <span id="curStartDisp">한국어</span> <span style="color:var(--primary)">⇄</span> <span id="curEndDisp">이탈리아어</span>
     </div>
 
     <div class="card mic-section">
@@ -79,27 +88,18 @@
         </div>
         <button class="mic-btn" id="micBtn" onclick="startListening()">🎙️</button>
         <div id="micStatus" style="font-size:0.85rem; color:var(--sub); margin-top:10px;">아이콘을 누르면 대화 시작</div>
-        
-        <div class="gender-toggle">
-            <button class="gender-btn active" id="btnFemale" onclick="setGender('female')">여성 목소리</button>
-            <button class="gender-btn" id="btnMale" onclick="setGender('male')">남성 목소리</button>
-        </div>
-        
-        <button class="stop-interpret-btn" id="stopInterpretBtn" onclick="stopAndTranslate()">⏹️ 종료 및 통역하기</button>
+        <button class="stop-btn" id="stopBtn" onclick="stopAndTranslate()">⏹️ 종료 및 통역하기</button>
     </div>
 
-    <div style="display:flex; gap:10px; margin-bottom:12px;">
-        <button style="flex:1; background:white; border:none; border-radius:15px; padding:15px; font-weight:bold; box-shadow:0 4px 6px rgba(0,0,0,0.03); cursor:pointer;" onclick="openCam()">📷 사진번역</button>
-        <button style="flex:1; background:white; border:none; border-radius:15px; padding:15px; font-weight:bold; box-shadow:0 4px 6px rgba(0,0,0,0.03); cursor:pointer;" onclick="toggleSitu()">📙 상황별</button>
+    <div class="sub-btn-row">
+        <button class="sub-btn" onclick="openCam()">📷 사진번역</button>
+        <button class="sub-btn" onclick="openModal('situModal')">📙 상황별</button>
     </div>
-
-    <div id="situTabs" style="display:none; grid-template-columns: repeat(5, 1fr); gap:6px; margin-bottom:15px;"></div>
-    <div id="situList" style="display:none; max-height:280px; overflow-y:auto; margin-bottom:15px;"></div>
 
     <div id="resultCard" class="card result-box">
         <div id="targetTxt" class="res-target"></div>
+        <div id="koTxt" class="res-ko"></div>
         <div id="pronunTxt" class="res-pronun"></div>
-        <div id="koTxt" style="color:var(--sub); font-size:0.85rem; margin: 5px 0;"></div>
         <div id="tipTxt" class="res-tip"></div>
         <button onclick="speakResult()" style="position:absolute; top:18px; right:18px; border:none; background:#eff6ff; width:42px; height:42px; border-radius:50%; color:var(--primary); font-size:1.2rem; cursor:pointer;">🔊</button>
     </div>
@@ -121,12 +121,18 @@
     <div class="lang-grid" id="langGrid"></div>
 </div></div>
 
+<div id="situModal" class="modal"><div class="modal-content">
+    <div class="modal-header"><h3>상황별 문장</h3><button class="close-x" onclick="closeModal('situModal')">✕</button></div>
+    <div class="situ-grid" id="situTabs"></div>
+    <div id="situList"></div>
+</div></div>
+
 <div id="camLayer">
     <div class="viewfinder"><div class="scan-line"></div></div>
-    <button onclick="closeCam()" style="position:absolute; top:30px; right:30px; color:white; background:none; border:none; font-size:2rem;">✕</button>
+    <button onclick="closeCam()" style="position:absolute; top:30px; right:30px; color:white; background:none; border:none; font-size:2rem; cursor:pointer;">✕</button>
     <div style="position:absolute; bottom:50px; display:flex; gap:15px;">
-        <label style="padding:15px 25px; border-radius:30px; background:white; font-weight:bold; cursor:pointer; font-size:0.9rem;">📁 사진 업로드<input type="file" style="display:none;" onchange="handleFileUpload()"></label>
-        <button onclick="closeCam(); handleManualTrans('이미지 스캔 완료... 번역 중');" style="padding:15px 25px; border-radius:30px; border:none; background:var(--primary); color:white; font-weight:bold;">📸 촬영번역</button>
+        <label style="padding:15px 25px; border-radius:30px; background:white; font-weight:bold; cursor:pointer; font-size:0.9rem;">📁 사진 업로드<input type="file" style="display:none;" onchange="closeCam(); handleManualTrans('사진 분석 중...');"></label>
+        <button onclick="closeCam(); handleManualTrans('이미지 스캔 분석 중...');" style="padding:15px 25px; border-radius:30px; border:none; background:var(--primary); color:white; font-weight:bold;">📸 촬영번역</button>
     </div>
 </div>
 
@@ -138,7 +144,6 @@
     ];
     const categories = ["식당", "호텔", "공항", "병원", "관광지", "상점", "쇼핑", "배달", "경찰서", "옷가게"];
     let currentTargetLang = 'it';
-    let voiceGender = 'female';
 
     // 1. 초기화
     window.onload = () => {
@@ -146,12 +151,12 @@
         languages.forEach(l => {
             const div = document.createElement('div');
             div.className = `lang-item ${l.id === currentTargetLang ? 'active' : ''}`;
-            div.innerHTML = `<span class="lang-ko-name">${l.flag} ${l.name}</span><span class="lang-en-name">${l.en}</span>`;
+            div.innerHTML = `<span class="lang-ko-name">${l.name}</span><span class="lang-en-name">${l.en}</span>`;
             div.onclick = () => {
                 currentTargetLang = l.id;
                 document.querySelectorAll('.lang-item').forEach(i => i.classList.remove('active'));
                 div.classList.add('active');
-                document.getElementById('curEndDisp').innerText = `${l.flag} ${l.name}`;
+                document.getElementById('curEndDisp').innerText = l.name;
                 closeModal('langModal');
             };
             grid.appendChild(div);
@@ -161,7 +166,6 @@
         categories.forEach(c => {
             const btn = document.createElement('button');
             btn.className = 'tab-btn';
-            btn.style = "padding:8px 0; border:none; border-radius:8px; font-size:0.75rem; background:#eee; cursor:pointer;";
             btn.innerText = c;
             btn.onclick = () => loadPhrases(c);
             tabs.appendChild(btn);
@@ -171,18 +175,12 @@
         if(savedKey) document.getElementById('geminiKeyInput').value = savedKey;
     };
 
-    // 2. 모달 제어
     function openModal(id) { document.getElementById(id).style.display = 'block'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
     function openCam() { document.getElementById('camLayer').style.display = 'flex'; }
     function closeCam() { document.getElementById('camLayer').style.display = 'none'; }
-    function setGender(g) {
-        voiceGender = g;
-        document.getElementById('btnFemale').classList.toggle('active', g === 'female');
-        document.getElementById('btnMale').classList.toggle('active', g === 'male');
-    }
 
-    // 3. 마이크 로직
+    // 2. 마이크 로직
     let recognition;
     if ('webkitSpeechRecognition' in window) {
         recognition = new webkitSpeechRecognition();
@@ -192,11 +190,11 @@
     }
 
     function startListening() {
-        if (!recognition) return alert("브라우저에서 음성 인식을 지원하지 않습니다.");
+        if (!recognition) return alert("브라우저 미지원");
         document.getElementById('micBtn').style.display = 'none';
         document.getElementById('waveBox').style.display = 'flex';
-        document.getElementById('stopInterpretBtn').style.display = 'block';
-        document.getElementById('micStatus').innerText = "목소리를 듣고 있습니다...";
+        document.getElementById('stopBtn').style.display = 'block';
+        document.getElementById('micStatus').innerText = "듣고 있습니다...";
         recognition.start();
     }
 
@@ -204,21 +202,37 @@
         recognition.stop();
         document.getElementById('micBtn').style.display = 'inline-block';
         document.getElementById('waveBox').style.display = 'none';
-        document.getElementById('stopInterpretBtn').style.display = 'none';
+        document.getElementById('stopBtn').style.display = 'none';
         document.getElementById('micStatus').innerText = "아이콘을 누르면 대화 시작";
     }
 
-    recognition.onresult = (event) => {
-        const result = event.results[event.results.length - 1][0].transcript;
-        if (event.results[event.results.length - 1].isFinal) {
-            handleManualTrans(result);
-        }
+    recognition.onresult = (e) => {
+        const last = e.results[e.results.length - 1];
+        if (last.isFinal) handleManualTrans(last[0].transcript);
     };
 
-    // 4. 번역 엔진 (오류 해결된 API 호출 방식)
+    // 3. 상황별 리스트 (15개)
+    function loadPhrases(cat) {
+        const list = document.getElementById('situList');
+        list.innerHTML = "";
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.innerText === cat));
+        for(let i=1; i<=15; i++) {
+            const div = document.createElement('div');
+            div.style = "background:#f8fafc; padding:15px; border-radius:15px; margin-bottom:10px; position:relative; border:1px solid #eee;";
+            div.innerHTML = `
+                <div style="font-size:0.75rem; color:#666;">[${cat}] 문장 ${i}</div>
+                <div style="font-weight:bold; margin-top:3px;">번역을 위해 클릭하세요.</div>
+                <button onclick="handleManualTrans('${cat} 관련 ${i}번 문장')" style="position:absolute; top:15px; right:15px; border:none; background:none; font-size:1.2rem; cursor:pointer;">🔊</button>
+            `;
+            list.appendChild(div);
+        }
+    }
+
+    // 4. 번역 엔진 (Gemini 단일화)
     async function handleManualTrans(input) {
         const text = input || document.getElementById('manualInput').value;
         if (!text) return;
+        closeModal('situModal');
 
         document.getElementById('resultCard').style.display = 'block';
         document.getElementById('targetTxt').innerText = "AI 분석 중...";
@@ -226,8 +240,8 @@
         document.getElementById('pronunTxt').innerText = "";
         document.getElementById('tipTxt').innerText = "";
 
-        const targetLangName = document.getElementById('curEndDisp').innerText;
-        const prompt = `"${text}"를 ${targetLangName}로 번역해줘. 반드시 JSON 형식으로만 답해: {"target":"번역문", "pronun":"한국어발음", "tip":"여행팁"}`;
+        const prompt = `Translate "${text}" to ${document.getElementById('curEndDisp').innerText}. 
+            Respond ONLY in JSON: {"target":"Translated Text", "pronun":"Korean Pronunciation", "tip":"Travel Tip"}`;
 
         const response = await callGeminiAPI(prompt);
         if (response) {
@@ -237,7 +251,7 @@
                 document.getElementById('pronunTxt').innerText = data.pronun;
                 document.getElementById('tipTxt').innerText = "💡 Gemini Tip: " + data.tip;
                 speakResult();
-            } catch(e) { document.getElementById('targetTxt').innerText = "응답 해석 오류"; }
+            } catch(e) { document.getElementById('targetTxt').innerText = "오류 발생"; }
         }
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }
@@ -245,64 +259,21 @@
     async function callGeminiAPI(prompt) {
         const apiKey = localStorage.getItem('GEMINI_API_KEY');
         if(!apiKey) { openModal('settingsModal'); return null; }
-        
-        // [수정] 구글 AI 스튜디오 정식 엔드포인트 사용
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-        
         try {
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-            });
+            const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
             const data = await res.json();
-            if(data.error) throw new Error(data.error.message);
-            
-            let cleanText = data.candidates[0].content.parts[0].text;
-            return cleanText.replace(/```json|```/g, '').trim();
-        } catch(e) {
-            alert("통신 오류: " + e.message + "\nAPI 키를 확인하시거나 모델 사용 승인을 확인해 주세요.");
-            return null;
-        }
+            return data.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim();
+        } catch(e) { return null; }
     }
 
-    function saveApiKeys() {
-        localStorage.setItem('GEMINI_API_KEY', document.getElementById('geminiKeyInput').value);
-        alert("저장되었습니다."); closeModal('settingsModal');
-    }
-
+    function saveApiKeys() { localStorage.setItem('GEMINI_API_KEY', document.getElementById('geminiKeyInput').value); alert("저장됨"); closeModal('settingsModal'); }
     function speakResult() {
         const text = document.getElementById('targetTxt').innerText;
         if(!text || text.includes("분석")) return;
         const msg = new SpeechSynthesisUtterance(text);
         msg.lang = currentTargetLang;
-        msg.pitch = voiceGender === 'female' ? 1.2 : 0.8;
         window.speechSynthesis.speak(msg);
-    }
-
-    function toggleSitu() {
-        const t = document.getElementById('situTabs');
-        const l = document.getElementById('situList');
-        const show = t.style.display === 'none' || t.style.display === '';
-        t.style.display = show ? 'grid' : 'none';
-        l.style.display = show ? 'block' : 'none';
-        if(show) loadPhrases("식당");
-    }
-
-    function loadPhrases(cat) {
-        const list = document.getElementById('situList');
-        list.innerHTML = "";
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.innerText === cat));
-        for(let i=1; i<=15; i++) {
-            const div = document.createElement('div');
-            div.style = "background:white; padding:15px; border-radius:15px; margin-bottom:10px; box-shadow:0 2px 4px rgba(0,0,0,0.02); border:1px solid #f1f5f9; position:relative;";
-            div.innerHTML = `
-                <div style="font-size:0.75rem; color:#666;">[${cat}] 문장 ${i}</div>
-                <div style="font-weight:bold; margin-top:3px;">${cat} 관련 요청 사항입니다.</div>
-                <button onclick="handleManualTrans('${cat} 상황 문장 ${i}')" style="position:absolute; top:15px; right:15px; border:none; background:none; font-size:1.2rem; cursor:pointer;">🔊</button>
-            `;
-            list.appendChild(div);
-        }
     }
 </script>
 
