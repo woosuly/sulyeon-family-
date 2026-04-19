@@ -2,166 +2,103 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>TIMOTHY Premium Adaptive</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TIMOTHY v2.0 Premium</title>
     <style>
         :root {
-            /* 라이트 모드 (기본) */
-            --bg-app: #f8fafc;
-            --card-bg: #ffffff;
-            --text-main: #1e293b;
-            --text-sub: #64748b;
-            --primary: #2563eb;
-            --accent: #dbeafe;
-            --safe-area-bottom: env(safe-area-inset-bottom);
+            --bg: #f3f4f6; --card: #ffffff; --primary: #2563eb; 
+            --text: #111827; --sub: #6b7280; --accent: #eff6ff;
         }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Pretendard', sans-serif; padding-bottom: 80px; }
+        .app { max-width: 480px; margin: 0 auto; padding: 20px; }
 
-        /* 시스템 설정에 따른 자동 다크모드 전환 */
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-app: #0f172a;
-                --card-bg: #1e293b;
-                --text-main: #f1f5f9;
-                --text-sub: #94a3b8;
-                --accent: #334155;
-            }
-        }
+        /* 언어 선택 (사진 1, 2 반영) */
+        .lang-bar { background: var(--card); border-radius: 20px; padding: 15px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .lang-item { text-align: center; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
+        .swap-btn { color: var(--primary); font-size: 1.2rem; cursor: pointer; }
 
-        body { 
-            margin: 0; background: var(--bg-app); color: var(--text-main); 
-            font-family: 'Pretendard', sans-serif; transition: all 0.3s ease;
-            -webkit-tap-highlight-color: transparent;
-        }
+        /* 메인 통역 카드 (사진 1 반영) */
+        .main-card { background: var(--card); border-radius: 25px; padding: 30px 20px; text-align: center; margin-bottom: 15px; position: relative; }
+        .online-tag { position: absolute; top: 15px; right: 15px; font-size: 0.65rem; color: #10b981; font-weight: bold; }
+        .mic-btn { width: 80px; height: 80px; border-radius: 50%; border: none; background: white; box-shadow: 0 10px 15px rgba(0,0,0,0.1); margin: 20px auto; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
-        .app-container { 
-            max-width: 480px; margin: 0 auto; padding: 20px; 
-            padding-bottom: calc(100px + var(--safe-area-bottom)); /* 하단 바 공간 확보 */
-        }
+        /* 서브 버튼 (사진번역 / 상황별) */
+        .sub-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
+        .sub-btn { background: var(--card); border: none; border-radius: 18px; padding: 15px; font-weight: bold; display: flex; align-items: center; gap: 10px; cursor: pointer; }
 
-        /* 자동 크기 조절 카드 */
-        .adaptive-card {
-            background: var(--card-bg); border-radius: 24px; padding: 5vw; /* 화면 너비에 비례한 패딩 */
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); margin-bottom: 20px;
-            transition: transform 0.2s active;
-        }
+        /* 결과창 (사진 4, 7 반영 - 가독성 극대화) */
+        .result-card { background: var(--card); border-radius: 25px; padding: 25px; border-left: 6px solid var(--primary); margin-top: 15px; position: relative; }
+        .res-target { font-size: 1.6rem; font-weight: bold; margin-bottom: 10px; }
+        .res-pronun { color: var(--primary); font-weight: bold; font-size: 1rem; margin-bottom: 5px; }
+        .res-tip { background: #fef3c7; color: #92400e; padding: 12px; border-radius: 12px; font-size: 0.85rem; margin-top: 15px; line-height: 1.4; }
 
-        .adaptive-card:active { transform: scale(0.98); }
+        /* 하단 입력바 */
+        .input-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: white; padding: 12px 20px; box-sizing: border-box; display: flex; gap: 10px; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); }
+        .input-bar input { flex: 1; border: none; background: #f3f4f6; border-radius: 12px; padding: 12px; }
 
-        /* 한 손 조작 최적화 레이아웃 */
-        .main-action-area {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            min-height: 30vh;
-        }
-
-        .mic-btn-adaptive {
-            width: 25vw; height: 25vw; max-width: 100px; max-height: 100px;
-            border-radius: 50%; border: none; background: var(--primary);
-            color: white; font-size: 2rem; cursor: pointer;
-            box-shadow: 0 15px 30px rgba(37, 99, 235, 0.3);
-            display: flex; align-items: center; justify-content: center;
-        }
-
-        /* 결과창 가독성 강화 */
-        .result-view {
-            border-left: 8px solid var(--primary);
-            animation: slideUp 0.4s ease-out;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* 하단 수동 입력바 (iOS/안드로이드 하단바 대응) */
-        .bottom-nav {
-            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-            width: 100%; max-width: 480px; background: var(--card-bg);
-            padding: 15px 20px calc(15px + var(--safe-area-bottom));
-            display: flex; gap: 10px; border-radius: 25px 25px 0 0;
-            box-shadow: 0 -10px 30px rgba(0,0,0,0.1);
-        }
-
-        input {
-            flex: 1; background: var(--bg-app); border: none; border-radius: 15px;
-            padding: 12px 15px; color: var(--text-main); font-size: 1rem;
-        }
+        /* 모달: 듣기 화면 (웨이브 포함) */
+        #listenModal { display: none; position: fixed; inset: 0; background: white; z-index: 2000; padding: 40px 20px; text-align: center; }
+        .wave { display: flex; justify-content: center; gap: 5px; height: 40px; align-items: center; margin: 30px 0; }
+        .bar { width: 4px; height: 20px; background: var(--primary); border-radius: 2px; animation: bounce 0.6s infinite alternate; }
+        @keyframes bounce { from { height: 10px; } to { height: 40px; } }
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <div class="adaptive-card" style="display: flex; justify-content: space-between; align-items: center;">
-        <div id="sourceLangDisp" style="text-align: center; font-weight: bold;">🇰🇷 한국어</div>
-        <button onclick="swapLanguages()" style="background: var(--accent); border: none; width: 40px; height: 40px; border-radius: 50%; color: var(--primary);">⇄</button>
-        <div id="targetLangDisp" style="text-align: center; font-weight: bold;">🇮🇹 이탈리아어</div>
+<div class="app">
+    <div style="font-weight: 800; font-size: 1.2rem; margin-bottom: 20px;">TIMOTHY <span style="color:var(--primary); font-size:0.7rem;">v2.0 PREMIUM</span></div>
+
+    <div class="lang-bar">
+        <div class="lang-item">🇰🇷 한국어</div>
+        <div class="swap-btn" onclick="swap()">⇄</div>
+        <div class="lang-item">🇮🇹 이탈리아어</div>
     </div>
 
-    <div class="main-action-area">
-        <button class="mic-btn-adaptive" id="mainMic" onclick="startRecognition()">
-            🎙️
-        </button>
-        <p style="margin-top: 15px; color: var(--text-sub); font-size: 0.9rem;">탭하여 말하기</p>
+    <div class="main-card">
+        <div class="online-tag">● ONLINE</div>
+        <button class="mic-btn" onclick="startListen()"><span style="font-size: 2rem; color: var(--primary);">🎙️</span></button>
+        <div style="color:var(--sub); font-size:0.85rem;">아이콘을 누르면 대화 시작</div>
     </div>
 
-    <div id="resultDisplay" class="adaptive-card result-view" style="display: none;">
-        <div id="originalText" style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 8px;"></div>
-        <div id="translatedText" style="font-size: 1.6rem; font-weight: 800; margin-bottom: 10px;"></div>
-        <div id="phoneticText" style="color: var(--primary); font-weight: bold; margin-bottom: 15px;"></div>
-        <div id="geminiTip" style="background: var(--accent); padding: 12px; border-radius: 12px; font-size: 0.85rem; line-height: 1.5;"></div>
-        
-        <button onclick="playTTS()" style="position: absolute; top: 20px; right: 20px; background: var(--primary); color: white; border: none; width: 45px; height: 45px; border-radius: 50%;">🔊</button>
+    <div class="sub-grid">
+        <button class="sub-btn" onclick="alert('카메라 스캐닝 실행')"><span>📷</span> 사진번역</button>
+        <button class="sub-btn" onclick="alert('상황별 리스트 호출')"><span>📙</span> 상황별</button>
+    </div>
+
+    <div id="result" class="result-card" style="display:none;">
+        <div id="resTarget" class="res-target">Vorrei confermare la mia prenotazione.</div>
+        <div id="resPronun" class="res-pronun">보레이 꼰뻬르마레 라 미아 쁘레노따찌오네.</div>
+        <div id="resKo" style="color:var(--sub); font-size:0.9rem;">제 예약을 확인하고 싶습니다.</div>
+        <div class="res-tip">💡 Gemini Tip: 이탈리아에서 'Vorrei'는 매우 정중한 표현입니다. 식당 예약 시 이 단어만 써도 아주 친절한 인상을 줄 수 있어요.</div>
+        <button onclick="playVoice()" style="position:absolute; top:20px; right:20px; border:none; background:var(--accent); width:40px; height:40px; border-radius:50%; color:var(--primary);">🔊</button>
     </div>
 </div>
 
-<div class="bottom-nav">
-    <input type="text" id="manualInput" placeholder="직접 입력...">
-    <button onclick="translateManual()" style="background: var(--text-main); color: var(--bg-app); border: none; border-radius: 15px; padding: 0 20px; font-weight: bold;">번역</button>
+<div class="input-bar">
+    <input type="text" id="manualText" placeholder="직접 문장을 입력하세요...">
+    <button onclick="manualTrans()" style="background:var(--text); color:white; border:none; padding:0 15px; border-radius:10px; font-weight:bold;">번역</button>
+</div>
+
+<div id="listenModal">
+    <div style="color:var(--primary); font-weight:bold; font-size:0.8rem;">● LISTENING...</div>
+    <h2 style="margin-top:10px;">한국어를 듣고 있습니다</h2>
+    <div class="wave"><div class="bar"></div><div class="bar" style="animation-delay:0.2s"></div><div class="bar" style="animation-delay:0.1s"></div><div class="bar" style="animation-delay:0.3s"></div></div>
+    <button onclick="finishListen()" style="width:100%; max-width:300px; background:var(--text); color:white; padding:15px; border-radius:15px; border:none; position:absolute; bottom:50px; left:50%; transform:translateX(-50%); font-weight:bold;">⏹️ 종료 및 번역하기</button>
 </div>
 
 <script>
-    let isItalian = true;
-
-    // 언어 스왑 기능
-    function swapLanguages() {
-        isItalian = !isItalian;
-        document.getElementById('sourceLangDisp').innerText = isItalian ? "🇰🇷 한국어" : "🇮🇹 이탈리아어";
-        document.getElementById('targetLangDisp').innerText = isItalian ? "🇮🇹 이탈리아어" : "🇰🇷 한국어";
+    function startListen() { document.getElementById('listenModal').style.display = 'block'; }
+    function finishListen() { 
+        document.getElementById('listenModal').style.display = 'none';
+        document.getElementById('result').style.display = 'block'; // 결과창 표시
     }
-
-    // 기본 브라우저 번역 엔진 연동 (테스트용)
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.lang = 'ko-KR';
-
-    function startRecognition() {
-        document.getElementById('mainMic').style.boxShadow = "0 0 0 10px rgba(37, 99, 235, 0.2)";
-        recognition.start();
+    function playVoice() {
+        const txt = document.getElementById('resTarget').innerText;
+        const msg = new SpeechSynthesisUtterance(txt);
+        msg.lang = 'it-IT';
+        window.speechSynthesis.speak(msg);
     }
-
-    recognition.onresult = async (event) => {
-        const text = event.results[0][0].transcript;
-        document.getElementById('mainMic').style.boxShadow = "0 15px 30px rgba(37, 99, 235, 0.3)";
-        
-        // 여기에 실제 번역 API 연결 (현재는 시뮬레이션)
-        showResult(text, "Buongiorno!", "본 조르노!", "정오 전 인사에요. 식당 입구에서 밝게 인사해보세요.");
-    };
-
-    function showResult(original, translated, phonetic, tip) {
-        document.getElementById('resultDisplay').style.display = 'block';
-        document.getElementById('originalText').innerText = original;
-        document.getElementById('translatedText').innerText = translated;
-        document.getElementById('phoneticText').innerText = phonetic;
-        document.getElementById('geminiTip').innerText = "💡 Gemini Tip: " + tip;
-        
-        // 자동 스크롤
-        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-    }
-
-    function playTTS() {
-        const text = document.getElementById('translatedText').innerText;
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'it-IT';
-        window.speechSynthesis.speak(utterance);
-    }
+    // 기타 스왑/입력 로직은 이전과 동일하게 확장 가능
 </script>
 
 </body>
