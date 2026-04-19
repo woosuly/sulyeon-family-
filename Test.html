@@ -2,171 +2,148 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TIMOTHY v2.0 - 독립 테스트</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TIMOTHY v2.0 Premium</title>
     <style>
         :root {
-            --bg-dark: #121826;
-            --card-bg: #1e293b;
-            --primary-blue: #2563eb;
-            --text-white: #ffffff;
-            --text-dim: #94a3b8;
+            --bg-dark: #121826; --card-bg: #1e293b; --primary-blue: #2563eb;
+            --text-white: #ffffff; --text-dim: #94a3b8; --accent-green: #10b981;
         }
+        body { margin: 0; background: var(--bg-dark); color: var(--text-white); font-family: sans-serif; overflow-x: hidden; }
+        .container { max-width: 480px; margin: 0 auto; padding: 20px; box-sizing: border-box; }
+        
+        /* 언어 선택 & 스왑 */
+        .lang-section { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); border-radius: 20px; padding: 15px; margin-bottom: 20px; }
+        select { background: none; color: white; border: 1px solid #475569; border-radius: 10px; padding: 8px; font-size: 0.9rem; width: 40%; }
+        .swap-btn { font-size: 1.5rem; color: var(--primary-blue); cursor: pointer; transition: 0.3s; }
 
-        body {
-            margin: 0; padding: 0;
-            background-color: var(--bg-dark);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            color: var(--text-white);
-            display: flex; justify: center;
-        }
+        /* 실시간 통역 & 웨이브 애니메이션 */
+        .mic-section { background: var(--card-bg); border-radius: 25px; padding: 30px 20px; text-align: center; position: relative; margin-bottom: 20px; }
+        .wave-container { display: none; justify-content: center; align-items: center; height: 50px; gap: 5px; margin: 20px 0; }
+        .wave-bar { width: 4px; height: 20px; background: var(--primary-blue); animation: wave 1s infinite; }
+        @keyframes wave { 0%, 100% { height: 10px; } 50% { height: 40px; } }
+        
+        .mic-btn { width: 80px; height: 80px; border-radius: 50%; border: none; background: var(--primary-blue); color: white; font-size: 2rem; box-shadow: 0 0 20px rgba(37, 99, 235, 0.5); cursor: pointer; }
+        .voice-options { margin-top: 15px; font-size: 0.8rem; }
 
-        .container {
-            width: 100%; max-width: 480px;
-            min-height: 100vh;
-            padding: 20px;
-            box-sizing: border-box;
-            margin: 0 auto;
-        }
+        /* 카메라 스캔 박스 */
+        .cam-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1000; }
+        .scan-box { position: absolute; top: 20%; left: 10%; width: 80%; height: 40%; border: 2px solid var(--accent-green); box-shadow: 0 0 20px var(--accent-green); border-radius: 15px; }
+        .scan-line { width: 100%; height: 2px; background: var(--accent-green); position: absolute; animation: scan 2s infinite; }
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
 
-        /* 상단 헤더 */
-        .header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding-bottom: 20px;
-        }
-        .logo { font-weight: bold; font-size: 1.2rem; color: #fff; }
-        .logo span { font-size: 0.8rem; color: var(--primary-blue); margin-left: 5px; }
+        /* 상황별 리스트 디자인 */
+        .situ-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 10px; }
+        .situ-item { background: var(--card-bg); padding: 10px 5px; border-radius: 10px; font-size: 0.7rem; text-align: center; cursor: pointer; min-width: 60px; }
+        .situ-item.active { background: var(--primary-blue); }
 
-        /* 언어 선택기 (사진 2 참조) */
-        .lang-selector {
-            display: flex; justify-content: space-around; align-items: center;
-            background: var(--card-bg);
-            border-radius: 20px; padding: 20px; margin-bottom: 20px;
-        }
-        .lang-box { text-align: center; cursor: pointer; }
-        .lang-box img { width: 30px; margin-bottom: 5px; }
-        .swap-btn { font-size: 1.5rem; color: var(--primary-blue); cursor: pointer; }
+        .phrase-card { background: white; color: black; border-radius: 15px; padding: 15px; margin-bottom: 10px; position: relative; }
+        .phrase-ko-sub { font-size: 0.75rem; color: #666; }
+        .phrase-target { font-size: 1.1rem; font-weight: bold; margin: 5px 0; }
+        .phrase-pronun { font-size: 0.9rem; color: var(--primary-blue); }
+        .phrase-tip { font-size: 0.75rem; color: #d97706; margin-top: 5px; border-top: 1px solid #eee; padding-top: 5px; }
 
-        /* 실시간 통역 버튼 (사진 1 참조) */
-        .mic-section {
-            background: var(--card-bg);
-            border-radius: 20px; padding: 20px; text-align: center; margin-bottom: 20px;
-        }
-        .status-tag { float: right; font-size: 0.7rem; color: var(--text-dim); }
-        .listen-btn {
-            width: 100%; background: var(--primary-blue);
-            color: white; border: none; border-radius: 15px;
-            padding: 15px; font-size: 1rem; font-weight: bold;
-            margin-top: 15px; cursor: pointer;
-        }
-
-        /* 하단 그리드 버튼 */
-        .action-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
-            margin-bottom: 20px;
-        }
-        .action-card {
-            background: var(--card-bg);
-            border-radius: 20px; padding: 20px; text-align: center; cursor: pointer;
-        }
-        .action-card i { font-size: 1.5rem; display: block; margin-bottom: 10px; }
-
-        /* 번역 결과창 (사진 4 참조) */
-        .result-section {
-            background: var(--card-bg);
-            border-radius: 20px; padding: 20px;
-            border-left: 4px solid var(--primary-blue);
-            min-height: 100px;
-        }
-        .result-label { font-size: 0.7rem; color: var(--primary-blue); font-weight: bold; margin-bottom: 10px; }
-
-        /* 카메라 레이어 (테스트용) */
-        #camera-layer {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: black; z-index: 100;
-        }
-        #video-feed { width: 100%; height: 100%; object-fit: cover; }
-        .close-cam { position: absolute; top: 20px; right: 20px; background: white; border: none; padding: 10px; border-radius: 50%; }
+        /* 하단 수동 입력 */
+        .manual-input { position: sticky; bottom: 0; background: var(--bg-dark); padding: 10px 0; display: flex; gap: 10px; }
+        input[type="text"] { flex: 1; background: var(--card-bg); border: 1px solid #475569; border-radius: 10px; color: white; padding: 12px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header">
-        <div class="logo">TIMOTHY <span>v2.0 Premium</span></div>
-        <div>🔑 👤</div>
-    </div>
+    <div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 20px;">TIMOTHY <span style="color:var(--primary-blue); font-size:0.8rem;">v2.0 Hybrid</span></div>
 
-    <div class="lang-selector">
-        <div class="lang-box">
-            <div style="font-size: 2rem;">🇰🇷</div>
-            <div>한국어</div>
-        </div>
-        <div class="swap-btn">⇄</div>
-        <div class="lang-box">
-            <div style="font-size: 2rem;">🇮🇹</div>
-            <div>이탈리아어</div>
-        </div>
+    <div class="lang-section">
+        <select id="startLang">
+            <option value="ko">한국어</option>
+            <option value="en-US">영어(미국)</option>
+            <option value="it">이탈리아어</option>
+            </select>
+        <div class="swap-btn" onclick="swapLang()">⇄</div>
+        <select id="endLang">
+            <option value="it" selected>이탈리아어</option>
+            <option value="en-US">영어(미국)</option>
+            <option value="ko">한국어</option>
+        </select>
     </div>
 
     <div class="mic-section">
-        <span class="status-tag">대기 중</span>
-        <div style="text-align: left; font-size: 0.9rem; margin-bottom: 10px;">🎙️ 실시간 통역</div>
-        <button class="listen-btn" onclick="startVoice()">🎤 듣기 시작</button>
-    </div>
-
-    <div class="action-grid">
-        <div class="action-card" onclick="openCamera()">
-            <div style="font-size: 1.5rem;">📷</div>
-            <div style="font-size: 0.9rem; margin-top:10px;">사진/촬영</div>
+        <div id="waveUI" class="wave-container">
+            <div class="wave-bar" style="animation-delay: 0.1s"></div>
+            <div class="wave-bar" style="animation-delay: 0.3s"></div>
+            <div class="wave-bar" style="animation-delay: 0.2s"></div>
+            <div class="wave-bar" style="animation-delay: 0.4s"></div>
         </div>
-        <div class="action-card" onclick="alert('상황별 문장 리스트 준비 중')">
-            <div style="font-size: 1.5rem;">📑</div>
-            <div style="font-size: 0.9rem; margin-top:10px;">상황별 문장</div>
+        <button class="mic-btn" id="micBtn" onclick="toggleMic()">🎤</button>
+        <div class="voice-options">
+            <label><input type="radio" name="gender" value="male"> 남성</label>
+            <label style="margin-left:15px;"><input type="radio" name="gender" value="female" checked> 여성</label>
         </div>
     </div>
 
-    <div class="result-section">
-        <div class="result-label">TRANSLATION RESULT</div>
-        <div id="translated-output" style="color: var(--text-dim);">번역할 문장을 입력하거나 음성을 시작하세요...</div>
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <button onclick="openCam()" style="flex:1; padding:15px; border-radius:15px; background:var(--card-bg); color:white; border:none;">📷 사진 스캐닝</button>
+        <button onclick="document.getElementById('fileUp').click()" style="flex:1; padding:15px; border-radius:15px; background:var(--card-bg); color:white; border:none;">📁 사진 업로드</button>
+        <input type="file" id="fileUp" style="display:none">
+    </div>
+
+    <div class="situ-grid">
+        <div class="situ-item active">식당</div><div class="situ-item">호텔</div><div class="situ-item">공항</div>
+        <div class="situ-item">병원</div><div class="situ-item">쇼핑</div><div class="situ-item">경찰서</div>
+    </div>
+
+    <div id="phraseList">
+        <div class="phrase-card">
+            <div class="phrase-ko-sub">메뉴판 좀 주시겠어요?</div>
+            <div class="phrase-target">Posso avere il menu, per favore?</div>
+            <div class="phrase-pronun">뽀쏘 아베레 일 메뉴, 뻬르 파보레?</div>
+            <div class="phrase-tip">💡 팁: 이탈리아 식당에서는 보통 물값(Coperto)을 따로 받으니 놀라지 마세요!</div>
+            <button style="position:absolute; top:15px; right:15px; border:none; background:none; font-size:1.2rem;">🔊</button>
+        </div>
+    </div>
+
+    <div class="manual-input">
+        <input type="text" placeholder="번역할 문장을 입력하세요...">
+        <button style="padding:10px 20px; border-radius:10px; background:var(--primary-blue); color:white; border:none;">번역</button>
     </div>
 </div>
 
-<div id="camera-layer">
-    <video id="video-feed" autoplay playsinline></video>
-    <button class="close-cam" onclick="closeCamera()">✕</button>
+<div id="camLayer" class="cam-overlay">
+    <div class="scan-box"><div class="scan-line"></div></div>
+    <button onclick="closeCam()" style="position:absolute; bottom:50px; left:50%; transform:translateX(-50%); padding:15px 40px; border-radius:30px; background:white; border:none; font-weight:bold;">촬영 및 번역</button>
 </div>
 
 <script>
-    // 카메라 실행 로직
-    async function openCamera() {
-        const layer = document.getElementById('camera-layer');
-        const video = document.getElementById('video-feed');
-        layer.style.display = 'block';
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-            video.srcObject = stream;
-        } catch (err) {
-            alert("카메라 권한이 필요합니다: " + err);
-            layer.style.display = 'none';
+    let isRecording = false;
+
+    function toggleMic() {
+        const btn = document.getElementById('micBtn');
+        const wave = document.getElementById('waveUI');
+        isRecording = !isRecording;
+        
+        if(isRecording) {
+            btn.innerHTML = "⏹️";
+            btn.style.background = "#ef4444";
+            wave.style.display = "flex";
+        } else {
+            btn.innerHTML = "🎤";
+            btn.style.background = "var(--primary-blue)";
+            wave.style.display = "none";
+            alert("통역 중... (Google Translate API 호출)");
         }
     }
 
-    function closeCamera() {
-        const layer = document.getElementById('camera-layer');
-        const video = document.getElementById('video-feed');
-        const stream = video.srcObject;
-        if (stream) {
-            const tracks = stream.getTracks();
-            tracks.forEach(track => track.stop());
-        }
-        layer.style.display = 'none';
+    function openCam() { document.getElementById('camLayer').style.display = 'block'; }
+    function closeCam() { 
+        alert("Gemini 1.5가 이미지를 분석 중입니다...");
+        document.getElementById('camLayer').style.display = 'none'; 
     }
-
-    function startVoice() {
-        const output = document.getElementById('translated-output');
-        output.innerText = "듣는 중... (실제 구현 시 Speech-to-Text API 연동)";
-        output.style.color = "#fff";
+    function swapLang() {
+        let s = document.getElementById('startLang');
+        let e = document.getElementById('endLang');
+        let temp = s.value;
+        s.value = e.value;
+        e.value = temp;
     }
 </script>
 
