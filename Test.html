@@ -1,35 +1,168 @@
-// [1] 카메라 연동: 모바일에서 클릭 시 카메라가 바로 실행됩니다.
-const camInput = document.createElement('input');
-camInput.type = 'file';
-camInput.accept = 'image/*';
-camInput.capture = 'environment'; // 후면 카메라 우선 실행
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>TIMOTHY Premium Adaptive</title>
+    <style>
+        :root {
+            /* 라이트 모드 (기본) */
+            --bg-app: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --primary: #2563eb;
+            --accent: #dbeafe;
+            --safe-area-bottom: env(safe-area-inset-bottom);
+        }
 
-// [2] API 키 관리 (브라우저 금고 활용)
-function saveApiKey(key) {
-    localStorage.setItem('SULYEON_TRANS_KEY', key);
-    alert('열쇠가 등록되었습니다. 이제 번역이 가능합니다!');
-}
+        /* 시스템 설정에 따른 자동 다크모드 전환 */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-app: #0f172a;
+                --card-bg: #1e293b;
+                --text-main: #f1f5f9;
+                --text-sub: #94a3b8;
+                --accent: #334155;
+            }
+        }
 
-function getApiKey() {
-    return localStorage.getItem('SULYEON_TRANS_KEY');
-}
+        body { 
+            margin: 0; background: var(--bg-app); color: var(--text-main); 
+            font-family: 'Pretendard', sans-serif; transition: all 0.3s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-// [3] 하이브리드 번역 공정 (영역 분리)
-async function runHybridTranslate(text) {
-    const key = getApiKey();
-    if (!key) { return alert('먼저 🔑 메뉴에서 API 키를 등록해주세요!'); }
+        .app-container { 
+            max-width: 480px; margin: 0 auto; padding: 20px; 
+            padding-bottom: calc(100px + var(--safe-area-bottom)); /* 하단 바 공간 확보 */
+        }
 
-    try {
-        // [공정 1] 구글 번역 (기본 번역)
-        const gResult = await callGoogleTranslate(text, key);
-        updateUI('basic', gResult); // 화면에 즉시 표시
+        /* 자동 크기 조절 카드 */
+        .adaptive-card {
+            background: var(--card-bg); border-radius: 24px; padding: 5vw; /* 화면 너비에 비례한 패딩 */
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); margin-bottom: 20px;
+            transition: transform 0.2s active;
+        }
 
-        // [공정 2] Gemini 1.5 (한글 발음 및 분석)
-        // 구글 번역문을 받아서 한글식 발음을 생성합니다.
-        const geminiResult = await callGeminiAnalysis(gResult, key);
-        updateUI('deep', geminiResult); // 파란색 발음/상세뜻 추가
+        .adaptive-card:active { transform: scale(0.98); }
+
+        /* 한 손 조작 최적화 레이아웃 */
+        .main-action-area {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 30vh;
+        }
+
+        .mic-btn-adaptive {
+            width: 25vw; height: 25vw; max-width: 100px; max-height: 100px;
+            border-radius: 50%; border: none; background: var(--primary);
+            color: white; font-size: 2rem; cursor: pointer;
+            box-shadow: 0 15px 30px rgba(37, 99, 235, 0.3);
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* 결과창 가독성 강화 */
+        .result-view {
+            border-left: 8px solid var(--primary);
+            animation: slideUp 0.4s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 하단 수동 입력바 (iOS/안드로이드 하단바 대응) */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 100%; max-width: 480px; background: var(--card-bg);
+            padding: 15px 20px calc(15px + var(--safe-area-bottom));
+            display: flex; gap: 10px; border-radius: 25px 25px 0 0;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.1);
+        }
+
+        input {
+            flex: 1; background: var(--bg-app); border: none; border-radius: 15px;
+            padding: 12px 15px; color: var(--text-main); font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="adaptive-card" style="display: flex; justify-content: space-between; align-items: center;">
+        <div id="sourceLangDisp" style="text-align: center; font-weight: bold;">🇰🇷 한국어</div>
+        <button onclick="swapLanguages()" style="background: var(--accent); border: none; width: 40px; height: 40px; border-radius: 50%; color: var(--primary);">⇄</button>
+        <div id="targetLangDisp" style="text-align: center; font-weight: bold;">🇮🇹 이탈리아어</div>
+    </div>
+
+    <div class="main-action-area">
+        <button class="mic-btn-adaptive" id="mainMic" onclick="startRecognition()">
+            🎙️
+        </button>
+        <p style="margin-top: 15px; color: var(--text-sub); font-size: 0.9rem;">탭하여 말하기</p>
+    </div>
+
+    <div id="resultDisplay" class="adaptive-card result-view" style="display: none;">
+        <div id="originalText" style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 8px;"></div>
+        <div id="translatedText" style="font-size: 1.6rem; font-weight: 800; margin-bottom: 10px;"></div>
+        <div id="phoneticText" style="color: var(--primary); font-weight: bold; margin-bottom: 15px;"></div>
+        <div id="geminiTip" style="background: var(--accent); padding: 12px; border-radius: 12px; font-size: 0.85rem; line-height: 1.5;"></div>
         
-    } catch (e) {
-        console.error("통합 번역 에러:", e);
+        <button onclick="playTTS()" style="position: absolute; top: 20px; right: 20px; background: var(--primary); color: white; border: none; width: 45px; height: 45px; border-radius: 50%;">🔊</button>
+    </div>
+</div>
+
+<div class="bottom-nav">
+    <input type="text" id="manualInput" placeholder="직접 입력...">
+    <button onclick="translateManual()" style="background: var(--text-main); color: var(--bg-app); border: none; border-radius: 15px; padding: 0 20px; font-weight: bold;">번역</button>
+</div>
+
+<script>
+    let isItalian = true;
+
+    // 언어 스왑 기능
+    function swapLanguages() {
+        isItalian = !isItalian;
+        document.getElementById('sourceLangDisp').innerText = isItalian ? "🇰🇷 한국어" : "🇮🇹 이탈리아어";
+        document.getElementById('targetLangDisp').innerText = isItalian ? "🇮🇹 이탈리아어" : "🇰🇷 한국어";
     }
-}
+
+    // 기본 브라우저 번역 엔진 연동 (테스트용)
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = 'ko-KR';
+
+    function startRecognition() {
+        document.getElementById('mainMic').style.boxShadow = "0 0 0 10px rgba(37, 99, 235, 0.2)";
+        recognition.start();
+    }
+
+    recognition.onresult = async (event) => {
+        const text = event.results[0][0].transcript;
+        document.getElementById('mainMic').style.boxShadow = "0 15px 30px rgba(37, 99, 235, 0.3)";
+        
+        // 여기에 실제 번역 API 연결 (현재는 시뮬레이션)
+        showResult(text, "Buongiorno!", "본 조르노!", "정오 전 인사에요. 식당 입구에서 밝게 인사해보세요.");
+    };
+
+    function showResult(original, translated, phonetic, tip) {
+        document.getElementById('resultDisplay').style.display = 'block';
+        document.getElementById('originalText').innerText = original;
+        document.getElementById('translatedText').innerText = translated;
+        document.getElementById('phoneticText').innerText = phonetic;
+        document.getElementById('geminiTip').innerText = "💡 Gemini Tip: " + tip;
+        
+        // 자동 스크롤
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+
+    function playTTS() {
+        const text = document.getElementById('translatedText').innerText;
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'it-IT';
+        window.speechSynthesis.speak(utterance);
+    }
+</script>
+
+</body>
+</html>
