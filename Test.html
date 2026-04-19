@@ -5,89 +5,102 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>TIMOTHY v2.0 Premium</title>
     <style>
-        :root { --primary: #2563eb; --bg: #f8fafc; --card: #ffffff; --text: #1e293b; }
-        body { margin: 0; background: var(--bg); color: var(--text); font-family: sans-serif; display: flex; flex-direction: column; min-height: 100vh; }
-        .app { max-width: 480px; width: 100%; margin: 0 auto; padding: 15px; flex: 1; display: flex; flex-direction: column; gap: 12px; box-sizing: border-box; }
+        :root { --primary: #2563eb; --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --sub: #64748b; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: sans-serif; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
         
-        /* 카드 및 레이아웃 */
-        .card { background: var(--card); border-radius: 20px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.03); }
-        .flex-row { display: flex; gap: 10px; }
-        .sub-btn { flex: 1; background: var(--card); border: none; border-radius: 15px; padding: 12px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.03); font-size: 0.9rem; }
+        /* 메인 컨테이너 */
+        .app { max-width: 480px; width: 100%; margin: 0 auto; padding: 15px; box-sizing: border-box; flex: 1; padding-bottom: 100px; }
+        
+        /* 상단 헤더 */
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; margin-bottom: 10px; }
+        .logo { font-weight: 900; font-size: 1.1rem; }
+        .gear-btn { background: none; border: none; font-size: 1.3rem; cursor: pointer; }
 
-        /* 결과창 (간격 조절) */
-        .result-box { border-left: 6px solid var(--primary); display: none; position: relative; margin-top: 5px; }
-        .tip-area { background: #fffbeb; color: #92400e; padding: 10px; border-radius: 12px; font-size: 0.8rem; margin-top: 10px; }
+        /* 언어 선택 */
+        .card { background: var(--card); border-radius: 20px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.03); margin-bottom: 12px; }
+        .lang-bar { display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; }
 
-        /* 성별 선택 */
-        .gender-toggle { display: flex; gap: 10px; justify-content: center; font-size: 0.8rem; margin-top: 5px; }
-        .gender-btn { padding: 4px 12px; border-radius: 20px; border: 1px solid #ddd; background: white; cursor: pointer; }
+        /* 마이크 섹션 */
+        .mic-section { text-align: center; padding: 25px 15px; position: relative; }
+        .online-tag { position: absolute; top: 15px; right: 15px; color: #10b981; font-size: 0.65rem; font-weight: bold; }
+        .mic-btn { width: 75px; height: 75px; border-radius: 50%; border: none; background: white; box-shadow: 0 8px 15px rgba(0,0,0,0.1); cursor: pointer; font-size: 2rem; margin: 10px 0; }
+        .gender-toggle { display: flex; gap: 8px; justify-content: center; margin-top: 10px; }
+        .gender-btn { padding: 5px 15px; border-radius: 20px; border: 1px solid #ddd; background: white; font-size: 0.75rem; cursor: pointer; }
         .gender-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-        /* 카메라 반투명 스캔 */
-        #scanOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 5000; display: none; align-items: center; justify-content: center; }
-        .viewfinder { width: 80%; height: 40%; border: 2px solid #10b981; border-radius: 15px; background: transparent; position: relative; box-shadow: 0 0 0 5000px rgba(0,0,0,0.6); }
+        /* 메인 버튼 */
+        .btn-row { display: flex; gap: 10px; margin-bottom: 12px; }
+        .sub-btn { flex: 1; background: var(--card); border: none; border-radius: 15px; padding: 15px; font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.03); }
+
+        /* 결과 창 */
+        .result-box { border-left: 6px solid var(--primary); display: none; position: relative; animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .res-target { font-size: 1.5rem; font-weight: 800; margin-bottom: 8px; padding-right: 40px; }
+        .res-pronun { color: var(--primary); font-weight: bold; margin-bottom: 5px; }
+        .res-tip { background: #fffbeb; color: #92400e; padding: 12px; border-radius: 12px; font-size: 0.8rem; line-height: 1.5; margin-top: 15px; }
+
+        /* 상황별 탭 */
+        .situ-tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; display: none; margin-bottom: 15px; }
+        .tab-btn { padding: 8px 0; border: none; border-radius: 8px; font-size: 0.7rem; background: #eee; cursor: pointer; }
+        .tab-btn.active { background: var(--primary); color: white; }
+
+        /* 하단 고정 입력바 */
+        .bottom-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: white; padding: 12px 15px; display: flex; gap: 8px; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); box-sizing: border-box; }
+        #manualInput { flex: 1; border: none; background: #f1f5f9; border-radius: 12px; padding: 12px; font-size: 1rem; outline: none; }
+        .send-btn { background: #1e293b; color: white; border: none; border-radius: 12px; padding: 0 18px; font-weight: bold; cursor: pointer; }
+
+        /* 모달 공통 */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9000; backdrop-filter: blur(3px); }
+        .modal-content { position: absolute; bottom: 0; width: 100%; max-width: 480px; left: 50%; transform: translateX(-50%); background: white; border-radius: 25px 25px 0 0; padding: 25px; box-sizing: border-box; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .close-btn { font-size: 1.5rem; background: none; border: none; cursor: pointer; color: var(--sub); }
+
+        /* 카메라 레이어 */
+        #camLayer { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 10000; align-items: center; justify-content: center; }
+        .viewfinder { width: 80%; height: 40%; border: 2px solid #10b981; border-radius: 15px; position: relative; box-shadow: 0 0 0 5000px rgba(0,0,0,0.5); }
         .scan-line { width: 100%; height: 2px; background: #10b981; position: absolute; top: 0; animation: scan 2s infinite linear; }
         @keyframes scan { to { top: 100%; } }
-
-        /* 상황별 10개 버튼 그리드 */
-        .situ-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 10px; }
-        .situ-tab { padding: 8px 2px; border-radius: 8px; border: none; background: #eee; font-size: 0.7rem; cursor: pointer; }
-        .situ-tab.active { background: var(--primary); color: white; }
-
-        /* 문장 리스트 */
-        .phrase-item { background: white; padding: 12px; border-radius: 12px; border-bottom: 1px solid #f1f5f9; margin-bottom: 8px; position: relative; font-size: 0.9rem; }
-
-        /* 하단바 고정 */
-        .bottom-bar { position: sticky; bottom: 0; background: white; padding: 12px 15px; display: flex; gap: 8px; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); }
-        input { flex: 1; border: none; background: #f1f5f9; border-radius: 10px; padding: 12px; font-size: 1rem; }
-        .send-btn { background: #1e293b; color: white; border: none; border-radius: 10px; padding: 0 18px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="app">
-<div style="display: flex; justify-content: space-between; align-items: center; padding-top: 5px;">
-    <div style="font-weight: 900; font-size: 1.1rem;">TIMOTHY <span style="color:var(--primary); font-size: 0.7rem;">v2.0 PREMIUM</span></div>
-    <button onclick="openModal('settingsModal')" style="background:none; border:none; font-size:1.2rem; cursor:pointer; padding:5px;">⚙️</button>
-</div>
+    <div class="header">
+        <div class="logo">TIMOTHY <span style="color:var(--primary); font-size:0.7rem;">v2.0 PREMIUM</span></div>
+        <button class="gear-btn" onclick="openModal('settingsModal')">⚙️</button>
+    </div>
 
-    <div class="card" style="text-align: center; padding: 25px 15px;">
-        <div style="text-align: right; color: #10b981; font-size: 0.65rem; font-weight: bold;">● ONLINE</div>
-        <button onclick="alert('듣기 시작')" style="width:70px; height:70px; border-radius:50%; border:none; background:white; box-shadow: 0 8px 15px rgba(0,0,0,0.1); cursor: pointer; margin: 10px 0;">🎙️</button>
+    <div class="card lang-bar" onclick="openModal('langModal')">
+        <span id="curStart">🇰🇷 한국어</span>
+        <span style="color:var(--primary)">⇄</span>
+        <span id="curEnd">🇮🇹 이탈리아어</span>
+    </div>
+
+    <div class="card mic-section">
+        <div class="online-tag">● ONLINE</div>
+        <button class="mic-btn" onclick="toggleSpeech()">🎙️</button>
+        <div id="micStatus" style="font-size:0.8rem; color:var(--sub);">아이콘을 누르면 대화 시작</div>
         <div class="gender-toggle">
-            <button class="gender-btn active" onclick="setGender('F')">여성 목소리</button>
-            <button class="gender-btn" onclick="setGender('M')">남성 목소리</button>
+            <button class="gender-btn active" onclick="setGender('female')">여성 목소리</button>
+            <button class="gender-btn" onclick="setGender('male')">남성 목소리</button>
         </div>
     </div>
 
-    <div class="flex-row">
-        <button class="sub-btn" onclick="openScan()">📷 사진번역</button>
-        <button class="sub-btn" onclick="showSitu()">📙 상황별</button>
+    <div class="btn-row">
+        <button class="sub-btn" onclick="openCam()">📷 사진번역</button>
+        <button class="sub-btn" onclick="toggleSitu()">📙 상황별</button>
     </div>
 
-    <div id="situArea" class="card" style="display:none;">
-        <div class="situ-grid">
-            <button class="situ-tab active">식당</button><button class="situ-tab">호텔</button>
-            <button class="situ-tab">병원</button><button class="situ-tab">공항</button>
-            <button class="situ-tab">관광지</button><button class="situ-tab">상점</button>
-            <button class="situ-tab">쇼핑</button><button class="situ-tab">배달</button>
-            <button class="situ-tab">경찰서</button><button class="situ-tab">옷가게</button>
+    <div id="situTabs" class="situ-tabs">
         </div>
-        <div id="phraseList" style="max-height: 200px; overflow-y: auto;">
-            <div class="phrase-item">
-                <div style="font-size:0.7rem; color:#666;">계산서 부탁합니다.</div>
-                <div style="font-weight:bold;">Il conto, per favore.</div>
-                <button onclick="alert('음성 재생')" style="position:absolute; top:10px; right:10px; border:none; background:none; font-size:1.1rem;">🔊</button>
-            </div>
-        </div>
-    </div>
+    <div id="situList" style="display:none; margin-bottom:15px;"></div>
 
     <div id="resultCard" class="card result-box">
-        <div id="targetTxt" style="font-size: 1.4rem; font-weight: 800; margin-bottom: 5px;">Vorrei confermare...</div>
-        <div id="pronunTxt" style="color: var(--primary); font-weight: bold; font-size: 0.95rem; margin-bottom: 3px;">보레이 꼰뻬르마레...</div>
-        <div id="koTxt" style="color: #64748b; font-size: 0.85rem;">제 예약을 확인하고 싶습니다.</div>
-        <div class="tip-area">💡 Gemini Tip: 'Vorrei'는 매우 정중한 표현입니다.</div>
-        <button onclick="alert('음성 재생')" style="position:absolute; top:15px; right:15px; border:none; background:#eff6ff; width:40px; height:40px; border-radius:50%; color:var(--primary);">🔊</button>
+        <div id="targetTxt" class="res-target">Vorrei confermare...</div>
+        <div id="pronunTxt" class="res-pronun">보레이 꼰뻬르마레...</div>
+        <div id="koTxt" style="color:var(--sub); font-size:0.85rem;">제 예약을 확인하고 싶습니다.</div>
+        <div id="tipTxt" class="res-tip"></div>
+        <button onclick="speak()" style="position:absolute; top:20px; right:20px; border:none; background:#eff6ff; width:45px; height:45px; border-radius:50%; color:var(--primary); font-size:1.2rem; cursor:pointer;">🔊</button>
     </div>
 </div>
 
@@ -96,154 +109,186 @@
     <button class="send-btn" onclick="manualTrans()">번역</button>
 </div>
 
-<div id="scanOverlay" onclick="closeScan()">
-    <div class="viewfinder" onclick="event.stopPropagation()">
-        <div class="scan-line"></div>
-    </div>
-    <div style="position: absolute; bottom: 40px; display: flex; gap: 20px;">
-        <button onclick="alert('갤러리 열기')" style="padding: 12px 25px; border-radius: 25px; border:none; background:white; font-weight:bold;">🖼️ 사진 첨부</button>
-        <button onclick="closeScan(); manualTrans();" style="padding: 12px 25px; border-radius: 25px; border:none; background:var(--primary); color:white; font-weight:bold;">📸 촬영번역</button>
-    </div>
-</div>
-
-<script>
-    function openScan() { document.getElementById('scanOverlay').style.display = 'flex'; }
-    function closeScan() { document.getElementById('scanOverlay').style.display = 'none'; }
-    function showSitu() { 
-        const area = document.getElementById('situArea');
-        area.style.display = (area.style.display === 'none') ? 'block' : 'none';
-    }
-    async function manualTrans() {
-    const input = document.getElementById('manualInput').value;
-    if (!input) return;
-
-    // 결과창 초기화 및 로딩 표시
-    const resCard = document.getElementById('resultCard');
-    resCard.style.display = 'block';
-    document.getElementById('targetTxt').innerText = "AI 분석 중...";
-    document.getElementById('pronunTxt').innerText = "잠시만 기다려주세요";
-    document.getElementById('koTxt').innerText = input;
-
-    // Gemini에게 보낼 프롬프트
-    const targetLang = document.getElementById('curEnd').innerText;
-    const prompt = `
-        문장: "${input}"
-        이 문장을 ${targetLang}로 번역하고, 다음 JSON 형식으로만 정확히 답해줘. (다른 설명 금지)
-        {
-            "target": "번역된 문장",
-            "pronun": "한국인이 읽기 쉬운 한국어 발음",
-            "tip": "여행자를 위한 짧은 문화적 팁이나 사용 주의사항"
-        }
-    `;
-
-    const response = await callGeminiAPI(prompt);
-    
-    if (response) {
-        try {
-            const data = JSON.parse(response);
-            document.getElementById('targetTxt').innerText = data.target;
-            document.getElementById('pronunTxt').innerText = data.pronun;
-            document.getElementById('tipTxt').innerText = "💡 Gemini Tip: " + data.tip;
-            // 번역이 완료되면 자동으로 소리 읽어주기
-            speak();
-        } catch (e) {
-            document.getElementById('targetTxt').innerText = "해석 오류";
-            document.getElementById('tipTxt').innerText = "AI 응답 형식이 올바르지 않습니다. 다시 시도해 주세요.";
-        }
-    }
-    window.scrollTo(0, document.body.scrollHeight);
-}
-    // [핵심 엔진] Gemini 1.5 API와 실제로 통신하는 함수
-async function callGeminiAPI(prompt) {
-    const apiKey = localStorage.getItem('GEMINI_API_KEY');
-    
-    if (!apiKey) {
-        alert("⚙️ 설정에서 API 키를 먼저 입력해주세요!");
-        openModal('settingsModal');
-        return null;
-    }
-
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-    
-    try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }]
-            })
-        });
-        const data = await response.json();
-        const rawText = data.candidates[0].content.parts[0].text;
-        // AI가 대답에 포함시킨 마크다운 기호(```json) 등을 깨끗하게 제거
-        return rawText.replace(/```json|```/g, '').trim();
-    } catch (error) {
-        console.error("Gemini 호출 실패:", error);
-        alert("API 호출 중 오류가 발생했습니다. 키를 확인해 주세요.");
-        return null;
-    }
-}
-
-// [목소리 엔진] 번역된 텍스트를 이탈리아어로 읽어주는 함수
-function speak() {
-    const text = document.getElementById('targetTxt').innerText;
-    if (!text || text === "AI 분석 중...") return;
-
-    const msg = new SpeechSynthesisUtterance(text);
-    msg.lang = 'it-IT'; // 이탈리아어 설정
-    
-    // 성별 선택 반영 (Pitch 조절로 여성/남성 느낌 구현)
-    const gender = document.querySelector('input[name="voiceType"]:checked').value;
-    msg.pitch = gender === 'female' ? 1.2 : 0.8; 
-    
-    window.speechSynthesis.speak(msg);
-}
-    function setGender(g) {
-        document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('active'));
-        event.target.classList.add('active');
-    }
-// 설정 저장 함수
-function saveApiKeys() {
-    const key = document.getElementById('geminiKeyInput').value;
-    if (key.trim().length < 10) {
-        alert("올바른 API 키를 입력해주세요.");
-        return;
-    }
-    localStorage.setItem('GEMINI_API_KEY', key); // 브라우저 메모리에 저장
-    alert("키가 안전하게 저장되었습니다.");
-    closeModal('settingsModal');
-}
-
-// 페이지가 열릴 때 기존에 저장된 키가 있으면 자동으로 채워줌
-window.addEventListener('DOMContentLoaded', () => {
-    const savedKey = localStorage.getItem('GEMINI_API_KEY');
-    if (savedKey) {
-        const input = document.getElementById('geminiKeyInput');
-        if(input) input.value = savedKey;
-    }
-});
-</script>
 <div id="settingsModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
             <h3 style="margin:0">보안 설정</h3>
-            <button class="close-x" onclick="closeModal('settingsModal')">✕</button>
+            <button class="close-btn" onclick="closeModal('settingsModal')">✕</button>
         </div>
-        <p style="font-size:0.8rem; color:var(--sub); line-height:1.4;">
-            API 키는 브라우저에만 저장되며, 깃허브에는 노출되지 않습니다.
-        </p>
-        <div style="margin-top:20px;">
-            <label style="font-size:0.85rem; font-weight:bold; display:block; margin-bottom:8px;">Gemini 1.5 API Key</label>
-            <input type="password" id="geminiKeyInput" 
-                   style="width:100%; border:1px solid #ddd; background:#f9f9f9; border-radius:10px; padding:12px; box-sizing:border-box;" 
-                   placeholder="API 키를 입력하세요">
-        </div>
-        <button onclick="saveApiKeys()" 
-                style="width:100%; background:var(--primary); color:white; border:none; padding:15px; border-radius:12px; margin-top:25px; font-weight:bold; cursor:pointer;">
-            설정 저장하기
-        </button>
+        <p style="font-size:0.8rem; color:var(--sub);">API 키는 기기에만 안전하게 저장됩니다.</p>
+        <input type="password" id="geminiKeyInput" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ddd; margin-top:10px; box-sizing:border-box;" placeholder="Gemini API Key 입력">
+        <button onclick="saveApiKeys()" style="width:100%; background:var(--primary); color:white; border:none; padding:15px; border-radius:12px; margin-top:20px; font-weight:bold; cursor:pointer;">설정 저장하기</button>
     </div>
 </div>
- 
+
+<div id="langModal" class="modal">
+    <div class="modal-content" id="langGridContainer">
+        <div class="modal-header"><h3>번역 언어 선택</h3><button class="close-btn" onclick="closeModal('langModal')">✕</button></div>
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px;" id="langGrid"></div>
+    </div>
+</div>
+
+<div id="camLayer">
+    <div class="viewfinder"><div class="scan-line"></div></div>
+    <button onclick="closeCam()" style="position:absolute; top:30px; right:30px; color:white; font-size:2rem; background:none; border:none;">✕</button>
+    <div style="position:absolute; bottom:50px; display:flex; gap:15px;">
+        <button onclick="alert('앨범 열기')" style="padding:15px 25px; border-radius:30px; border:none; background:white; font-weight:bold;">🖼️ 사진 첨부</button>
+        <button onclick="closeCam(); manualTrans();" style="padding:15px 25px; border-radius:30px; border:none; background:var(--primary); color:white; font-weight:bold;">📸 촬영번역</button>
+    </div>
+</div>
+
+<script>
+    // 1. 데이터 설정
+    const languages = [
+        {id:'ko', name:'한국어', flag:'🇰🇷'}, {id:'en-US', name:'영어(US)', flag:'🇺🇸'}, {id:'it', name:'이탈리아어', flag:'🇮🇹'},
+        {id:'zh', name:'중국어', flag:'🇨🇳'}, {id:'ja', name:'일어', flag:'🇯🇵'}, {id:'fr', name:'프랑스어', flag:'🇫🇷'},
+        {id:'es', name:'스페인어', flag:'🇪🇸'}, {id:'vi', name:'베트남어', flag:'🇻🇳'}, {id:'th', name:'태국어', flag:'🇹🇭'}, {id:'en-GB', name:'영어(UK)', flag:'🇬🇧'}
+    ];
+    const categories = ["식당", "호텔", "공항", "병원", "관광지", "상점", "쇼핑", "배달", "경찰서", "옷가게"];
+
+    // 2. 초기화 로직
+    window.onload = () => {
+        // 언어 그리드 생성
+        const langGrid = document.getElementById('langGrid');
+        languages.forEach(l => {
+            const div = document.createElement('div');
+            div.style = "padding:15px 5px; border:1px solid #eee; border-radius:12px; text-align:center; cursor:pointer; font-size:0.8rem;";
+            div.innerHTML = `${l.flag}<br>${l.name}`;
+            div.onclick = () => {
+                document.getElementById('curEnd').innerText = `${l.flag} ${l.name}`;
+                closeModal('langModal');
+            };
+            langGrid.appendChild(div);
+        });
+
+        // 상황별 탭 생성
+        const tabs = document.getElementById('situTabs');
+        categories.forEach(c => {
+            const btn = document.createElement('button');
+            btn.className = 'tab-btn';
+            btn.innerText = c;
+            btn.onclick = () => loadSituList(c);
+            tabs.appendChild(btn);
+        });
+
+        // 저장된 키 로드
+        const savedKey = localStorage.getItem('GEMINI_API_KEY');
+        if(savedKey) document.getElementById('geminiKeyInput').value = savedKey;
+    };
+
+    // 3. 주요 기능 함수
+    function openModal(id) { document.getElementById(id).style.display = 'block'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    function openCam() { document.getElementById('camLayer').style.display = 'flex'; }
+    function closeCam() { document.getElementById('camLayer').style.display = 'none'; }
+    
+    function toggleSitu() {
+        const t = document.getElementById('situTabs');
+        const l = document.getElementById('situList');
+        const isHidden = t.style.display === 'none' || t.style.display === '';
+        t.style.display = isHidden ? 'grid' : 'none';
+        l.style.display = isHidden ? 'block' : 'none';
+        if(isHidden) loadSituList("식당");
+    }
+
+    function setGender(g) {
+        document.querySelectorAll('.gender-btn').forEach(b => b.classList.toggle('active', b.innerText.includes(g === 'female' ? '여성' : '남성')));
+        localStorage.setItem('VOICE_GENDER', g);
+    }
+
+    // 상황별 15개 문장 로드 (AI 정렬 시뮬레이션 포함)
+    function loadSituList(cat) {
+        const list = document.getElementById('situList');
+        list.innerHTML = "";
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.innerText === cat));
+        
+        // 15개 예시 (실제로는 여기서 데이터셋이나 API 호출)
+        for(let i=1; i<=15; i++) {
+            const div = document.createElement('div');
+            div.style = "background:white; padding:12px; border-radius:12px; margin-bottom:8px; position:relative; box-shadow:0 2px 4px rgba(0,0,0,0.02);";
+            div.innerHTML = `
+                <div style="font-size:0.75rem; color:#666;">[${cat}] 문장 ${i}</div>
+                <div style="font-weight:bold; margin-top:3px;">Sample phrase ${i} in ${cat}</div>
+                <button onclick="manualTrans('Sample phrase ${i}')" style="position:absolute; top:12px; right:12px; border:none; background:none; font-size:1.1rem; cursor:pointer;">🔊</button>
+            `;
+            list.appendChild(div);
+        }
+    }
+
+    // 4. API 및 번역 로직
+    async function manualTrans(customInput) {
+        const input = customInput || document.getElementById('manualInput').value;
+        if(!input) return;
+
+        const resCard = document.getElementById('resultCard');
+        resCard.style.display = 'block';
+        document.getElementById('targetTxt').innerText = "AI 분석 중...";
+        document.getElementById('pronunTxt').innerText = "잠시만 기다려주세요";
+        document.getElementById('koTxt').innerText = input;
+
+        const targetLang = document.getElementById('curEnd').innerText;
+        const prompt = `문장: "${input}" 를 ${targetLang}로 번역해줘. 
+            반드시 다음 JSON 형식으로만 답해: {"target":"번역문", "pronun":"한국어발음", "tip":"여행팁"}`;
+
+        const response = await callGeminiAPI(prompt);
+        if(response) {
+            try {
+                const data = JSON.parse(response);
+                document.getElementById('targetTxt').innerText = data.target;
+                document.getElementById('pronunTxt').innerText = data.pronun;
+                document.getElementById('tipTxt').innerText = "💡 Gemini Tip: " + data.tip;
+                speak();
+            } catch(e) { console.error("JSON 파싱 에러"); }
+        }
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+
+    async function callGeminiAPI(prompt) {
+        const apiKey = localStorage.getItem('GEMINI_API_KEY');
+        if(!apiKey) { alert("⚙️ 설정에서 API 키를 먼저 입력해주세요!"); openModal('settingsModal'); return null; }
+        
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            });
+            const data = await res.json();
+            return data.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim();
+        } catch(e) { alert("API 호출 실패"); return null; }
+    }
+
+    function saveApiKeys() {
+        const key = document.getElementById('geminiKeyInput').value;
+        if(key.length < 10) { alert("올바른 키를 입력하세요."); return; }
+        localStorage.setItem('GEMINI_API_KEY', key);
+        alert("키가 저장되었습니다.");
+        closeModal('settingsModal');
+    }
+
+    function speak() {
+        const text = document.getElementById('targetTxt').innerText;
+        if(!text || text.includes("분석 중")) return;
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = 'it-IT';
+        const gender = localStorage.getItem('VOICE_GENDER') || 'female';
+        msg.pitch = gender === 'female' ? 1.2 : 0.8;
+        window.speechSynthesis.speak(msg);
+    }
+
+    // 마이크(STT) 시뮬레이션
+    function toggleSpeech() {
+        const btn = document.querySelector('.mic-btn');
+        const status = document.getElementById('micStatus');
+        if(btn.innerText === '🎙️') {
+            btn.innerText = '⏹️'; btn.style.background = '#ff4757'; status.innerText = "듣고 있습니다...";
+            // 실제 STT 로직 연결 부위
+        } else {
+            btn.innerText = '🎙️'; btn.style.background = 'white'; status.innerText = "아이콘을 누르면 대화 시작";
+        }
+    }
+</script>
+
 </body>
 </html>
