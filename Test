@@ -1,0 +1,76 @@
+import streamlit as st
+import pandas as pd
+import numpy as np
+import plotly.express as px
+from sklearn.ensemble import IsolationForest
+
+# 1. 페이지 설정 및 제목
+st.set_page_config(page_title="RTDB AI Insight Analyzer", layout="wide")
+st.title("📊 RTDB AI 설비 데이터 분석 시스템")
+st.markdown("엑셀 파일을 업로드하면 AI가 트렌드와 이상 징후를 자동으로 분석합니다.")
+
+# 2. 파일 업로드 섹션
+uploaded_file = st.file_uploader("RTDB 엑셀 데이터를 선택하세요 (.xlsx)", type=['xlsx'])
+
+if uploaded_file:
+    # 데이터 불러오기
+    df = pd.read_excel(uploaded_file)
+    
+    # 시간 데이터 처리 (컬럼명은 현장에 맞게 수정 필요)
+    time_col = st.selectbox("시간 데이터 컬럼을 선택하세요", df.columns)
+    df[time_col] = pd.to_datetime(df[time_col])
+    df = df.sort_values(by=time_col)
+
+    # 분석할 태그 선택
+    target_cols = st.multiselect("분석할 태그(변수)를 선택하세요", [c for c in df.columns if c != time_col])
+
+    if target_cols:
+        st.divider()
+        
+        # 3. AI 이상 탐지 모델 (Isolation Forest)
+        # 서버 부하를 줄이기 위해 효율적인 트리 기반 모델 사용
+        with st.spinner('AI가 데이터를 분석 중입니다...'):
+            model = IsolationForest(contamination=0.03, random_state=42)
+            # 결측치 제거 후 학습
+            analysis_data = df[target_cols].fillna(method='ffill').fillna(method='bfill')
+            df['anomaly_score'] = model.fit_predict(analysis_data)
+            # -1은 이상치, 1은 정상
+            df['status'] = df['anomaly_score'].apply(lambda x: '이상 감지' if x == -1 else '정상')
+
+        # 4. 시각화 섹션
+        col1, col2 = st.columns([3, 1])
+        
+        with col1:
+            st.subheader("📈 설비 트렌드 및 AI 분석 결과")
+            # 대표 태그 하나를 선택해 메인 차트 출력
+            main_tag = st.selectbox("집중 분석할 태그 선택", target_cols)
+            
+            fig = px.line(df, x=time_col, y=main_tag, title=f"{main_tag} 추세 분석")
+            
+            # 이상 지점 표시
+            anomalies = df[df['status'] == '이상 감지']
+            fig.add_scatter(x=anomalies[time_col], y=anomalies[main_tag], 
+                            mode='markers', name='AI 이상 감지', 
+                            marker=dict(color='red', size=8))
+            
+            st.plotly_chart(fig, use_container_width=True)
+
+        with col2:
+            st.subheader("📋 통계 및 인사이트")
+            # 기본적인 표준편차 외에 AI가 판단한 이상 빈도 출력
+            anomaly_count = len(anomalies)
+            st.metric("AI 감지 이상 건수", f"{anomaly_count} 건")
+            
+            avg_val = df[main_tag].mean()
+            st.metric("평균값", f"{avg_val:.2f}")
+            
+            # 트렌드 기울기 분석 (간이 인디케이터)
+            diff = df[main_tag].iloc[-1] - df[main_tag].iloc[0]
+            st.metric("총 변동폭", f"{diff:.2f}", delta=f"{diff:.2f}")
+
+        # 5. 상세 데이터 테이블
+        with st.expander("상세 분석 데이터 보기"):
+            st.write(df[[time_col] + target_cols + ['status']])
+
+else:
+    st.info("왼쪽 상단에서 엑셀 파일을 업로드해 주세요.")
