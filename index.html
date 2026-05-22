@@ -5934,7 +5934,7 @@ function initRealtimeSync() {
             var r=await fetch(
                 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+key,
                 {method:'POST',headers:{'Content-Type':'application/json'},
-                 body:JSON.stringify({contents:[{parts:parts}]}),signal:ctrl.signal}
+                 body:JSON.stringify({contents:[{parts:parts}],generationConfig:{maxOutputTokens:(img?800:256),temperature:0.2}}),signal:ctrl.signal}
             );
             clearTimeout(timer);
             if(!r.ok){
@@ -5962,7 +5962,7 @@ function initRealtimeSync() {
                 },
                 body:JSON.stringify({
                     model:'claude-haiku-4-5-20251001',
-                    max_tokens:1024,
+                    max_tokens:512,
                     messages:[{role:'user',content:prompt}]
                 }),
                 signal:ctrl.signal
@@ -5988,7 +5988,7 @@ function initRealtimeSync() {
             var r=await fetch('https://api.openai.com/v1/chat/completions',{
                 method:'POST',
                 headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-                body:JSON.stringify({model:'gpt-4o',messages:messages,max_tokens:1500}),
+                body:JSON.stringify({model:'gpt-4o',messages:messages,max_tokens:1000}),
                 signal:ctrl.signal
             });
             clearTimeout(timer);
@@ -6007,15 +6007,16 @@ function initRealtimeSync() {
             var mode=timGetEngineMode();
             if(mode==='none') throw new Error('API 키 없음 — 🔑 아이콘을 눌러 키를 등록해 주세요.');
 
-            // 기능별 1순위 엔진 결정
+            // 기능별 엔진 순서 결정
+            // ★ 통역(interpret)은 항상 Gemini 단독 — Claude는 브라우저 CORS 제한으로 느림
             var order=[];
             if(mode==='optimal'){
-                if(task==='translate') order=[{e:'claude',k:keys.claude},{e:'gemini',k:keys.gemini},{e:'gpt',k:keys.gpt}];
-                else if(task==='ocr')  order=[{e:'gpt',k:keys.gpt},{e:'gemini',k:keys.gemini},{e:'claude',k:keys.claude}];
-                else                   order=[{e:'gemini',k:keys.gemini},{e:'claude',k:keys.claude},{e:'gpt',k:keys.gpt}];
+                if(task==='translate') order=[{e:'gemini',k:keys.gemini},{e:'gpt',k:keys.gpt}]; // Claude CORS 제거
+                else if(task==='ocr')  order=[{e:'gpt',k:keys.gpt},{e:'gemini',k:keys.gemini}];
+                else                   order=[{e:'gemini',k:keys.gemini}]; // 통역: Gemini만
             } else {
-                // 기본 모드: 등록된 것 먼저
-                ['gemini','claude','gpt'].forEach(function(e){
+                // 기본 모드: Gemini → GPT → Claude 순 (속도 우선)
+                ['gemini','gpt','claude'].forEach(function(e){
                     if(keys[e]) order.push({e:e,k:keys[e]});
                 });
             }
@@ -6173,41 +6174,85 @@ function initRealtimeSync() {
             reader.readAsDataURL(file);
         }
 
-        // ── timLoadCat: 상황별 1-shot 배치 ──
+        // ── timLoadCat: 점진적 로드 (첫 10개 → 나머지 10개) ──
+        function _timSitRenderItems(items, cat, koList, appendTo){
+            var usage=JSON.parse(localStorage.getItem('timPU')||'{}');
+            var h='';
+            items.forEach(function(item,_){
+                var i=item._idx;
+                h+='<div style="background:#f8fafc;border-radius:14px;padding:14px;margin-bottom:8px;cursor:pointer;border:1.5px solid transparent;transition:.1s;" '+
+                   'data-cat="'+cat+'" data-idx="'+i+'" onclick="timPClick(this)">'+
+                   '<div style="font-size:11px;color:#94a3b8;font-style:italic;margin-bottom:3px;">"'+escHtml(item.original||koList[i])+'"</div>'+
+                   '<div style="font-size:15px;font-weight:800;color:#1e293b;line-height:1.4;">'+escHtml(item.translated||'')+'</div>'+
+                   '<div style="font-size:15px;font-weight:800;color:#1d4ed8;margin-top:3px;">'+escHtml(item.pronunciation||'')+'</div>'+
+                   '</div>';
+            });
+            if(appendTo){
+                appendTo.insertAdjacentHTML('beforeend', h);
+            } else {
+                return h;
+            }
+        }
+
+        async function _timFetchCat(cat, sentences, startIdx){
+            // 짧고 명확한 프롬프트 — 응답 속도 최우선
+            var prompt=timTgt.n+'('+timTgt.g+')로 번역+한글발음. JSON배열만:[{"original":"원문","translated":"번역","pronunciation":"발음"}]\n\n'+
+                sentences.map(function(s,i){return (i+1)+'. '+s;}).join('\n');
+            var raw=await timCallAI('translate',prompt);
+            var arr=timParseJSONArray(raw);
+            if(!arr||!arr.length) return [];
+            return arr.map(function(item,i){
+                item._idx = startIdx+i;
+                return item;
+            });
+        }
+
         async function timLoadCat(cat){
             if(!timGetKey()){ timSitOut(timErr('API 키 없음 — 🔑 아이콘을 눌러 등록해 주세요')); timSwitchTab(2); return; }
             var koList=TIM_SIT[cat]||TIM_SIT['식당'];
             timSwitchTab(2);
-            timSitOut(timLoading(timTgt.n+' · '+cat+' 생성 중...'));
             timSitU[cat]=(timSitU[cat]||0)+1;
             localStorage.setItem('timSitU',JSON.stringify(timSitU));
+
+            // 결과 영역 먼저 표시
+            var wrap=document.getElementById('tim-sit-result-wrap');
+            var grid=document.querySelector('#timPanel2 > div:first-child');
+            if(wrap) wrap.style.display='block';
+            if(grid) grid.style.display='none';
+
+            var sitOut=document.getElementById('tim-sit-output');
+            var headerH='<div style="font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:1px;margin-bottom:8px;">'+cat.toUpperCase()+' — '+timTgt.s+'</div>';
+            if(sitOut) sitOut.innerHTML=headerH+
+                '<div id="tim-sit-progress" style="text-align:center;padding:16px;font-size:13px;color:#64748b;">'+
+                '<div style="font-size:28px;animation:trPulse 1s ease-in-out infinite;">🐱</div>'+
+                '<div style="margin-top:6px;">첫 번째 문구 로딩 중...</div></div>';
+
+            // 1단계: 첫 10개 (빠르게 표시)
+            var first=koList.slice(0,10);
             try{
-                var prompt='당신은 '+timTgt.n+' 현지 통역사. 아래 '+koList.length+'개 한국어 문장을 '+timTgt.n+'('+timTgt.g+')으로 번역하고 발음을 한글로. JSON 배열만: [{"original":"한국어","translated":"번역","pronunciation":"발음"}]\n\n'+koList.map(function(s,i){return (i+1)+'. '+s;}).join('\n');
-                var raw=await timCallAI('translate',prompt);
-                var arr=timParseJSONArray(raw);
-                if(!arr||!arr.length) throw new Error('파싱 실패 — 다시 시도해 주세요.');
-                while(arr.length<koList.length) arr.push({original:'',translated:'',pronunciation:''});
-                var usage=JSON.parse(localStorage.getItem('timPU')||'{}');
-                var idxArr=koList.map(function(_,i){return i;}).sort(function(a,b){return (usage[cat+'_'+b]||0)-(usage[cat+'_'+a]||0);});
-                var h='<div style="font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:1px;margin-bottom:8px;">'+cat.toUpperCase()+' — '+timTgt.s+'</div>';
-                h+=idxArr.map(function(i){
-                    var item=arr[i]||{};
-                    return '<div style="background:#f8fafc;border-radius:14px;padding:14px;margin-bottom:8px;cursor:pointer;border:1.5px solid transparent;" data-cat="'+cat+'" data-idx="'+i+'" onclick="timPClick(this)">'+
-                           '<div style="font-size:11px;color:#94a3b8;font-style:italic;margin-bottom:3px;">"'+escHtml(item.original||koList[i])+'"</div>'+
-                           '<div style="font-size:15px;font-weight:800;color:#1e293b;line-height:1.4;">'+escHtml(item.translated||'')+'</div>'+
-                           '<div style="font-size:15px;font-weight:800;color:#1d4ed8;margin-top:3px;">'+escHtml(item.pronunciation||'')+'</div>'+
-                           '</div>';
-                }).join('');
-                timSitOut(h);
-                // 결과 영역 표시, 카테고리 그리드 숨김
-                var wrap=document.getElementById('tim-sit-result-wrap');
-                var grid=document.querySelector('#timPanel2 > div:first-child');
-                if(wrap) wrap.style.display='block';
-                if(grid) grid.style.display='none';
+                var arr1=await _timFetchCat(cat,first,0);
+                var prog=document.getElementById('tim-sit-progress');
+                if(prog) prog.remove();
+                _timSitRenderItems(arr1, cat, koList, sitOut);
+
+                // 나머지 있으면 안내 추가 후 백그라운드 로드
+                var rest=koList.slice(10);
+                if(rest.length>0){
+                    var moreDiv=document.createElement('div');
+                    moreDiv.id='tim-sit-more';
+                    moreDiv.style.cssText='text-align:center;padding:10px;font-size:12px;color:#94a3b8;';
+                    moreDiv.textContent='나머지 '+rest.length+'개 로딩 중...';
+                    sitOut.appendChild(moreDiv);
+                    // 백그라운드 로드 (await 없이)
+                    _timFetchCat(cat,rest,10).then(function(arr2){
+                        var m=document.getElementById('tim-sit-more');
+                        if(m) m.remove();
+                        _timSitRenderItems(arr2, cat, koList, sitOut);
+                    }).catch(function(){ var m=document.getElementById('tim-sit-more'); if(m) m.remove(); });
+                }
             }catch(e){
+                if(sitOut) sitOut.innerHTML=headerH;
                 timSitOut(timErr(e.message));
-                var wrap2=document.getElementById('tim-sit-result-wrap');
-                if(wrap2) wrap2.style.display='block';
             }
         }
         function timPClick(el){
@@ -6401,7 +6446,7 @@ function initRealtimeSync() {
         // AI 번역 → 버블 추가
         async function _timTrBubble(text,side,fromN,toN,toG,toSr){
             try{
-                var prompt='최고 수준의 동시통역사. '+fromN+' → '+toN+'('+toG+'). 번역문만 한 줄. 마크다운 금지.\n\n입력: '+text;
+                var prompt=fromN+'→'+toN+'('+toG+') 번역. 1줄만. 입력: '+text;
                 var tr=await timCallAI('interpret',prompt);
                 if(tr){
                     tr=tr.trim();
