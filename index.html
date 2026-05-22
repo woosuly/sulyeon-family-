@@ -664,7 +664,6 @@
             to   { opacity:1; transform:translate(-50%, -50%) scale(1); }
         }
 
-
         /* ── 채팅 아이콘 버튼 바 ── */
         .chat-icon-btn {
             width:36px; height:36px; border-radius:50%;
@@ -714,7 +713,6 @@
         }
         .gemini-dot:nth-child(2) { animation-delay:.2s; }
         .gemini-dot:nth-child(3) { animation-delay:.4s; }
-
 
         /* ── 채팅 배경 사진 그리드 ── */
         .chat-bg-photo-grid {
@@ -878,7 +876,6 @@
         .travel-card-badge { font-size:10px; padding:2px 9px; border-radius:20px; font-weight:700; white-space:nowrap; }
         .travel-dday { font-size:11px; font-weight:800; color:var(--month-accent); }
 
-
         /* ── 가계부 탭 ── */
         .asset-period-tab,.asset-member-tab { height:32px;padding:0 14px;border:1.5px solid #e2e8f0;border-radius:20px;background:white;font-size:12px;font-weight:600;color:#64748b;cursor:pointer;transition:.15s; }
         .asset-period-tab.active,.asset-member-tab.active { background:var(--month-header);border-color:var(--month-header);color:white; }
@@ -896,8 +893,6 @@
         .smart-ev-item { display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;margin-bottom:6px;background:#f8fafc;font-size:12px; }
         .smart-ev-dot  { width:8px;height:8px;border-radius:50%;flex-shrink:0; }
         
-
-
 
         /* ── 통번역 모드 버튼 ── */
         .tr-mode-btn {
@@ -1204,6 +1199,28 @@
         }
 
         .hidden { display:none !important; }
+
+        /* ═══ 슬라이드인 드로어 ═══ */
+        .drawer-item{display:flex;align-items:center;gap:10px;padding:12px;border-radius:12px;font-size:13px;font-weight:700;color:#475569;cursor:pointer;margin-bottom:2px;transition:.15s;}
+        .drawer-item:hover{background:#f1f5f9;color:#1e293b;}
+        .drawer-item.active{background:var(--month-grad-a);color:var(--month-header);}
+        .drawer-item-accent{background:linear-gradient(135deg,#eff6ff,#dbeafe);color:#1d4ed8!important;margin-top:4px;}
+        .drawer-item-accent:hover{background:linear-gradient(135deg,#dbeafe,#bfdbfe)!important;}
+        /* ═══ 번역기 탭 ═══ */
+        .tim-tab{flex:1;padding:9px 6px;border-radius:10px;border:1.5px solid #e2e8f0;background:white;font-size:11px;font-weight:700;color:#64748b;cursor:pointer;transition:.15s;}
+        .tim-tab.active{background:var(--month-header);border-color:var(--month-header);color:white;box-shadow:0 2px 8px rgba(0,0,0,0.15);}
+        /* ═══ 마이크 펄스 ═══ */
+        .tim-mic-on{background:#3b82f6!important;border-color:#1d4ed8!important;animation:timPulse 1.2s ease-in-out infinite;}
+        .tim-peer-on{background:#10b981!important;border-color:#059669!important;animation:timPulse 1.2s ease-in-out infinite;}
+        @keyframes timPulse{0%,100%{box-shadow:0 0 0 0 rgba(59,130,246,0.4);}50%{box-shadow:0 0 0 8px rgba(59,130,246,0);}}
+        .ql-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 12px;border-radius:14px;border:1.5px solid #e2e8f0;background:white;cursor:pointer;font-size:18px;flex-shrink:0;white-space:nowrap;}
+        .ql-btn span{font-size:10px;font-weight:700;color:#475569;}
+        .ql-btn:active{transform:scale(.95);}
+        /* 스와이프 아이콘 버튼 */
+        .ql-icon-btn{display:flex;flex-direction:column;align-items:center;gap:5px;padding:4px 2px;background:none;border:none;cursor:pointer;flex-shrink:0;min-width:52px;}
+        .ql-icon-btn:active .ql-icon-circle{transform:scale(.9);}
+        .ql-icon-circle{width:48px;height:48px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:22px;transition:.15s;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+        .ql-icon-btn span{font-size:10px;font-weight:700;color:#475569;white-space:nowrap;}
     </style>
 
     <script>
@@ -1299,6 +1316,34 @@
 </head>
 <body>
 
+    <div id="drw-ov" onclick="closeDrawer()" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.5);"></div>
+    <div id="drw-panel" style="position:fixed;top:0;left:-270px;width:250px;height:100dvh;z-index:3001;background:white;box-shadow:4px 0 24px rgba(0,0,0,0.15);transition:left .25s;display:flex;flex-direction:column;overflow:hidden;">
+        <div style="background:var(--month-header);padding:20px 16px 14px;flex-shrink:0;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <span style="font-size:16px;font-weight:900;color:white;">설연 Family</span>
+                <button onclick="closeDrawer()" style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.2);border:none;color:white;font-size:14px;cursor:pointer;">✕</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <div id="drw-avatar" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:18px;">👤</div>
+                <div id="drw-name" style="font-size:13px;font-weight:800;color:white;">–</div>
+            </div>
+        </div>
+        <nav style="flex:1;overflow-y:auto;padding:10px 8px;">
+            <div class="drawer-item active" id="di-main"       onclick="drawerGo('main-section')">🏠 <span>대시보드</span></div>
+            <div class="drawer-item" id="di-schedule"          onclick="drawerGo('schedule-section')">📅 <span>일정</span></div>
+            <div class="drawer-item" id="di-asset"             onclick="drawerGo('asset-section')">💰 <span>가계부</span></div>
+            <div class="drawer-item" id="di-photo"             onclick="drawerGo('photo-section')">📸 <span>앨범</span></div>
+            <div class="drawer-item" id="di-travel"            onclick="drawerGo('travel-section')">✈️ <span>여행 &amp; 여가</span></div>
+            <div class="drawer-item" id="di-chat"              onclick="drawerGo('chat-section')">🫧 <span>채팅</span><span id="drw-badge" style="display:none;background:#ef4444;color:white;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:800;margin-left:auto;"></span></div>
+            <div style="height:1px;background:#e2e8f0;margin:6px 4px;"></div>
+            <div class="drawer-item drawer-item-accent" id="di-trans" onclick="drawerGo('translator-section')">🌐 <span>AI 번역기</span></div>
+        </nav>
+        <div style="padding:10px 12px;border-top:1px solid #e2e8f0;display:flex;gap:8px;flex-shrink:0;">
+            <button onclick="openThemeColorModal();closeDrawer();" style="flex:1;padding:9px;border-radius:10px;background:#f1f5f9;border:none;font-size:11px;font-weight:700;color:#64748b;cursor:pointer;">🎨 테마</button>
+            <button onclick="familyAuthToggle();closeDrawer();" style="flex:1;padding:9px;border-radius:10px;background:#f1f5f9;border:none;font-size:11px;font-weight:700;color:#64748b;cursor:pointer;" id="drw-auth">🔑 인증</button>
+        </div>
+    </div>
+
     <!-- 프로필 선택 모달 (최초 접속 or 수동 변경) -->
     <div id="profile-modal" style="display:none;">
         <div class="profile-modal-box">
@@ -1325,21 +1370,15 @@
     </div>
 
     <header>
-        <!-- 왼쪽: 로고 -->
-        <div class="logo" onclick="showSection('main-section')">설연 <span class="accent">Family</span></div>
-        <!-- 오른쪽: 테마버튼 + 프로필 -->
+        <div style="display:flex;align-items:center;gap:10px;">
+            <button onclick="toggleDrawer()" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.18);border:none;cursor:pointer;font-size:18px;color:white;">☰</button>
+            <div class="logo" onclick="showSection('main-section')">설연 <span class="accent">Family</span></div>
+        </div>
+        <!-- 오른쪽: 테마버튼만 유지 (로그인 아이콘 제거) -->
         <div style="display:flex;align-items:center;gap:8px;">
             <button id="theme-color-btn" onclick="openThemeColorModal()" title="테마 색상 변경">🎨</button>
-            <button id="family-auth-btn" onclick="familyAuthToggle()" title="가족 인증"
-                style="background:rgba(255,255,255,0.18);border:none;border-radius:16px;padding:5px 10px;cursor:pointer;font-size:14px;color:white;">🔑</button>
-            <div id="header-profile" onclick="openProfileModal()"
-                style="cursor:pointer;display:flex;align-items:center;gap:6px;
-                       background:rgba(255,255,255,0.18);border-radius:20px;
-                       padding:5px 12px 5px 8px;font-size:12px;font-weight:700;
-                       color:rgba(255,255,255,0.92);transition:.15s;"
-                onmouseover="this.style.background='rgba(255,255,255,0.28)'"
-                onmouseout="this.style.background='rgba(255,255,255,0.18)'">
-                <span id="header-profile-avatar" style="font-size:18px;"></span>
+            <div id="header-profile" style="display:none;">
+                <span id="header-profile-avatar"></span>
                 <span id="header-profile-name"></span>
             </div>
         </div>
@@ -1385,15 +1424,7 @@
             </div>
 
             <!-- ② 슬라이드 래퍼 -->
-            <div class="main-slide-wrap">
-                <div class="main-slide-dots">
-                    <div class="main-slide-dot active" onclick="goMainSlide(0)"></div>
-                    <div class="main-slide-dot" onclick="goMainSlide(1)"></div>
-                </div>
-                <div class="main-slide-track" id="main-slide-track">
-                    <!-- Page 1 -->
-                    <div class="main-slide-page">
-                        <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;min-height:0;-webkit-overflow-scrolling:touch;">
+            <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;min-height:0;-webkit-overflow-scrolling:touch;">
                         <div class="main-dashboard">
                         <!-- 왼쪽 -->
                         <div class="dash-left">
@@ -1465,53 +1496,40 @@
                         </div><!-- /dash-right -->
                         </div><!-- /main-dashboard -->
                         <!-- 배너 5개 -->
-                        <div class="banner-container">
-                            <div class="banner" onclick="showSection('schedule-section')"><span class="banner-icon">📅</span><b>일정</b></div>
-                            <div class="banner" onclick="showSection('asset-section')"><span class="banner-icon">💰</span><b>가계부</b></div>
-                            <div class="banner" onclick="showSection('photo-section')"><span class="banner-icon">📸</span><b>앨범</b></div>
-                            <div class="banner" onclick="showSection('travel-section')"><span class="banner-icon">✈️</span><b>여행<br>&amp; 여가</b></div>
-                            <div class="banner" onclick="showSection('chat-section')">
-                                <div class="chat-banner-wrap"><span class="banner-icon">🫧</span><span class="chat-badge" id="chat-unread-badge"></span></div>
-                                <b>채팅</b>
+                        <!-- 좌우 스와이프 퀵링크 아이콘 바 -->
+                        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0 -14px;padding:4px 14px 6px;touch-action:pan-x;">
+                            <div id="quicklink-row" style="display:flex;gap:12px;width:max-content;">
+                                <button onclick="drawerGo('schedule-section')" class="ql-icon-btn">
+                                    <div class="ql-icon-circle" style="background:#e0f2fe;">📅</div>
+                                    <span>일정</span>
+                                </button>
+                                <button onclick="drawerGo('asset-section')" class="ql-icon-btn">
+                                    <div class="ql-icon-circle" style="background:#dcfce7;">💰</div>
+                                    <span>가계부</span>
+                                </button>
+                                <button onclick="drawerGo('photo-section')" class="ql-icon-btn">
+                                    <div class="ql-icon-circle" style="background:#fae8ff;">📸</div>
+                                    <span>앨범</span>
+                                </button>
+                                <button onclick="drawerGo('travel-section')" class="ql-icon-btn">
+                                    <div class="ql-icon-circle" style="background:#fef9c3;">✈️</div>
+                                    <span>여행</span>
+                                </button>
+                                <button onclick="drawerGo('chat-section')" class="ql-icon-btn" style="position:relative;">
+                                    <div class="ql-icon-circle" style="background:#e0f2fe;">🫧</div>
+                                    <span>채팅</span>
+                                    <span id="chat-unread-badge" class="chat-badge" style="position:absolute;top:0;right:0;"></span>
+                                </button>
+                                <button onclick="drawerGo('translator-section')" class="ql-icon-btn">
+                                    <div class="ql-icon-circle" style="background:linear-gradient(135deg,#1e40af,#3b82f6);color:white;">🌐</div>
+                                    <span style="color:#1d4ed8;font-weight:800;">AI번역</span>
+                                </button>
                             </div>
                         </div>
                         <div class="footer-info">Family Shared v51.0 &nbsp;·&nbsp; Jung Wooseol 2026</div>
-                        </div><!-- /scroll -->
-                    </div><!-- /page1 -->
-
-                    <!-- Page 2: 티모시 번역기 v3 -->
-                    <div class="main-slide-page" id="translator-page">
-                        <div style="flex:1;overflow-y:auto;padding:0 14px 20px;-webkit-overflow-scrolling:touch;">
-                            <div style="display:flex;align-items:center;gap:8px;padding:10px 0 8px;">
-                                <button id="tim-src-btn" onclick="timOpenLang('src')" style="flex:1;padding:12px 8px;border-radius:14px;border:1.5px solid #e2e8f0;background:white;cursor:pointer;text-align:center;">
-                                    <div id="tim-src-flag" style="font-size:26px;">🇰🇷</div><div id="tim-src-name" style="font-size:10px;font-weight:700;color:#475569;margin-top:3px;">KOR</div>
-                                </button>
-                                <button onclick="timSwap()" style="width:36px;height:36px;border-radius:50%;border:1.5px solid #e2e8f0;background:white;font-size:16px;cursor:pointer;flex-shrink:0;">⇄</button>
-                                <button id="tim-tgt-btn" onclick="timOpenLang('tgt')" style="flex:1;padding:12px 8px;border-radius:14px;border:1.5px solid var(--month-header);background:var(--month-grad-a);cursor:pointer;text-align:center;">
-                                    <div id="tim-tgt-flag" style="font-size:26px;">🇮🇹</div><div id="tim-tgt-name" style="font-size:10px;font-weight:700;color:#475569;margin-top:3px;">ITA</div>
-                                </button>
-                            </div>
-                            <div style="background:white;border-radius:16px;border:1.5px solid #e2e8f0;padding:18px 14px;margin-bottom:10px;text-align:center;">
-                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><span style="font-size:9px;font-weight:800;color:#94a3b8;letter-spacing:1px;">INTERPRETATION</span><span style="font-size:9px;font-weight:700;color:#22c55e;">● ONLINE</span></div>
-                                <div onclick="timOpenMic()" style="width:90px;height:90px;border-radius:50%;background:rgba(59,130,246,0.06);display:flex;align-items:center;justify-content:center;margin:0 auto;cursor:pointer;">
-                                    <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:26px;color:white;box-shadow:0 4px 16px rgba(59,130,246,0.3);">🎙</div>
-                                </div>
-                                <div style="font-size:11px;color:#94a3b8;margin-top:8px;">아이콘을 누르면 대화 시작</div>
-                            </div>
-                            <div style="display:flex;gap:8px;margin-bottom:10px;">
-                                <button onclick="document.getElementById('tim-gallery-input').click()" style="flex:1;padding:14px;border-radius:14px;border:1.5px solid #e2e8f0;background:white;cursor:pointer;display:flex;align-items:center;gap:8px;"><div style="width:36px;height:36px;border-radius:10px;background:#eff6ff;display:flex;align-items:center;justify-content:center;font-size:16px;">🖼</div><span style="font-size:13px;font-weight:700;">사진번역</span></button>
-                                <button onclick="timOpenSit()" style="flex:1;padding:14px;border-radius:14px;border:1.5px solid #e2e8f0;background:white;cursor:pointer;display:flex;align-items:center;gap:8px;"><div style="width:36px;height:36px;border-radius:10px;background:#fef3c7;display:flex;align-items:center;justify-content:center;font-size:16px;">📋</div><span style="font-size:13px;font-weight:700;">상황별</span></button>
-                            </div>
-                            <div id="tim-output" style="min-height:200px;"></div>
-                            <div style="background:white;border-radius:12px;border:1.5px solid #e2e8f0;padding:10px;margin-top:8px;"><div style="display:flex;gap:6px;"><textarea id="tim-input" rows="1" placeholder="번역할 문장 입력..." style="flex:1;border:1.5px solid #e2e8f0;border-radius:10px;padding:9px 10px;font-size:13px;font-family:inherit;resize:none;outline:none;"></textarea><button onclick="timTranslate()" style="padding:9px 14px;border-radius:10px;background:#1e293b;border:none;color:white;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;">번역하기 →</button></div></div>
-                        </div>
-                    </div><!-- /page2 -->
-
-
-                </div><!-- /slide-track -->
-            </div><!-- /slide-wrap -->
+                        </div><!-- /main-scroll -->
+            </div><!-- /main-wrap -->
         </section>
-
 
         <!-- 일정 -->
         <section id="schedule-section" class="page-section">
@@ -1800,6 +1818,156 @@
         <!-- 일별 가계부 캘린더 -->
 
         <!-- 💬 채팅 -->
+
+        <!-- ═══ AI 번역기 섹션 ═══ -->
+        <section id="translator-section" class="page-section">
+            <div style="width:100%;max-width:500px;padding:0 0 40px;display:flex;flex-direction:column;">
+
+                <!-- 헤더 -->
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px 8px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <button onclick="drawerGo('main-section')" style="width:30px;height:30px;border-radius:50%;border:1.5px solid #e2e8f0;background:white;font-size:14px;cursor:pointer;">←</button>
+                        <span style="font-size:15px;font-weight:800;color:#1e293b;">🌐 AI 번역기</span>
+                        <button onclick="timOpenApiKeyModal()" id="tim-key-icon"
+                            style="width:26px;height:26px;border-radius:50%;border:1.5px solid #fde68a;background:#fffbeb;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;"
+                            title="API 키 설정">🔑</button>
+                    </div>
+                    <span style="font-size:9px;font-weight:700;color:#22c55e;letter-spacing:1px;">● SEOLYEON</span>
+                </div>
+                <!-- API 키 입력 패널 (토글) -->
+                <div id="tim-key-panel" style="display:none;margin:0 14px 10px;background:#fffbeb;border:1.5px solid #fde68a;border-radius:12px;padding:10px 12px;">
+                    <div style="font-size:10px;font-weight:800;color:#92400e;margin-bottom:6px;">🔑 GEMINI API KEY</div>
+                    <div style="display:flex;gap:6px;">
+                        <input type="password" id="tim-api-input" placeholder="Gemini API 키 입력..."
+                            style="flex:1;border:1.5px solid #fde68a;border-radius:8px;padding:7px 9px;font-size:12px;outline:none;background:white;font-family:monospace;" />
+                        <button onclick="timSaveKey()" style="padding:7px 12px;border-radius:8px;background:#1e293b;border:none;color:white;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;">저장</button>
+                    </div>
+                    <div id="tim-key-status" style="font-size:10px;margin-top:4px;color:#166534;"></div>
+                </div>
+
+                <!-- 언어 선택 바 -->
+                <div style="display:flex;align-items:center;gap:8px;padding:0 14px;margin-bottom:10px;">
+                    <button id="tim-src-btn" onclick="timOpenLang('src')" style="flex:1;padding:10px 6px;border-radius:12px;border:1.5px solid #e2e8f0;background:white;cursor:pointer;text-align:center;">
+                        <div id="tim-src-flag" style="font-size:22px;">🇰🇷</div>
+                        <div id="tim-src-name" style="font-size:10px;font-weight:700;color:#475569;margin-top:2px;">KOR</div>
+                    </button>
+                    <button onclick="timSwap()" style="width:34px;height:34px;border-radius:50%;border:1.5px solid #e2e8f0;background:white;font-size:16px;cursor:pointer;flex-shrink:0;">⇄</button>
+                    <button id="tim-tgt-btn" onclick="timOpenLang('tgt')" style="flex:1;padding:10px 6px;border-radius:12px;border:1.5px solid var(--month-header);background:var(--month-grad-a);cursor:pointer;text-align:center;">
+                        <div id="tim-tgt-flag" style="font-size:22px;">🇮🇹</div>
+                        <div id="tim-tgt-name" style="font-size:10px;font-weight:700;color:#475569;margin-top:2px;">ITA</div>
+                    </button>
+                </div>
+
+                <!-- 탭 3개 -->
+                <div style="display:flex;gap:6px;padding:0 14px;margin-bottom:12px;">
+                    <button class="tim-tab active" id="timTab0" onclick="timSwitchTab(0)">📝 번역</button>
+                    <button class="tim-tab"        id="timTab1" onclick="timSwitchTab(1)">🎙️ 통역</button>
+                    <button class="tim-tab"        id="timTab2" onclick="timSwitchTab(2)">📋 상황별</button>
+                </div>
+
+                <!-- 패널0: 번역 — 입력 + 버튼 + 결과 통합 -->
+                <div id="timPanel0" style="padding:0 14px;display:flex;flex-direction:column;gap:10px;">
+                    <!-- 입력 카드 -->
+                    <div style="background:white;border-radius:14px;border:1.5px solid #e2e8f0;padding:14px;">
+                        <div style="font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:.5px;margin-bottom:8px;">입력</div>
+                        <textarea id="tim-input" rows="5" placeholder="번역할 문장을 입력하세요..."
+                            style="width:100%;border:1.5px solid #e2e8f0;border-radius:10px;padding:11px 12px;font-size:14px;font-family:inherit;resize:none;outline:none;box-sizing:border-box;line-height:1.7;"></textarea>
+                        <!-- 버튼 3개 1:1:1 -->
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:10px;">
+                            <button id="tim-trans-btn" onclick="timTranslate()"
+                                style="padding:11px 6px;border-radius:10px;background:#1e293b;border:none;color:white;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;">번역하기 →</button>
+                            <button onclick="timOpenPhotoModal()"
+                                style="padding:11px 6px;border-radius:10px;background:#eff6ff;border:1.5px solid #bfdbfe;color:#1d4ed8;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;">사진 번역</button>
+                            <button onclick="timClearAll()"
+                                style="padding:11px 6px;border-radius:10px;background:#f1f5f9;border:none;color:#64748b;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">지우기</button>
+                        </div>
+                        <input type="file" id="tim-cam-input"     accept="image/*" capture="environment" style="display:none" onchange="timGallerySelected(this)">
+                        <input type="file" id="tim-gallery-input" accept="image/*"                       style="display:none" onchange="timGallerySelected(this)">
+                    </div>
+                    <!-- 결과 카드 (항상 표시, 내용 없을 때 최소화) -->
+                    <div id="tim-result-card" style="background:white;border-radius:14px;border:1.5px solid #e2e8f0;padding:14px;display:none;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                            <div style="font-size:10px;font-weight:800;color:#3b82f6;letter-spacing:.5px;">번역 결과</div>
+                            <button onclick="timClearResult()" style="font-size:10px;color:#94a3b8;background:none;border:none;cursor:pointer;padding:2px 6px;">✕ 닫기</button>
+                        </div>
+                        <div id="tim-output"></div>
+                    </div>
+                </div>
+
+                <!-- 패널1: 실시간 통역 (회의모드) -->
+                <div id="timPanel1" style="display:none;padding:0 14px;flex-direction:column;gap:10px;">
+
+                    <!-- 마이크 컨트롤 바 -->
+                    <div style="background:white;border-radius:14px;border:1.5px solid #e2e8f0;padding:14px;">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                            <!-- 내 음성 버튼 -->
+                            <button id="tim-my-btn" onclick="timToggleMyMic()"
+                                style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border-radius:12px;border:2px solid #3b82f6;background:#eff6ff;cursor:pointer;transition:.2s;">
+                                <div style="width:44px;height:44px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-size:20px;" id="tim-my-mic-icon">🎙️</div>
+                                <div>
+                                    <div style="font-size:10px;font-weight:800;color:#3b82f6;letter-spacing:.4px;">MY VOICE</div>
+                                    <div id="tim-my-lbl" style="font-size:10px;font-weight:700;color:#1e293b;margin-top:1px;line-height:1.3;">🇰🇷 한국어</div>
+                                </div>
+                                <div id="tim-my-status" style="font-size:10px;color:#94a3b8;">● 대기 중</div>
+                            </button>
+                            <!-- 상대방 음성 버튼 -->
+                            <button id="tim-peer-btn" onclick="timTogglePeerMic()"
+                                style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border-radius:12px;border:2px solid #10b981;background:#f0fdf4;cursor:pointer;transition:.2s;">
+                                <div style="width:44px;height:44px;border-radius:50%;background:#d1fae5;display:flex;align-items:center;justify-content:center;font-size:20px;" id="tim-peer-mic-icon">🎙️</div>
+                                <div>
+                                    <div style="font-size:10px;font-weight:800;color:#10b981;letter-spacing:.4px;">PEER VOICE</div>
+                                    <div id="tim-peer-lbl" style="font-size:10px;font-weight:700;color:#1e293b;margin-top:1px;line-height:1.3;">🇮🇹 이탈리아어</div>
+                                </div>
+                                <div id="tim-peer-status" style="font-size:10px;color:#94a3b8;">● 대기 중</div>
+                            </button>
+                        </div>
+                        <!-- 인식 중 텍스트 -->
+                        <div id="tim-interp-interim" style="margin-top:10px;min-height:20px;font-size:12px;color:#64748b;font-style:italic;text-align:center;padding:6px 10px;background:#f8fafc;border-radius:8px;display:none;"></div>
+                    </div>
+
+                    <!-- 대화 흐름 타임라인 -->
+                    <div style="background:white;border-radius:14px;border:1.5px solid #e2e8f0;padding:14px;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                            <div style="font-size:11px;font-weight:800;color:#475569;letter-spacing:.4px;">📋 대화 기록</div>
+                            <button onclick="timClearInterpLog()" style="font-size:10px;color:#ef4444;background:none;border:none;cursor:pointer;padding:2px 6px;">🗑 초기화</button>
+                        </div>
+                        <!-- 대화 버블 스크롤 영역 -->
+                        <div id="tim-interp-log" style="min-height:200px;max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;">
+                            <div style="text-align:center;padding:20px;font-size:12px;color:#cbd5e1;">
+                                마이크 버튼을 눌러 통역을 시작하세요
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 히든 textarea (하위 호환용) -->
+                    <textarea id="tim-log-my"   style="display:none;" readonly></textarea>
+                    <textarea id="tim-log-peer" style="display:none;" readonly></textarea>
+                </div>
+
+                <!-- 패널2: 상황별 -->
+                <div id="timPanel2" style="display:none;padding:0 14px;flex-direction:column;gap:10px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                        <button onclick="timLoadCat('식당')"  style="padding:16px 8px;border-radius:14px;background:#fef3c7;border:none;cursor:pointer;"><div style="font-size:26px;">🍽</div><div style="font-size:12px;font-weight:800;color:#92400e;margin-top:5px;">식당</div></button>
+                        <button onclick="timLoadCat('호텔')"  style="padding:16px 8px;border-radius:14px;background:#eff6ff;border:none;cursor:pointer;"><div style="font-size:26px;">🏨</div><div style="font-size:12px;font-weight:800;color:#1d4ed8;margin-top:5px;">호텔</div></button>
+                        <button onclick="timLoadCat('교통')"  style="padding:16px 8px;border-radius:14px;background:#f0fdf4;border:none;cursor:pointer;"><div style="font-size:26px;">🚌</div><div style="font-size:12px;font-weight:800;color:#166534;margin-top:5px;">교통</div></button>
+                        <button onclick="timLoadCat('병원')"  style="padding:16px 8px;border-radius:14px;background:#fdf2f8;border:none;cursor:pointer;"><div style="font-size:26px;">🏥</div><div style="font-size:12px;font-weight:800;color:#86198f;margin-top:5px;">병원</div></button>
+                        <button onclick="timLoadCat('경찰서')" style="padding:16px 8px;border-radius:14px;background:#fef2f2;border:none;cursor:pointer;"><div style="font-size:26px;">👮</div><div style="font-size:12px;font-weight:800;color:#991b1b;margin-top:5px;">경찰서</div></button>
+                        <button onclick="timLoadCat('공항')"  style="padding:16px 8px;border-radius:14px;background:#f8fafc;border:none;cursor:pointer;"><div style="font-size:26px;">✈️</div><div style="font-size:12px;font-weight:800;color:#334155;margin-top:5px;">공항</div></button>
+                        <button onclick="timLoadCat('쇼핑')"  style="padding:16px 8px;border-radius:14px;background:#fff7ed;border:none;cursor:pointer;"><div style="font-size:26px;">🛍</div><div style="font-size:12px;font-weight:800;color:#9a3412;margin-top:5px;">쇼핑</div></button>
+                    </div>
+                    <!-- 상황별 결과 (닫기 포함) -->
+                    <div id="tim-sit-result-wrap" style="display:none;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px 6px;">
+                            <div style="font-size:11px;font-weight:800;color:#475569;letter-spacing:.4px;">📋 문구 목록</div>
+                            <button onclick="timCloseSitResult()" style="display:flex;align-items:center;gap:4px;font-size:11px;color:#64748b;background:#f1f5f9;border:none;border-radius:8px;padding:5px 10px;cursor:pointer;font-weight:700;">← 카테고리</button>
+                        </div>
+                        <div id="tim-sit-output" style="padding:0 0 10px;"></div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
         <section id="chat-section" class="page-section">
             <div class="card" id="chat-card" style="padding:clamp(12px,2vw,20px);position:relative;overflow:hidden;">
                 <canvas id="chat-fx-canvas"></canvas>
@@ -2022,8 +2190,6 @@
                 </div>
             </div>
         </div>
-
-
 
         <!-- 🎨 테마 색상 선택 모달 -->
         <div id="theme-color-modal" class="sch-detail-modal hidden">
@@ -2695,8 +2861,6 @@
         // openPhotoAdjustModal → openLocationModal 위임 (기존 호출 호환)
         function openPhotoAdjustModal() { openLocationModal(); }
 
-
-
         // ══════════════════════════════════════════════════════
         // 👤 프로필 (사용자 식별) 관리
         // ══════════════════════════════════════════════════════
@@ -2924,7 +3088,6 @@
             }
         }
 
-
         // 채팅창 열릴 때 배경/날씨효과 적용 (DOM이 확정된 후 실행)
         function initChatUI() {
             applyChatBg();
@@ -2941,7 +3104,6 @@
                 });
             }
         }
-
 
         function renderChatMessages() {
             const el = document.getElementById('chat-messages');
@@ -3215,7 +3377,6 @@
         /* ── escapeHtml (하위 호환) ── */
         function escapeHtml(t) { return escHtml(t); }
 
-
         // ══════════════════════════════════════════════════════
         // 🎨 테마 색상 편집
         // ══════════════════════════════════════════════════════
@@ -3374,8 +3535,6 @@
 
         // 미디어 패널 토글
 
-
-
         function switchChatBgTab(btn) {
             document.querySelectorAll('.chat-bg-tab').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
@@ -3384,8 +3543,6 @@
             const panel = document.getElementById('chatbgtab-'+tab);
             if (panel) panel.style.display = 'block';
         }
-
-
 
         // ══ 날씨 효과 Canvas 애니메이션 ══
         let chatFxType = localStorage.getItem('chatFxType') || 'none';
@@ -3585,7 +3742,6 @@
             reader.readAsDataURL(file);
         }
 
-
         // 채팅 배경 적용 후 모달 닫기
         function applyChatBgAndClose() {
             applyChatBg();
@@ -3636,7 +3792,6 @@
             const btn = document.getElementById('media-btn');
             if (btn) btn.textContent = isOpen ? '📷' : '✕';
         }
-
 
         function openChatBgModal() {
             document.getElementById('chat-bg-modal').classList.remove('hidden');
@@ -3782,7 +3937,6 @@
             }
         }
 
-
         // ══════════════════════════════════════════════════════
         // 😊 이모티콘 팝업
         // ══════════════════════════════════════════════════════
@@ -3911,8 +4065,6 @@
             msgEl.scrollTop = msgEl.scrollHeight;
         }
 
-
-
 function initRealtimeSync() {
             db.collection("schedules").onSnapshot(s => {
                 schData = s.docs.map(d => d.data());
@@ -4016,11 +4168,55 @@ function initRealtimeSync() {
         }
 
         // ── 섹션 전환 ──────────────────────────────────────────────────
+
+        // ════════════════════════════════════════════════
+        // 🗂️ 드로어 네비게이션
+        // ════════════════════════════════════════════════
+        var _drwOpen=false;
+        function toggleDrawer(){ _drwOpen?closeDrawer():openDrawer(); }
+        function openDrawer(){
+            _drwOpen=true;
+            var p=document.getElementById('drw-panel'),o=document.getElementById('drw-ov');
+            if(p) p.style.left='0';
+            if(o){ o.style.display='block'; }
+            // 프로필 동기화
+            var nm=document.getElementById('drw-name'),av=document.getElementById('drw-avatar');
+            var pn=document.getElementById('header-profile-name'),pa=document.getElementById('header-profile-avatar');
+            if(nm&&pn) nm.textContent=pn.textContent||'–';
+            if(av&&pa) av.textContent=pa.textContent||'👤';
+            // 배지 동기화
+            var bs=document.getElementById('chat-unread-badge'),bd=document.getElementById('drw-badge');
+            if(bs&&bd){ var c=bs.textContent; if(c){bd.textContent=c;bd.style.display='inline-block';}else bd.style.display='none'; }
+            // 인증 버튼
+            var ab=document.getElementById('drw-auth');
+            if(ab) ab.textContent=(typeof isFamilyAuthed==='function'&&isFamilyAuthed())?'🔓 로그아웃':'🔑 인증';
+        }
+        function closeDrawer(){
+            _drwOpen=false;
+            var p=document.getElementById('drw-panel'),o=document.getElementById('drw-ov');
+            if(p) p.style.left='-270px';
+            if(o) o.style.display='none';
+        }
+        function drawerGo(sectionId){
+            closeDrawer();
+            var map={'main-section':'di-main','schedule-section':'di-schedule','asset-section':'di-asset',
+                     'photo-section':'di-photo','travel-section':'di-travel','chat-section':'di-chat','translator-section':'di-trans'};
+            document.querySelectorAll('.drawer-item').forEach(function(el){el.classList.remove('active');});
+            var did=map[sectionId]; if(did){var de=document.getElementById(did);if(de)de.classList.add('active');}
+            setTimeout(function(){ showSection(sectionId); },200);
+        }
+
         function showSection(id, pushHistory = true) {
             document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
             const target = document.getElementById(id);
             if (target) {
                 target.classList.add('active');
+                // 번역기 진입 시 키 복원
+                if(id==='translator-section'&&typeof timOnEnter==='function') timOnEnter();
+                // 드로어 활성 동기화
+                var _dm={'main-section':'di-main','schedule-section':'di-schedule','asset-section':'di-asset','photo-section':'di-photo','travel-section':'di-travel','chat-section':'di-chat','translator-section':'di-trans'};
+                document.querySelectorAll('.drawer-item').forEach(function(el){el.classList.remove('active');});
+                var _did=_dm[id]; if(_did){var _de=document.getElementById(_did);if(_de)_de.classList.add('active');}
                 window.scrollTo(0, 0);
                 // History API: 메인이 아닐 때만 pushState (뒤로가기 가능하게)
                 if (pushHistory) {
@@ -4528,7 +4724,6 @@ function initRealtimeSync() {
             document.getElementById('sch-action-sheet').classList.remove('hidden');
         }
 
-
         function closeSchAction() {
             document.getElementById('sch-action-sheet').classList.add('hidden');
             schActionTarget = null;
@@ -4969,7 +5164,6 @@ function initRealtimeSync() {
             history.pushState({ modal: 'asset-entry' }, '', '');
         }
 
-
         // initAssetCharts → 하단 개선판 사용
 
         // ── 앨범 ──────────────────────────────────────────────────
@@ -5105,7 +5299,6 @@ function initRealtimeSync() {
             }
             updateFilterButtons();
         }
-
 
         // 기간 필터 옵션 동적 생성 (데이터 기반)
         function buildPeriodOptions() {
@@ -5544,7 +5737,6 @@ function initRealtimeSync() {
             history.pushState({ modal: 'master' }, '', '');
         }
 
-
         // ── 메인 대시보드 렌더 ──────────────────────────────────────────
 
         // ════════════════════════════════════════════════════════
@@ -5576,23 +5768,752 @@ function initRealtimeSync() {
         var _timLD='tgt';
         function timOpenLang(d){_timLD=d;document.getElementById('tim-lang-modal').style.display='flex';history.pushState({timLang:1},'');}
         function timPickLang(i){if(_timLD==='src')timSrc=TIM_L[i];else timTgt=TIM_L[i];timUpdateUI();document.getElementById('tim-lang-modal').style.display='none';}
-        async function timGT(q,tgt,src){if(!isFamilyAuthed()){openFamilyAuthModal();throw new Error('인증 필요');}var r=await fetch('https://translation.googleapis.com/language/translate/v2?key='+getApiKey(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q:q,target:tgt,source:src||'',format:'text'})});if(!r.ok){var e=await r.json().catch(function(){return{};});throw new Error(e.error&&e.error.message||r.status);}var d=await r.json(),t=d.data&&d.data.translations;return Array.isArray(q)?t.map(function(x){return x.translatedText;}):t&&t[0]&&t[0].translatedText||'';}
-        async function timGemini(prompt,img){var parts=[];if(img)parts.push({inline_data:{mime_type:'image/jpeg',data:img}});parts.push({text:prompt});var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+getApiKey(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:parts}]})});if(!r.ok){var ed=await r.json().catch(function(){return{};});throw new Error(r.status===403?'Gemini API 활성화 필요':ed.error&&ed.error.message||'Gemini '+r.status);}var d=await r.json();return d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0]&&d.candidates[0].content.parts[0].text&&d.candidates[0].content.parts[0].text.trim()||'';}
-        async function timPron(texts,ln,lc){try{var prompt='발음 전문가로서 답해줘. 아래 '+ln+' 문장들을 번역하지 말고 소리나는 그대로 한글로 적어줘.\n예시: "hungry"→"헝그리", "Buongiorno"→"본조르노"\n\n'+texts.map(function(t,i){return(i+1)+'. '+t;}).join('\n')+'\n\nJSON 배열만: ["발음1","발음2",...]';var raw=await timGemini(prompt);var m=raw.match(/\[[\s\S]*?\]/);if(m){var arr=JSON.parse(m[0]);if(arr.length>0)return arr;}}catch(e){console.warn('발음실패:',e);}try{var ko=await timGT(texts,'ko',lc);return ko.map(function(t,i){return '('+t+')';});}catch(e3){return texts.map(function(){return '';});}}
-        function timShow(h){var el=document.getElementById('tim-output');if(el)el.innerHTML=h;}
-        function timLoading(m){return '<div style="text-align:center;padding:28px;"><div style="font-size:36px;animation:trPulse 1.2s ease-in-out infinite;">🐱</div><div style="font-size:13px;color:#64748b;margin-top:8px;font-weight:600;">'+m+'</div></div>';}
-        function timCard(trans,pron,meaning,tip){timLast=trans;return '<div style="border-left:3px solid #3b82f6;border-radius:0 16px 16px 0;background:white;padding:20px;margin-top:14px;box-shadow:0 2px 12px rgba(0,0,0,0.06);"><div style="font-size:10px;font-weight:800;color:#3b82f6;letter-spacing:.5px;margin-bottom:6px;">'+timTgt.s+' TRANSLATION</div><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;"><div style="font-size:24px;font-weight:900;color:#1e293b;line-height:1.4;flex:1;">'+escHtml(trans)+'</div><button data-txt="'+escHtml(trans)+'" onclick="timSpeak(this.dataset.txt)" style="flex-shrink:0;width:42px;height:42px;border-radius:50%;border:none;background:#eff6ff;font-size:20px;cursor:pointer;">🔊</button></div>'+(pron?'<div style="margin-top:12px;background:#eff6ff;padding:12px 16px;border-radius:12px;font-size:20px;font-weight:800;color:#0000FF;line-height:1.5;">'+escHtml(pron)+'</div>':'')+(meaning&&meaning!==trans?'<div style="margin-top:8px;font-size:14px;color:#64748b;line-height:1.5;">'+escHtml(meaning)+'</div>':'')+(tip?'<div style="margin-top:8px;background:#fef3c7;border-radius:10px;padding:10px 12px;font-size:12px;color:#92400e;line-height:1.5;">💡 '+escHtml(tip)+'</div>':'')+'<div style="text-align:center;font-size:9px;color:#cbd5e1;margin-top:10px;letter-spacing:1px;">SEOLYEON FAMILY PREMIUM</div></div>';}
-        async function timTranslate(){var text=(document.getElementById('tim-input').value||'').trim();if(!text){alert('번역할 문장을 입력하세요.');return;}timShow(timLoading(timTgt.n+' 번역 중...'));try{var trans=await timGT(text,timTgt.g,timSrc.g);timShow(timLoading('한글 발음 생성 중...'));var pron='',tip='';try{var raw=await timGemini('발음 전문가로서 답해줘. 다음 '+timTgt.n+' 문장을 번역하지 말고 소리나는 대로 한글로 적고, 에티켓 팁도 알려줘.\n문장: "'+trans+'"\n원문: "'+text+'"\nJSON만: {"pronunciation":"한글발음","tip":"에티켓 팁"}');var m=raw.replace(/```json|```/g,'').match(/\{[\s\S]*?\}/);if(m){var p=JSON.parse(m[0]);pron=p.pronunciation||'';tip=p.tip||'';}}catch(e){console.warn('발음실패:',e);}timShow(timCard(trans,pron,text,tip));}catch(e){timShow('<div style="color:#ef4444;padding:14px;background:#fef2f2;border-radius:12px;">❌ '+escHtml(e.message)+'</div>');}}
-        function timOpenMic(){if(!isFamilyAuthed()){openFamilyAuthModal();return;}document.getElementById('tim-mic-modal').style.display='flex';history.pushState({timMic:1},'');document.getElementById('tim-mic-lang').textContent=timSrc.n+'를 듣고 있습니다';document.getElementById('tim-mic-target').textContent='"'+timTgt.n+'로 통역 준비됨"';timStartSR();}
-        function timCloseMic(){if(timSR)try{timSR.abort();}catch(e){}document.getElementById('tim-mic-modal').style.display='none';}
-        async function timStartSR(){if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){alert('Chrome 필요');return;}if(!window._micGranted){try{var s=await navigator.mediaDevices.getUserMedia({audio:true});s.getTracks().forEach(function(t){t.stop();});window._micGranted=true;}catch(e){alert('마이크 허용 필요');return;}}var SR=window.SpeechRecognition||window.webkitSpeechRecognition;timSR=new SR();timSR.lang=timSrc.sr;timSR.interimResults=true;var st=document.getElementById('tim-mic-status');if(st)st.textContent='"지금 말씀하세요"';var ft='';timSR.onresult=function(e){var interim='';for(var i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)ft+=e.results[i][0].transcript;else interim+=e.results[i][0].transcript;}if(st)st.textContent='"'+(ft+interim||'듣고 있어요...')+'"';};timSR.onerror=function(e){if(st)st.textContent=e.error==='no-speech'?'음성 감지 안됨':'오류: '+e.error;};timSR.start();}
-        async function timStopAndTranslate(){if(timSR)try{timSR.stop();}catch(e){}var st=document.getElementById('tim-mic-status'),wv=document.getElementById('tim-mic-wave');if(wv)wv.style.display='none';setTimeout(async function(){var spoken=(st&&st.textContent||'').replace(/"/g,'').trim();if(!spoken||spoken==='지금 말씀하세요'||spoken.indexOf('오류')===0||spoken==='음성 감지 안됨'){if(st)st.textContent='다시 시도해주세요.';return;}if(st)st.textContent='🐱 번역 중...';try{var trans=await timGT(spoken,timTgt.g,timSrc.g);var prons=await timPron([trans],timTgt.n,timTgt.g);timCloseMic();timShow(timCard(trans,prons[0],spoken,''));timSpeak(trans);}catch(e){if(st)st.textContent='❌ '+e.message;}},500);}
-        async function timGallerySelected(input){var file=input.files[0];if(!file)return;if(!isFamilyAuthed()){openFamilyAuthModal();return;}timShow(timLoading('이미지 분석 중...'));var reader=new FileReader();reader.onload=async function(e){var b64=e.target.result.split(',')[1];try{var prompt='이 이미지의 모든 텍스트를 추출하고 '+timTgt.n+'와 한국어로 번역해줘. 번역문의 한글 발음(번역하지 말고 소리나는 대로)과 문맥 설명 포함. JSON만: {"extracted":"원문","translated":"번역","korean":"한국어","pronunciation":"한글발음","context":"설명"}';var raw=await timGemini(prompt,b64);var clean=raw.replace(/```json|```/g,'').trim();var m2=clean.match(/\{[\s\S]*?\}/);if(m2)clean=m2[0];var p=JSON.parse(clean);var h='<div style="border-left:3px solid #3b82f6;border-radius:0 16px 16px 0;background:white;padding:20px;margin-top:14px;">';if(p.extracted)h+='<div style="font-size:10px;font-weight:700;color:#94a3b8;margin-bottom:4px;">📝 원문</div><div style="font-size:13px;color:#64748b;margin-bottom:10px;line-height:1.5;">'+escHtml(p.extracted)+'</div>';if(p.translated)h+='<div style="font-size:10px;font-weight:800;color:#3b82f6;margin-bottom:4px;">'+timTgt.s+' TRANSLATION</div><div style="font-size:22px;font-weight:900;color:#1e293b;line-height:1.4;margin-bottom:10px;">'+escHtml(p.translated)+'</div>';if(p.pronunciation)h+='<div style="background:#eff6ff;padding:12px 16px;border-radius:12px;font-size:20px;font-weight:800;color:#0000FF;margin-bottom:8px;">'+escHtml(p.pronunciation)+'</div>';if(p.korean)h+='<div style="font-size:14px;color:#64748b;margin-bottom:8px;">'+escHtml(p.korean)+'</div>';if(p.context)h+='<div style="background:#fef3c7;border-radius:10px;padding:10px;font-size:12px;color:#92400e;line-height:1.5;">🐱 '+escHtml(p.context)+'</div>';h+='</div>';timShow(h);}catch(e){try{var vr=await fetch('https://vision.googleapis.com/v1/images:annotate?key='+getApiKey(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({requests:[{image:{content:b64},features:[{type:'TEXT_DETECTION'}]}]})});var vd=await vr.json();var ext=vd.responses&&vd.responses[0]&&vd.responses[0].fullTextAnnotation&&vd.responses[0].fullTextAnnotation.text||'';if(!ext){timShow('<div style="color:#f59e0b;padding:14px;background:#fef3c7;border-radius:12px;">텍스트를 찾지 못했어요.</div>');return;}var toKo=await timGT(ext,'ko');timShow(timCard(toKo,'',ext,''));}catch(e2){timShow('<div style="color:#ef4444;padding:14px;background:#fef2f2;border-radius:12px;">❌ '+e2.message+'</div>');}}};reader.readAsDataURL(file);input.value='';}
-        function timOpenSit(){if(!isFamilyAuthed()){openFamilyAuthModal();return;}document.getElementById('tim-sit-modal').style.display='flex';history.pushState({timSit:1},'');}
-        async function timLoadCat(cat){document.getElementById('tim-sit-modal').style.display='none';var koList=TIM_SIT[cat]||TIM_SIT['식당'];timShow(timLoading(timTgt.n+' '+cat+' 문장 생성 중...'));timSitU[cat]=(timSitU[cat]||0)+1;localStorage.setItem('timSitU',JSON.stringify(timSitU));try{var trans=await timGT(koList,timTgt.g,'ko');timShow(timLoading('한글 발음 생성 중...'));var prons=await timPron(trans,timTgt.n,timTgt.g);var usage=JSON.parse(localStorage.getItem('timPU')||'{}');var idx=koList.map(function(_,i){return i;}).sort(function(a,b){return(usage[cat+'_'+b]||0)-(usage[cat+'_'+a]||0);});var h='<div style="font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:1px;margin-bottom:10px;">USEFUL PHRASES ('+koList.length+') — '+timTgt.s+'</div>';h+=idx.map(function(i){return '<div style="background:#f8fafc;border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;border:1.5px solid transparent;" data-cat="'+cat+'" data-idx="'+i+'" onclick="timPClick(this)"><div style="font-size:11px;color:#94a3b8;font-style:italic;margin-bottom:4px;">"'+escHtml(koList[i])+'"</div><div style="font-size:16px;font-weight:800;color:#1e293b;line-height:1.4;">'+escHtml(trans[i])+'</div><div style="font-size:18px;font-weight:800;color:#0000FF;margin-top:4px;">'+escHtml(prons[i]||'')+'</div></div>';}).join('');timShow(h);}catch(e){timShow('<div style="color:#ef4444;padding:14px;background:#fef2f2;border-radius:12px;">❌ '+e.message+'</div>');}}
-        function timPClick(el){var u=JSON.parse(localStorage.getItem('timPU')||'{}');var cat=el.dataset.cat,idx=el.dataset.idx;u[cat+'_'+idx]=(u[cat+'_'+idx]||0)+1;localStorage.setItem('timPU',JSON.stringify(u));var t=el.querySelector('div:nth-child(2)');if(t)timSpeak(t.textContent);}
-        function timSpeak(text){if(!text)return;window.speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(text);u.lang=timTgt.sr;u.rate=0.85;u.pitch=0.9;var v=window.speechSynthesis.getVoices().find(function(v){return v.lang.indexOf(timTgt.g)===0;})||null;if(v)u.voice=v;window.speechSynthesis.speak(u);}
-        window.addEventListener('load',function(){setTimeout(function(){var savedKey=localStorage.getItem('timApiKey');if(savedKey)_GCLOUD_KEY=savedKey;timUpdateUI();var lg=document.getElementById('tim-lang-grid');if(lg)lg.innerHTML=TIM_L.map(function(l,i){return '<div style="padding:14px 8px;border-radius:14px;border:1.5px solid #e2e8f0;background:white;cursor:pointer;text-align:center;" onclick="timPickLang('+i+')"><div style="font-size:28px;">'+l.f+'</div><div style="font-size:11px;font-weight:700;color:#475569;margin-top:4px;">'+l.n+'</div></div>';}).join('');},600);});
+        // ════════════════════════════════════════════════════
+        // 🚀 티모시 v4 엔진
+        // ════════════════════════════════════════════════════
+
+        // ── API 키 관리 ──
+        // ════════════════════════════════════════════════════════════════
+        // 🤖 멀티 AI 엔진 라우터 v1
+        //
+        //  ┌─ 기본 모드 (키 1개) ──────────────────────────────────────────
+        //  │  등록된 단일 키 엔진이 번역·OCR·통역 모두 처리
+        //  │
+        //  └─ 최적화 모드 (키 3개) ─────────────────────────────────────────
+        //     [번역]  Claude  — 문맥 파악 & 매끄러운 자연어 번역
+        //     [OCR]   GPT-4o  — 다양한 레이아웃·표 인식 정확도
+        //     [통역]  Gemini  — 저지연 오디오·음성 멀티모달 처리
+        //
+        //  Fallback: 지정 엔진 오류 시 등록된 다른 엔진 자동 재시도
+        // ════════════════════════════════════════════════════════════════
+
+        // ── 키 저장/로드 ────────────────────────────────────────────────
+        function timGetKeys(){
+            return {
+                gemini:  localStorage.getItem('timKey_gemini')  || _GCLOUD_KEY || '',
+                claude:  localStorage.getItem('timKey_claude')  || '',
+                gpt:     localStorage.getItem('timKey_gpt')     || ''
+            };
+        }
+        // 하위 호환 (단일키 참조)
+        function timGetKey(){
+            var keys = timGetKeys();
+            return keys.gemini || keys.claude || keys.gpt || '';
+        }
+        function timHasAllKeys(){
+            var k = timGetKeys();
+            return !!(k.gemini && k.claude && k.gpt);
+        }
+        function timGetEngineMode(){
+            var k = timGetKeys();
+            var count = [k.gemini,k.claude,k.gpt].filter(Boolean).length;
+            if(count===0) return 'none';
+            if(count>=3)  return 'optimal';  // 3개 → 기능별 최적 엔진
+            return 'basic';                   // 1~2개 → 단일 엔진 폴백
+        }
+        // 기능별 최적 엔진 키 반환 (없으면 가용 키 fallback)
+        function timGetKeyFor(task){
+            // task: 'translate' | 'ocr' | 'interpret'
+            var k = timGetKeys();
+            var mode = timGetEngineMode();
+            if(mode === 'optimal'){
+                if(task==='translate' && k.claude)   return {key:k.claude,  engine:'claude'};
+                if(task==='ocr'       && k.gpt)      return {key:k.gpt,     engine:'gpt'};
+                if(task==='interpret' && k.gemini)   return {key:k.gemini,  engine:'gemini'};
+            }
+            // 기본/폴백: 등록된 키 우선순위 gemini > claude > gpt
+            var fallback = k.gemini||k.claude||k.gpt;
+            var eng = k.gemini?'gemini': k.claude?'claude':'gpt';
+            return fallback ? {key:fallback, engine:eng} : null;
+        }
+
+        // ── 모달 제어 ────────────────────────────────────────────────────
+        function timOpenApiKeyModal(){
+            var k = timGetKeys();
+            var g=document.getElementById('key-gemini'),
+                c=document.getElementById('key-claude'),
+                p=document.getElementById('key-gpt');
+            if(g) g.value=k.gemini||'';
+            if(c) c.value=k.claude||'';
+            if(p) p.value=k.gpt||'';
+            timUpdateKeyBadges();
+            var modal=document.getElementById('tim-apikey-modal');
+            if(modal) modal.style.display='flex';
+        }
+        function timCloseApiKeyModal(){
+            var modal=document.getElementById('tim-apikey-modal');
+            if(modal) modal.style.display='none';
+        }
+        function timUpdateKeyBadges(){
+            var k=timGetKeys();
+            var pairs=[['key-gemini','key-gemini-status',k.gemini],
+                       ['key-claude','key-claude-status',k.claude],
+                       ['key-gpt',   'key-gpt-status',   k.gpt]];
+            pairs.forEach(function(p){
+                var el=document.getElementById(p[1]);
+                if(el) el.textContent=p[2]?'✅':'';
+            });
+            var badge=document.getElementById('tim-engine-badge');
+            if(!badge) return;
+            var mode=timGetEngineMode();
+            if(mode==='none'){
+                badge.style.background='#fef2f2'; badge.style.borderColor='#fecaca'; badge.style.color='#991b1b';
+                badge.innerHTML='⚠️ API 키 없음 — 키를 1개 이상 등록해 주세요';
+            } else if(mode==='optimal'){
+                badge.style.background='#f0fdf4'; badge.style.borderColor='#86efac'; badge.style.color='#166534';
+                badge.innerHTML='🚀 <b>최적화 모드</b> — Claude 번역 · GPT OCR · Gemini 통역';
+            } else {
+                var k2=timGetKeys();
+                var eng=k2.gemini?'Gemini':k2.claude?'Claude':'GPT';
+                badge.style.background='#eff6ff'; badge.style.borderColor='#bfdbfe'; badge.style.color='#1d4ed8';
+                badge.innerHTML='🔵 <b>기본 모드</b> — '+eng+' 단일 엔진으로 모든 기능 처리';
+            }
+        }
+        function timSaveAllKeys(){
+            var g=(document.getElementById('key-gemini').value||'').trim();
+            var c=(document.getElementById('key-claude').value||'').trim();
+            var p=(document.getElementById('key-gpt').value||'').trim();
+            if(g){ localStorage.setItem('timKey_gemini',g); _GCLOUD_KEY=g; }
+            else  localStorage.removeItem('timKey_gemini');
+            if(c) localStorage.setItem('timKey_claude',c);
+            else  localStorage.removeItem('timKey_claude');
+            if(p) localStorage.setItem('timKey_gpt',p);
+            else  localStorage.removeItem('timKey_gpt');
+            timUpdateKeyBadges();
+            var st=document.getElementById('tim-apikey-modal-status');
+            if(st){ st.textContent='✅ 저장됐습니다!'; st.style.color='#166534'; }
+            setTimeout(function(){
+                if(st) st.textContent='';
+                timCloseApiKeyModal();
+            },1200);
+        }
+
+        // ── 하위 호환 (구 timSaveKey / timToggleKeyPanel) ────────────────
+        function timSaveKey(){ timOpenApiKeyModal(); }
+        function timToggleKeyPanel(){ timOpenApiKeyModal(); }
+        function timKeyStatus(msg,color){
+            var el=document.getElementById('tim-key-status');
+            if(el){ el.textContent=msg; el.style.color=color; }
+        }
+        function timOnEnter(){
+            var k=timGetKey();
+            var el=document.getElementById('tim-api-input');
+            if(el&&k) el.value=k;
+            timUpdateUI();
+        }
+
+        // ── 사진 번역 모달 ───────────────────────────────────────────────
+        function timOpenPhotoModal(){
+            var m=document.getElementById('tim-photo-modal');
+            if(m) m.style.display='flex';
+        }
+        function timClosePhotoModal(){
+            var m=document.getElementById('tim-photo-modal');
+            if(m) m.style.display='none';
+        }
+
+        // ── 지우기 ───────────────────────────────────────────────────────
+        function timClearInput(){
+            var i=document.getElementById('tim-input');
+            if(i) i.value='';
+            document.getElementById('tim-output').innerHTML='';
+        }
+
+        // ════════════════════════════════════════════════════════════════
+        // 🚀 AI 엔진별 API 호출 함수
+        // ════════════════════════════════════════════════════════════════
+
+        // ── Gemini (번역·통역·OCR 기본) ──────────────────────────────────
+        async function _callGemini(key, prompt, img, mime){
+            mime=mime||'image/jpeg';
+            var parts=[];
+            if(img) parts.push({inline_data:{mime_type:mime,data:img}});
+            parts.push({text:prompt});
+            var ctrl=new AbortController();
+            var timer=setTimeout(function(){ctrl.abort();},30000);
+            var r=await fetch(
+                'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+key,
+                {method:'POST',headers:{'Content-Type':'application/json'},
+                 body:JSON.stringify({contents:[{parts:parts}]}),signal:ctrl.signal}
+            );
+            clearTimeout(timer);
+            if(!r.ok){
+                var ed=await r.json().catch(function(){return{};});
+                throw new Error('Gemini '+r.status+': '+((ed.error&&ed.error.message)||r.statusText));
+            }
+            var d=await r.json();
+            var t=d.candidates&&d.candidates[0]&&d.candidates[0].content&&
+                  d.candidates[0].content.parts&&d.candidates[0].content.parts[0]&&
+                  d.candidates[0].content.parts[0].text;
+            return t?t.trim():'';
+        }
+
+        // ── Claude (번역 최적) ────────────────────────────────────────────
+        async function _callClaude(key, prompt){
+            var ctrl=new AbortController();
+            var timer=setTimeout(function(){ctrl.abort();},30000);
+            var r=await fetch('https://api.anthropic.com/v1/messages',{
+                method:'POST',
+                headers:{
+                    'Content-Type':'application/json',
+                    'x-api-key':key,
+                    'anthropic-version':'2023-06-01',
+                    'anthropic-dangerous-direct-browser-access':'true'
+                },
+                body:JSON.stringify({
+                    model:'claude-haiku-4-5-20251001',
+                    max_tokens:1024,
+                    messages:[{role:'user',content:prompt}]
+                }),
+                signal:ctrl.signal
+            });
+            clearTimeout(timer);
+            if(!r.ok){
+                var ed=await r.json().catch(function(){return{};});
+                throw new Error('Claude '+r.status+': '+((ed.error&&ed.error.message)||r.statusText));
+            }
+            var d=await r.json();
+            return (d.content&&d.content[0]&&d.content[0].text)||'';
+        }
+
+        // ── GPT-4o (OCR 최적) ────────────────────────────────────────────
+        async function _callGPT(key, prompt, img, mime){
+            var messages=[{role:'user',content:[]}];
+            if(img){
+                messages[0].content.push({type:'image_url',image_url:{url:'data:'+(mime||'image/jpeg')+';base64,'+img}});
+            }
+            messages[0].content.push({type:'text',text:prompt});
+            var ctrl=new AbortController();
+            var timer=setTimeout(function(){ctrl.abort();},30000);
+            var r=await fetch('https://api.openai.com/v1/chat/completions',{
+                method:'POST',
+                headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+                body:JSON.stringify({model:'gpt-4o',messages:messages,max_tokens:1500}),
+                signal:ctrl.signal
+            });
+            clearTimeout(timer);
+            if(!r.ok){
+                var ed=await r.json().catch(function(){return{};});
+                throw new Error('GPT '+r.status+': '+((ed.error&&ed.error.message)||r.statusText));
+            }
+            var d=await r.json();
+            return (d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content)||'';
+        }
+
+        // ── 통합 라우터 (기능별 최적 엔진 + fallback) ────────────────────
+        async function timCallAI(task, prompt, img, mime){
+            // task: 'translate' | 'ocr' | 'interpret'
+            var keys=timGetKeys();
+            var mode=timGetEngineMode();
+            if(mode==='none') throw new Error('API 키 없음 — 🔑 아이콘을 눌러 키를 등록해 주세요.');
+
+            // 기능별 1순위 엔진 결정
+            var order=[];
+            if(mode==='optimal'){
+                if(task==='translate') order=[{e:'claude',k:keys.claude},{e:'gemini',k:keys.gemini},{e:'gpt',k:keys.gpt}];
+                else if(task==='ocr')  order=[{e:'gpt',k:keys.gpt},{e:'gemini',k:keys.gemini},{e:'claude',k:keys.claude}];
+                else                   order=[{e:'gemini',k:keys.gemini},{e:'claude',k:keys.claude},{e:'gpt',k:keys.gpt}];
+            } else {
+                // 기본 모드: 등록된 것 먼저
+                ['gemini','claude','gpt'].forEach(function(e){
+                    if(keys[e]) order.push({e:e,k:keys[e]});
+                });
+            }
+            order=order.filter(function(o){return !!o.k;});
+
+            var lastErr=null;
+            for(var i=0;i<order.length;i++){
+                try{
+                    var o=order[i];
+                    console.log('[timCallAI] task='+task+' engine='+o.e+(i>0?' (fallback '+i+')':''));
+                    if(o.e==='claude') return await _callClaude(o.k, prompt);
+                    if(o.e==='gpt')    return await _callGPT(o.k,   prompt, img, mime);
+                    return await _callGemini(o.k, prompt, img, mime);
+                }catch(e){
+                    lastErr=e;
+                    console.warn('[timCallAI] '+order[i].e+' 실패, 다음 엔진 시도:', e.message);
+                }
+            }
+            throw new Error((lastErr&&lastErr.message)||'모든 AI 엔진 호출 실패');
+        }
+
+        // ── 하위 호환: timGemini → timCallAI 라우팅 ─────────────────────
+        async function timGemini(prompt,img,mime){
+            return await timCallAI(img?'ocr':'translate', prompt, img, mime);
+        }
+
+        // ── JSON 파싱 가드 ──
+        function timParseJSON(raw){
+            if(!raw) return null;
+            var clean=raw.replace(/```json[\s\S]*?```/gi,function(s){return s.replace(/```json|```/gi,'');})
+                         .replace(/```[\s\S]*?```/gi,function(s){return s.replace(/```/gi,'');}).trim();
+            var m=clean.match(/\{[\s\S]*\}/);
+            if(!m) return null;
+            try{ return JSON.parse(m[0]); }catch(e){ return null; }
+        }
+        function timParseJSONArray(raw){
+            if(!raw) return null;
+            var clean=raw.replace(/```json[\s\S]*?```/gi,function(s){return s.replace(/```json|```/gi,'');})
+                         .replace(/```[\s\S]*?```/gi,function(s){return s.replace(/```/gi,'');}).trim();
+            var m=clean.match(/\[[\s\S]*\]/);
+            if(!m) return null;
+            try{ return JSON.parse(m[0]); }catch(e){ return null; }
+        }
+
+        // ── Gemini 1.5 Flash 호출 ──
+        async function timGemini(prompt,img,mime){
+            mime=mime||'image/jpeg';
+            var key=timGetKey();
+            if(!key) throw new Error('API 키 없음 — 번역기 상단에서 입력해 주세요.');
+            var parts=[];
+            if(img) parts.push({inline_data:{mime_type:mime,data:img}});
+            parts.push({text:prompt});
+            var ctrl=new AbortController();
+            var timer=setTimeout(function(){ ctrl.abort(); },30000);
+            var r=await fetch(
+                'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+key,
+                {method:'POST',headers:{'Content-Type':'application/json'},
+                 body:JSON.stringify({contents:[{parts:parts}]}),signal:ctrl.signal}
+            );
+            clearTimeout(timer);
+            if(!r.ok){
+                var ed=await r.json().catch(function(){return{};});
+                throw new Error(r.status===403?'Gemini API 활성화 필요(403)':
+                    'Gemini '+r.status+': '+((ed.error&&ed.error.message)||r.statusText));
+            }
+            var d=await r.json();
+            var t=d.candidates&&d.candidates[0]&&d.candidates[0].content&&
+                  d.candidates[0].content.parts&&d.candidates[0].content.parts[0]&&
+                  d.candidates[0].content.parts[0].text;
+            return t?t.trim():'';
+        }
+
+        // ── timGT: 배치 번역 래퍼 (하위 호환) ──
+        async function timGT(q,tgt,src){
+            var isArr=Array.isArray(q), list=isArr?q:[q];
+            var tgtName=(TIM_L.find(function(l){return l.g===tgt;})||{n:tgt}).n;
+            var srcName=(TIM_L.find(function(l){return l.g===src;})||{n:src||'자동'}).n;
+            var prompt='아래 문장들을 '+srcName+'에서 '+tgtName+'('+tgt+')으로 번역. JSON 배열만 출력. 예: ["번역1","번역2"]\n\n'+list.map(function(s,i){return (i+1)+'. '+s;}).join('\n');
+            var raw=await timGemini(prompt);
+            var arr=timParseJSONArray(raw);
+            if(!arr||!arr.length) arr=raw.split('\n').map(function(l){return l.replace(/^\d+\.\s*/,'').trim();}).filter(Boolean);
+            while(arr.length<list.length) arr.push('');
+            return isArr?arr:(arr[0]||'');
+        }
+
+        // ── 탭 전환 ──
+        function timSwitchTab(idx){
+            for(var i=0;i<3;i++){
+                var btn=document.getElementById('timTab'+i);
+                var pan=document.getElementById('timPanel'+i);
+                if(btn) btn.classList.toggle('active',i===idx);
+                if(pan){
+                    pan.style.display=(i===idx)?'flex':'none';
+                    if(i===idx) pan.style.flexDirection='column';
+                }
+            }
+            if(idx===1) timUpdInterpLbl();
+        }
+        function timUpdInterpLbl(){
+            var a=document.getElementById('tim-my-lbl');
+            var b=document.getElementById('tim-peer-lbl');
+            if(a) a.textContent=timSrc.f+' '+timSrc.n;
+            if(b) b.textContent=timTgt.f+' '+timTgt.n;
+        }
+
+        // ── timTranslate: 텍스트 번역 ──
+        async function timTranslate(){
+            var text=(document.getElementById('tim-input').value||'').trim();
+            if(!text){ timOut(timErr('번역할 문장을 입력하세요.')); return; }
+            if(!timGetKey()){ timOut(timErr('API 키 없음 — 🔑 아이콘을 눌러 키를 등록해 주세요')); return; }
+            var btn=document.getElementById('tim-trans-btn');
+            if(btn){ btn.disabled=true; btn.textContent='번역 중...'; }
+            timOut(timLoading(timTgt.n+' 번역 중...'));
+            try{
+                var prompt='당신은 최고 수준의 동시통역사이자 '+timTgt.n+' 전문가.\n'+timSrc.n+'('+timSrc.g+') → '+timTgt.n+'('+timTgt.g+')\n\n'+'현지 구어체로 번역. JSON만 출력.\n'+'{"translated":"번역문","pronunciation":"한글발음","tip":"에티켓팁"}\n\n번역:\n'+text;
+                var raw=await timCallAI('translate',prompt);
+                var p=timParseJSON(raw);
+                if(p&&p.translated){
+                    timShowResult(timCard(p.translated,p.pronunciation||'',text,p.tip||''));
+                } else {
+                    timShowResult(timCard(raw.trim(),'',text,''));
+                }
+            }catch(e){
+                timShowResult(timErr(e.message));
+            } finally {
+                if(btn){ btn.disabled=false; btn.textContent='번역하기 →'; }
+            }
+        }
+
+        // ── timGallerySelected: 이미지 멀티모달 번역 ──
+        async function timGallerySelected(input){
+            var file=input.files[0]; if(!file) return;
+            input.value='';
+            if(!timGetKey()){ timOut(timErr('API 키 없음 — 🔑 아이콘을 눌러 키를 등록해 주세요')); return; }
+            timOut(timLoading('이미지 AI 분석 중...'));
+            var mime=file.type||'image/jpeg';
+            var reader=new FileReader();
+            reader.onload=async function(e){
+                var b64=e.target.result.split(',')[1];
+                try{
+                    var prompt='당신은 최고 수준의 동시통역사이자 '+timTgt.n+' 현지 여행 가이드.\n\n이미지 텍스트를 모두 추출하고 JSON만 출력. 마크다운 금지.\n'+'{"extracted":"원문","translated":"'+timTgt.n+' 번역","korean":"한국어 번역","pronunciation":"한글발음","context":"현지 가이드 팁 2~3문장"}';
+                    var raw=await timCallAI('ocr',prompt,b64,mime);
+                    var p=timParseJSON(raw);
+                    if(!p) throw new Error('분석 실패 — 다시 시도해 주세요.');
+                    var h='<div style="border-left:3px solid #3b82f6;border-radius:0 16px 16px 0;background:white;padding:18px;margin-top:4px;box-shadow:0 2px 12px rgba(0,0,0,.06);">';
+                    if(p.extracted)     h+='<div style="font-size:10px;font-weight:700;color:#94a3b8;margin-bottom:3px;">📝 원문</div><div style="font-size:13px;color:#64748b;margin-bottom:10px;line-height:1.6;white-space:pre-wrap;">'+escHtml(p.extracted)+'</div>';
+                    if(p.translated)    h+='<div style="font-size:10px;font-weight:800;color:#3b82f6;margin-bottom:3px;">'+timTgt.s+' TRANSLATION</div><div style="font-size:20px;font-weight:900;color:#1e293b;line-height:1.4;margin-bottom:8px;">'+escHtml(p.translated)+'</div>';
+                    if(p.pronunciation) h+='<div style="background:#eff6ff;padding:10px 14px;border-radius:12px;font-size:18px;font-weight:800;color:#1d4ed8;margin-bottom:8px;">'+escHtml(p.pronunciation)+'</div>';
+                    if(p.korean)        h+='<div style="font-size:13px;color:#64748b;margin-bottom:8px;line-height:1.5;">'+escHtml(p.korean)+'</div>';
+                    if(p.context)       h+='<div style="background:#fef3c7;border-radius:10px;padding:10px 12px;font-size:12px;color:#92400e;line-height:1.5;">🐱 '+escHtml(p.context)+'</div>';
+                    h+='<div style="text-align:center;font-size:9px;color:#cbd5e1;margin-top:10px;letter-spacing:1px;">SEOLYEON FAMILY PREMIUM</div></div>';
+                    timShowResult(h);
+                }catch(err){ timShowResult(timErr(err.message)); }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // ── timLoadCat: 상황별 1-shot 배치 ──
+        async function timLoadCat(cat){
+            if(!timGetKey()){ timSitOut(timErr('API 키 없음 — 🔑 아이콘을 눌러 등록해 주세요')); timSwitchTab(2); return; }
+            var koList=TIM_SIT[cat]||TIM_SIT['식당'];
+            timSwitchTab(2);
+            timSitOut(timLoading(timTgt.n+' · '+cat+' 생성 중...'));
+            timSitU[cat]=(timSitU[cat]||0)+1;
+            localStorage.setItem('timSitU',JSON.stringify(timSitU));
+            try{
+                var prompt='당신은 '+timTgt.n+' 현지 통역사. 아래 '+koList.length+'개 한국어 문장을 '+timTgt.n+'('+timTgt.g+')으로 번역하고 발음을 한글로. JSON 배열만: [{"original":"한국어","translated":"번역","pronunciation":"발음"}]\n\n'+koList.map(function(s,i){return (i+1)+'. '+s;}).join('\n');
+                var raw=await timCallAI('translate',prompt);
+                var arr=timParseJSONArray(raw);
+                if(!arr||!arr.length) throw new Error('파싱 실패 — 다시 시도해 주세요.');
+                while(arr.length<koList.length) arr.push({original:'',translated:'',pronunciation:''});
+                var usage=JSON.parse(localStorage.getItem('timPU')||'{}');
+                var idxArr=koList.map(function(_,i){return i;}).sort(function(a,b){return (usage[cat+'_'+b]||0)-(usage[cat+'_'+a]||0);});
+                var h='<div style="font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:1px;margin-bottom:8px;">'+cat.toUpperCase()+' — '+timTgt.s+'</div>';
+                h+=idxArr.map(function(i){
+                    var item=arr[i]||{};
+                    return '<div style="background:#f8fafc;border-radius:14px;padding:14px;margin-bottom:8px;cursor:pointer;border:1.5px solid transparent;" data-cat="'+cat+'" data-idx="'+i+'" onclick="timPClick(this)">'+
+                           '<div style="font-size:11px;color:#94a3b8;font-style:italic;margin-bottom:3px;">"'+escHtml(item.original||koList[i])+'"</div>'+
+                           '<div style="font-size:15px;font-weight:800;color:#1e293b;line-height:1.4;">'+escHtml(item.translated||'')+'</div>'+
+                           '<div style="font-size:15px;font-weight:800;color:#1d4ed8;margin-top:3px;">'+escHtml(item.pronunciation||'')+'</div>'+
+                           '</div>';
+                }).join('');
+                timSitOut(h);
+                // 결과 영역 표시, 카테고리 그리드 숨김
+                var wrap=document.getElementById('tim-sit-result-wrap');
+                var grid=document.querySelector('#timPanel2 > div:first-child');
+                if(wrap) wrap.style.display='block';
+                if(grid) grid.style.display='none';
+            }catch(e){
+                timSitOut(timErr(e.message));
+                var wrap2=document.getElementById('tim-sit-result-wrap');
+                if(wrap2) wrap2.style.display='block';
+            }
+        }
+        function timPClick(el){
+            var u=JSON.parse(localStorage.getItem('timPU')||'{}');
+            u[el.dataset.cat+'_'+el.dataset.idx]=(u[el.dataset.cat+'_'+el.dataset.idx]||0)+1;
+            localStorage.setItem('timPU',JSON.stringify(u));
+            var t=el.querySelector('div:nth-child(2)');
+            if(t) timSpeak(t.textContent);
+        }
+        function timOpenSit(){ timSwitchTab(2); showSection('translator-section'); }
+        function timOpenMic(){ timSwitchTab(1); showSection('translator-section'); }
+
+        // ── 실시간 통역 ──
+        var _timMyR=null,_timPeerR=null,_timMyOn=false,_timPeerOn=false;
+        async function _timGrantMic(){
+            if(window._micGranted) return true;
+            try{ var s=await navigator.mediaDevices.getUserMedia({audio:true}); s.getTracks().forEach(function(t){t.stop();}); window._micGranted=true; return true; }
+            catch(e){ alert('마이크 권한이 필요합니다.'); return false; }
+        }
+        function timToggleMyMic(){ _timMyOn?timStopMyMic():timStartMyMic(); }
+        function timTogglePeerMic(){ _timPeerOn?timStopPeerMic():timStartPeerMic(); }
+
+        // ════════════════════════════════════════════
+        // 🎙️ 실시간 통역 — 회의모드 버블 방식
+        //    연속 녹음: onend 시 자동 재시작
+        //    발화자별 버블 (MY=파랑 / PEER=초록)
+        // ════════════════════════════════════════════
+
+        // 대화 버블 추가
+        function _timAddBubble(side, original, translated, ttsLang){
+            var log = document.getElementById('tim-interp-log');
+            if(!log) return;
+            // 첫 발화 시 안내 메시지 제거
+            var placeholder = log.querySelector('div[style*="text-align:center"]');
+            if(placeholder) placeholder.remove();
+
+            var isMe = (side==='my');
+            var color    = isMe ? '#3b82f6'  : '#10b981';
+            var bgOrig   = isMe ? '#eff6ff'  : '#f0fdf4';
+            var bgTrans  = isMe ? '#dbeafe'  : '#d1fae5';
+            var flag     = isMe ? timSrc.f   : timTgt.f;
+            var flagDst  = isMe ? timTgt.f   : timSrc.f;
+            var align    = isMe ? 'flex-end' : 'flex-start';
+
+            var bubble = document.createElement('div');
+            bubble.style.cssText = 'display:flex;flex-direction:column;align-items:'+align+';gap:3px;';
+            bubble.innerHTML =
+                '<div style="font-size:9px;font-weight:800;color:'+color+';letter-spacing:.4px;">'+flag+' '+(isMe?timSrc.n:timTgt.n)+'</div>'+
+                '<div style="max-width:90%;background:'+bgOrig+';border-radius:'+(isMe?'14px 14px 4px 14px':'14px 14px 14px 4px')+';padding:10px 12px;">'+
+                    '<div style="font-size:13px;color:#1e293b;line-height:1.5;">'+escHtml(original)+'</div>'+
+                '</div>'+
+                '<div style="max-width:90%;background:'+bgTrans+';border-radius:'+(isMe?'4px 14px 14px 14px':'14px 4px 14px 14px')+';padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;">'+
+                    '<div style="font-size:12px;color:'+color+';font-weight:700;line-height:1.5;flex:1;">'+flagDst+' '+escHtml(translated)+'</div>'+
+                    '<button data-tts="'+escHtml(translated)+'" data-lang="'+ttsLang+'" onclick="timSpeakLang(this.dataset.tts,this.dataset.lang)" '+
+                        'style="flex-shrink:0;width:28px;height:28px;border-radius:50%;border:none;background:rgba(255,255,255,0.7);font-size:13px;cursor:pointer;">🔊</button>'+
+                '</div>';
+            log.appendChild(bubble);
+            log.scrollTop = log.scrollHeight;
+
+            // 히든 textarea 하위 호환 기록
+            var hidId = isMe ? 'tim-log-my' : 'tim-log-peer';
+            var hidEl = document.getElementById(hidId);
+            if(hidEl){ hidEl.value += (hidEl.value?'\n':'')+original+'\n[→] '+translated; }
+        }
+
+        function _timSetInterim(text){
+            var el=document.getElementById('tim-interp-interim');
+            if(!el) return;
+            if(text){ el.textContent=text; el.style.display='block'; }
+            else    { el.textContent='';   el.style.display='none';  }
+        }
+
+        // 마이크 버튼 UI 갱신
+        function _timMyBtnUI(on){
+            var btn=document.getElementById('tim-my-btn');
+            var ico=document.getElementById('tim-my-mic-icon');
+            if(!btn) return;
+            if(on){
+                btn.style.background='#3b82f6'; btn.style.borderColor='#1d4ed8';
+                if(ico){ ico.style.background='#1d4ed8'; ico.textContent='⏹'; }
+            } else {
+                btn.style.background='#eff6ff'; btn.style.borderColor='#3b82f6';
+                if(ico){ ico.style.background='#dbeafe'; ico.textContent='🎙️'; }
+            }
+        }
+        function _timPeerBtnUI(on){
+            var btn=document.getElementById('tim-peer-btn');
+            var ico=document.getElementById('tim-peer-mic-icon');
+            if(!btn) return;
+            if(on){
+                btn.style.background='#10b981'; btn.style.borderColor='#059669';
+                if(ico){ ico.style.background='#059669'; ico.textContent='⏹'; }
+            } else {
+                btn.style.background='#f0fdf4'; btn.style.borderColor='#10b981';
+                if(ico){ ico.style.background='#d1fae5'; ico.textContent='🎙️'; }
+            }
+        }
+
+        // STT 시작 (연속 모드: onend 자동 재시작)
+        async function timStartMyMic(){
+            if(!timGetKey()){ timOut(timErr('API 키를 먼저 입력해 주세요.')); timSwitchTab(0); return; }
+            if(!await _timGrantMic()) return;
+            if(!('SpeechRecognition' in window||'webkitSpeechRecognition' in window)){ alert('Chrome이 필요합니다.'); return; }
+            if(_timPeerOn) timStopPeerMic();
+            var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+            _timMyR=new SR();
+            _timMyR.lang=timSrc.sr;
+            _timMyR.interimResults=true;
+            _timMyR.continuous=false;
+            _timMyOn=true;
+            _timMyBtnUI(true);
+            _timMyS('🔴 듣는 중...');
+            _timMyR.onresult=function(e){
+                var interim='',final='';
+                for(var i=e.resultIndex;i<e.results.length;i++){
+                    if(e.results[i].isFinal) final+=e.results[i][0].transcript;
+                    else interim+=e.results[i][0].transcript;
+                }
+                if(interim) _timSetInterim('"'+interim+'"');
+                if(final){
+                    _timSetInterim('');
+                    _timMyS('🐱 통역 중...');
+                    _timTrBubble(final,'my',timSrc.n,timTgt.n,timTgt.g,timTgt.sr);
+                }
+            };
+            _timMyR.onerror=function(e){
+                if(e.error==='no-speech') return; // 무음 무시
+                _timMyS('오류: '+e.error); timStopMyMic();
+            };
+            _timMyR.onend=function(){
+                // 연속 모드: 마이크가 켜져 있으면 자동 재시작
+                if(_timMyOn) setTimeout(function(){ if(_timMyOn&&_timMyR) try{_timMyR.start();}catch(er){} },200);
+                else timStopMyMic();
+            };
+            _timMyR.start();
+        }
+        function timStopMyMic(){
+            _timMyOn=false;
+            if(_timMyR) try{_timMyR.abort();}catch(e){}
+            _timMyR=null;
+            _timMyBtnUI(false);
+            _timMyS('● 대기 중');
+            _timSetInterim('');
+        }
+
+        async function timStartPeerMic(){
+            if(!timGetKey()){ timOut(timErr('API 키를 먼저 입력해 주세요.')); timSwitchTab(0); return; }
+            if(!await _timGrantMic()) return;
+            if(!('SpeechRecognition' in window||'webkitSpeechRecognition' in window)){ alert('Chrome이 필요합니다.'); return; }
+            if(_timMyOn) timStopMyMic();
+            var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+            _timPeerR=new SR();
+            _timPeerR.lang=timTgt.sr;
+            _timPeerR.interimResults=true;
+            _timPeerR.continuous=false;
+            _timPeerOn=true;
+            _timPeerBtnUI(true);
+            _timPeerS('🔴 듣는 중...');
+            _timPeerR.onresult=function(e){
+                var interim='',final='';
+                for(var i=e.resultIndex;i<e.results.length;i++){
+                    if(e.results[i].isFinal) final+=e.results[i][0].transcript;
+                    else interim+=e.results[i][0].transcript;
+                }
+                if(interim) _timSetInterim('"'+interim+'"');
+                if(final){
+                    _timSetInterim('');
+                    _timPeerS('🐱 역통역 중...');
+                    _timTrBubble(final,'peer',timTgt.n,timSrc.n,timSrc.g,timSrc.sr);
+                }
+            };
+            _timPeerR.onerror=function(e){
+                if(e.error==='no-speech') return;
+                _timPeerS('오류: '+e.error); timStopPeerMic();
+            };
+            _timPeerR.onend=function(){
+                if(_timPeerOn) setTimeout(function(){ if(_timPeerOn&&_timPeerR) try{_timPeerR.start();}catch(er){} },200);
+                else timStopPeerMic();
+            };
+            _timPeerR.start();
+        }
+        function timStopPeerMic(){
+            _timPeerOn=false;
+            if(_timPeerR) try{_timPeerR.abort();}catch(e){}
+            _timPeerR=null;
+            _timPeerBtnUI(false);
+            _timPeerS('● 대기 중');
+            _timSetInterim('');
+        }
+
+        // AI 번역 → 버블 추가
+        async function _timTrBubble(text,side,fromN,toN,toG,toSr){
+            try{
+                var prompt='최고 수준의 동시통역사. '+fromN+' → '+toN+'('+toG+'). 번역문만 한 줄. 마크다운 금지.\n\n입력: '+text;
+                var tr=await timCallAI('interpret',prompt);
+                if(tr){
+                    tr=tr.trim();
+                    _timAddBubble(side,text,tr,toSr);
+                    timSpeakLang(tr,toSr);
+                }
+                if(side==='my')   _timMyS('● 대기 중');
+                else              _timPeerS('● 대기 중');
+            }catch(e){
+                console.warn('[_timTrBubble]',e.message);
+                if(side==='my')   _timMyS('● 대기 중');
+                else              _timPeerS('● 대기 중');
+            }
+        }
+
+        // 하위 호환 (_timTrSpeak → _timTrBubble)
+        function _timTrSpeak(text,fromN,toN,toG,toSr,logId,statusFn){
+            var side = logId==='tim-log-peer'?'my':'peer';
+            _timTrBubble(text,side,fromN,toN,toG,toSr);
+        }
+
+        function _timAppend(id,text){
+            var el=document.getElementById(id); if(!el) return;
+            el.value=(el.value?el.value+'\n':'')+text; el.scrollTop=el.scrollHeight;
+        }
+        function _timMyS(m){var e=document.getElementById('tim-my-status');if(e)e.textContent=m;}
+        function _timMyI(m){ _timSetInterim(m); }
+        function _timPeerS(m){var e=document.getElementById('tim-peer-status');if(e)e.textContent=m;}
+        function _timPeerI(m){ _timSetInterim(m); }
+        function timClearInterpLog(){
+            var log=document.getElementById('tim-interp-log');
+            if(log) log.innerHTML='<div style="text-align:center;padding:20px;font-size:12px;color:#cbd5e1;">마이크 버튼을 눌러 통역을 시작하세요</div>';
+            var my=document.getElementById('tim-log-my'),pe=document.getElementById('tim-log-peer');
+            if(my) my.value=''; if(pe) pe.value='';
+        }
+
+        // ── UI 헬퍼 ──
+        function timOut(h){ var el=document.getElementById('tim-output'); if(el) el.innerHTML=h; }
+        function timShowResult(h){
+            var card=document.getElementById('tim-result-card');
+            if(card) card.style.display='block';
+            timOut(h);
+            // 결과 카드로 부드럽게 스크롤
+            setTimeout(function(){ if(card) card.scrollIntoView({behavior:'smooth',block:'nearest'}); },100);
+        }
+        function timClearResult(){
+            var card=document.getElementById('tim-result-card');
+            if(card) card.style.display='none';
+            timOut('');
+        }
+        function timClearAll(){
+            var i=document.getElementById('tim-input'); if(i) i.value='';
+            timClearResult();
+        }
+        function timCloseSitResult(){
+            var wrap=document.getElementById('tim-sit-result-wrap');
+            if(wrap) wrap.style.display='none';
+            // 카테고리 그리드 다시 표시
+            var grid=document.querySelector('#timPanel2 > div:first-child');
+            if(grid) grid.style.display='grid';
+        }
+        function timSitOut(h){ var el=document.getElementById('tim-sit-output'); if(el) el.innerHTML=h; }
+        function timLoading(m){ return '<div style="text-align:center;padding:24px;"><div style="font-size:32px;animation:trPulse 1.2s ease-in-out infinite;">🐱</div><div style="font-size:13px;color:#64748b;margin-top:8px;font-weight:600;">'+escHtml(m)+'</div></div>'; }
+        function timErr(m){ return '<div style="color:#ef4444;padding:12px;background:#fef2f2;border-radius:10px;font-size:13px;">❌ '+escHtml(m)+'</div>'; }
+        function timCard(trans,pron,meaning,tip){
+            timLast=trans;
+            var h='<div style="border-left:3px solid #3b82f6;border-radius:0 16px 16px 0;background:white;padding:18px;margin-top:4px;box-shadow:0 2px 12px rgba(0,0,0,.06);">';
+            h+='<div style="font-size:10px;font-weight:800;color:#3b82f6;letter-spacing:.5px;margin-bottom:5px;">'+timTgt.s+' TRANSLATION</div>';
+            h+='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">';
+            h+='<div style="font-size:22px;font-weight:900;color:#1e293b;line-height:1.4;flex:1;">'+escHtml(trans)+'</div>';
+            // TTS 버튼: data-tts 속성으로 텍스트 전달 (문자열 이스케이프 불필요)
+            h+='<button data-tts="'+escHtml(trans)+'" onclick="timSpeak(this.dataset.tts)" style="flex-shrink:0;width:40px;height:40px;border-radius:50%;border:none;background:#eff6ff;font-size:18px;cursor:pointer;">🔊</button>';
+            h+='</div>';
+            if(pron) h+='<div style="margin-top:10px;background:#eff6ff;padding:10px 14px;border-radius:12px;font-size:18px;font-weight:800;color:#1d4ed8;">'+escHtml(pron)+'</div>';
+            if(meaning&&meaning!==trans) h+='<div style="margin-top:7px;font-size:13px;color:#64748b;line-height:1.5;">'+escHtml(meaning)+'</div>';
+            if(tip) h+='<div style="margin-top:7px;background:#fef3c7;border-radius:10px;padding:9px 12px;font-size:12px;color:#92400e;line-height:1.5;">💡 '+escHtml(tip)+'</div>';
+            h+='<div style="text-align:center;font-size:9px;color:#cbd5e1;margin-top:10px;letter-spacing:1px;">SEOLYEON FAMILY PREMIUM</div>';
+            h+='</div>';
+            return h;
+        }
+
+        // ── TTS ──
+        function timSpeak(text){ if(text) timSpeakLang(text,timTgt.sr); }
+        function timSpeakLang(text,lang){
+            if(!text) return;
+            window.speechSynthesis.cancel();
+            var doSpeak=function(){
+                var u=new SpeechSynthesisUtterance(text);
+                u.lang=lang; u.rate=0.85; u.pitch=0.9;
+                var lc=lang.split('-')[0];
+                var v=window.speechSynthesis.getVoices().find(function(x){return x.lang.indexOf(lc)===0;})||null;
+                if(v) u.voice=v;
+                window.speechSynthesis.speak(u);
+            };
+            var voices=window.speechSynthesis.getVoices();
+            if(voices&&voices.length>0) doSpeak();
+            else{ window.speechSynthesis.onvoiceschanged=function(){window.speechSynthesis.onvoiceschanged=null;doSpeak();}; }
+        }
+        window.addEventListener('load',function(){
+            setTimeout(function(){
+                var k=localStorage.getItem('timApiKey');
+                if(k) _GCLOUD_KEY=k;
+                timUpdateUI();
+                // 언어 선택 모달 그리드 초기화
+                var lg=document.getElementById('tim-lang-grid');
+                if(lg) lg.innerHTML=TIM_L.map(function(l,i){
+                    return '<div style="padding:14px 8px;border-radius:14px;border:1.5px solid #e2e8f0;background:white;cursor:pointer;text-align:center;" onclick="timPickLang('+i+')">'+
+                           '<div style="font-size:28px;">'+l.f+'</div>'+
+                           '<div style="font-size:11px;font-weight:700;color:#475569;margin-top:4px;">'+l.n+'</div></div>';
+                }).join('');
+            },600);
+        });
 
         // ── 메인 슬라이드 ──────────────────────────────────────────────
         let mainSlideIdx = 0;
@@ -5995,7 +6916,6 @@ function initRealtimeSync() {
             document.getElementById('asset-day-modal').classList.add('hidden');
         }
 
-
         // initAssetCharts - 월별 6개월 / 주차별 W# 6주 + 클릭 연동
         let _periodMeta = []; // 차트 인덱스별 기간 정보
 
@@ -6108,7 +7028,6 @@ function initRealtimeSync() {
             renderGallery();
         }
 
-
         function openAlbumLightbox(src) {
             document.getElementById('album-lightbox-img').src = src;
             document.getElementById('album-lightbox').style.display = 'flex';
@@ -6158,8 +7077,6 @@ function initRealtimeSync() {
         }
 
         // openFolderModal 개선 - 이름수정/하위폴더 지원
-
-
 
         // showSection에 smart/asset-cal 추가
 
@@ -6214,8 +7131,135 @@ function initRealtimeSync() {
     </div>
 
 
-    <div id="tim-lang-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10000;align-items:flex-end;"><div style="background:white;border-radius:24px 24px 0 0;width:100%;padding:24px 20px 36px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><div style="font-size:18px;font-weight:900;">언어 선택</div><button onclick="document.getElementById('tim-lang-modal').style.display='none'" style="width:32px;height:32px;border-radius:50%;background:#f1f5f9;border:none;font-size:16px;cursor:pointer;">✕</button></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;" id="tim-lang-grid"></div></div></div>
-    <div id="tim-mic-modal" style="display:none;position:fixed;inset:0;background:white;z-index:9999;flex-direction:column;align-items:center;justify-content:center;"><div style="text-align:center;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;"><div style="font-size:10px;font-weight:800;color:#3b82f6;letter-spacing:1px;">● LISTENING...</div><div style="font-size:22px;font-weight:900;color:#1e293b;margin-top:8px;" id="tim-mic-lang"></div><div style="font-size:12px;color:#3b82f6;margin-top:4px;" id="tim-mic-target"></div><div id="tim-mic-wave" style="display:flex;align-items:center;justify-content:center;gap:3px;height:50px;margin:16px 0;"><div style="width:4px;border-radius:2px;background:#3b82f6;animation:timW .6s ease-in-out infinite alternate;height:12px;"></div><div style="width:4px;border-radius:2px;background:#3b82f6;animation:timW .6s ease-in-out infinite alternate .1s;height:12px;"></div><div style="width:4px;border-radius:2px;background:#3b82f6;animation:timW .6s ease-in-out infinite alternate .2s;height:12px;"></div><div style="width:4px;border-radius:2px;background:#3b82f6;animation:timW .6s ease-in-out infinite alternate .3s;height:12px;"></div><div style="width:4px;border-radius:2px;background:#3b82f6;animation:timW .6s ease-in-out infinite alternate .2s;height:12px;"></div><div style="width:4px;border-radius:2px;background:#3b82f6;animation:timW .6s ease-in-out infinite alternate .1s;height:12px;"></div><div style="width:4px;border-radius:2px;background:#3b82f6;animation:timW .6s ease-in-out infinite alternate;height:12px;"></div></div><div style="width:140px;height:140px;border-radius:50%;border:3px solid rgba(59,130,246,0.15);display:flex;align-items:center;justify-content:center;margin:20px 0;"><div style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:36px;color:white;box-shadow:0 6px 24px rgba(59,130,246,0.4);">🎙</div></div><div style="font-size:14px;color:#64748b;font-weight:600;" id="tim-mic-status">"지금 말씀하세요"</div></div><div style="padding:20px;width:100%;flex-shrink:0;"><button onclick="timStopAndTranslate()" style="width:100%;padding:16px;border-radius:16px;background:#1e293b;border:none;color:white;font-size:15px;font-weight:800;cursor:pointer;">⏹ 종료 및 번역하기</button><button onclick="timCloseMic()" style="width:100%;padding:10px;background:none;border:none;color:#94a3b8;font-size:13px;cursor:pointer;margin-top:6px;">CANCEL</button></div></div>
-    <div id="tim-sit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10000;align-items:flex-end;"><div style="background:white;border-radius:24px 24px 0 0;width:100%;padding:24px 20px 36px;"><div style="width:40px;height:4px;background:#e2e8f0;border-radius:2px;margin:0 auto 16px;"></div><div style="font-size:18px;font-weight:900;margin-bottom:16px;">상황별 문장</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;"><button onclick="timLoadCat('식당')" style="padding:12px;border-radius:12px;border:1.5px solid #e2e8f0;background:white;font-size:13px;font-weight:700;cursor:pointer;">🍽 식당</button><button onclick="timLoadCat('호텔')" style="padding:12px;border-radius:12px;border:1.5px solid #e2e8f0;background:white;font-size:13px;font-weight:700;cursor:pointer;">🏨 호텔</button><button onclick="timLoadCat('교통')" style="padding:12px;border-radius:12px;border:1.5px solid #e2e8f0;background:white;font-size:13px;font-weight:700;cursor:pointer;">🚌 교통</button><button onclick="timLoadCat('병원')" style="padding:12px;border-radius:12px;border:1.5px solid #e2e8f0;background:white;font-size:13px;font-weight:700;cursor:pointer;">🏥 병원</button><button onclick="timLoadCat('경찰서')" style="padding:12px;border-radius:12px;border:1.5px solid #e2e8f0;background:white;font-size:13px;font-weight:700;cursor:pointer;">🚔 경찰서</button><button onclick="timLoadCat('공항')" style="padding:12px;border-radius:12px;border:1.5px solid #e2e8f0;background:white;font-size:13px;font-weight:700;cursor:pointer;">✈️ 공항</button><button onclick="timLoadCat('쇼핑')" style="padding:12px;border-radius:12px;border:1.5px solid #e2e8f0;background:white;font-size:13px;font-weight:700;cursor:pointer;">🛍 쇼핑</button></div><button onclick="document.getElementById('tim-sit-modal').style.display='none'" style="width:100%;padding:12px;border-radius:12px;background:#f1f5f9;border:none;color:#64748b;font-size:13px;cursor:pointer;margin-top:14px;">취소</button></div></div>
-    <input type="file" id="tim-gallery-input" accept="image/*" style="display:none;" onchange="timGallerySelected(this)">
+    <!-- ═══ API 키 설정 모달 ═══ -->
+    <div id="tim-apikey-modal"
+        style="display:none;position:fixed;inset:0;z-index:9200;background:rgba(0,0,0,0.5);
+               align-items:center;justify-content:center;"
+        onclick="if(event.target===this) timCloseApiKeyModal()">
+        <div style="background:white;border-radius:20px;padding:22px 18px 18px;width:92%;max-width:380px;
+                    box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:timModalIn .2s ease-out;max-height:90vh;overflow-y:auto;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                <div>
+                    <div style="font-size:15px;font-weight:900;color:#1e293b;">🔑 AI API 키 설정</div>
+                    <div style="font-size:11px;color:#64748b;margin-top:3px;">3개 모두 등록 시 기능별 최적 엔진 자동 선택</div>
+                </div>
+                <button onclick="timCloseApiKeyModal()" style="width:28px;height:28px;border-radius:50%;background:#f1f5f9;border:none;font-size:14px;cursor:pointer;flex-shrink:0;">✕</button>
+            </div>
+
+            <!-- 현재 모드 배지 -->
+            <div id="tim-engine-badge" style="margin-bottom:14px;padding:8px 12px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;font-size:11px;color:#64748b;text-align:center;">
+                🔍 키 등록 현황을 확인 중...
+            </div>
+
+            <!-- Gemini 키 -->
+            <div style="margin-bottom:12px;">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+                    <span style="font-size:16px;">🟦</span>
+                    <div>
+                        <div style="font-size:12px;font-weight:800;color:#1e293b;">Google Gemini</div>
+                        <div style="font-size:10px;color:#64748b;">실시간 통역 · 기본 번역 담당</div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:6px;">
+                    <input type="password" id="key-gemini" placeholder="AIza..." autocomplete="off"
+                        style="flex:1;border:1.5px solid #e2e8f0;border-radius:8px;padding:8px 10px;font-size:12px;outline:none;font-family:monospace;background:#fafafa;">
+                    <span id="key-gemini-status" style="font-size:16px;align-self:center;width:20px;text-align:center;"></span>
+                </div>
+            </div>
+
+            <!-- Claude 키 -->
+            <div style="margin-bottom:12px;">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+                    <span style="font-size:16px;">🟠</span>
+                    <div>
+                        <div style="font-size:12px;font-weight:800;color:#1e293b;">Anthropic Claude</div>
+                        <div style="font-size:10px;color:#64748b;">텍스트 번역 최우선 담당</div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:6px;">
+                    <input type="password" id="key-claude" placeholder="sk-ant-..." autocomplete="off"
+                        style="flex:1;border:1.5px solid #e2e8f0;border-radius:8px;padding:8px 10px;font-size:12px;outline:none;font-family:monospace;background:#fafafa;">
+                    <span id="key-claude-status" style="font-size:16px;align-self:center;width:20px;text-align:center;"></span>
+                </div>
+            </div>
+
+            <!-- GPT 키 -->
+            <div style="margin-bottom:16px;">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+                    <span style="font-size:16px;">🟢</span>
+                    <div>
+                        <div style="font-size:12px;font-weight:800;color:#1e293b;">OpenAI GPT-4o</div>
+                        <div style="font-size:10px;color:#64748b;">사진/문서 OCR 최우선 담당</div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:6px;">
+                    <input type="password" id="key-gpt" placeholder="sk-..." autocomplete="off"
+                        style="flex:1;border:1.5px solid #e2e8f0;border-radius:8px;padding:8px 10px;font-size:12px;outline:none;font-family:monospace;background:#fafafa;">
+                    <span id="key-gpt-status" style="font-size:16px;align-self:center;width:20px;text-align:center;"></span>
+                </div>
+            </div>
+
+            <div id="tim-apikey-modal-status" style="font-size:11px;color:#166534;text-align:center;min-height:16px;margin-bottom:10px;"></div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <button onclick="timCloseApiKeyModal()" style="padding:12px;border-radius:10px;background:#f1f5f9;border:none;font-size:13px;font-weight:700;color:#64748b;cursor:pointer;">취소</button>
+                <button onclick="timSaveAllKeys()" style="padding:12px;border-radius:10px;background:#1e293b;border:none;color:white;font-size:13px;font-weight:800;cursor:pointer;">저장</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ═══ 사진 번역 모달 ═══ -->
+    <div id="tim-photo-modal"
+        style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,0.5);
+               align-items:center;justify-content:center;"
+        onclick="if(event.target===this) timClosePhotoModal()">
+        <div style="background:white;border-radius:20px;padding:24px 20px 20px;width:88%;max-width:340px;
+                    box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:timModalIn .2s ease-out;">
+            <div style="text-align:center;margin-bottom:20px;">
+                <div style="font-size:11px;font-weight:800;color:#94a3b8;letter-spacing:1px;margin-bottom:4px;">PHOTO TRANSLATION</div>
+                <div style="font-size:16px;font-weight:900;color:#1e293b;">사진 번역</div>
+                <div style="font-size:12px;color:#94a3b8;margin-top:4px;">이미지를 선택하면 AI가 자동 분석합니다</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+                <button onclick="timClosePhotoModal();setTimeout(()=>document.getElementById('tim-cam-input').click(),100);"
+                    style="display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:14px;
+                           border:1.5px solid #bfdbfe;background:#eff6ff;cursor:pointer;text-align:left;">
+                    <span style="font-size:28px;">📷</span>
+                    <div>
+                        <div style="font-size:13px;font-weight:800;color:#1d4ed8;">카메라로 촬영</div>
+                        <div style="font-size:11px;color:#64748b;margin-top:2px;">지금 바로 사진을 찍어 번역</div>
+                    </div>
+                </button>
+                <button onclick="timClosePhotoModal();setTimeout(()=>document.getElementById('tim-gallery-input').click(),100);"
+                    style="display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:14px;
+                           border:1.5px solid #d1d5db;background:#f9fafb;cursor:pointer;text-align:left;">
+                    <span style="font-size:28px;">🖼️</span>
+                    <div>
+                        <div style="font-size:13px;font-weight:800;color:#374151;">갤러리에서 선택</div>
+                        <div style="font-size:11px;color:#64748b;margin-top:2px;">저장된 사진을 골라 번역</div>
+                    </div>
+                </button>
+            </div>
+            <button onclick="timClosePhotoModal()"
+                style="margin-top:14px;width:100%;padding:12px;border-radius:12px;background:#f1f5f9;
+                       border:none;font-size:13px;font-weight:700;color:#64748b;cursor:pointer;">닫기</button>
+        </div>
+    </div>
+    <style>
+        @keyframes timModalIn { from{opacity:0;transform:scale(.94) translateY(8px)} to{opacity:1;transform:scale(1) translateY(0)} }
+    </style>
+
+
+    <!-- 언어 선택 모달 -->
+    <div id="tim-lang-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.45);align-items:flex-end;justify-content:center;">
+        <div style="background:white;border-radius:24px 24px 0 0;padding:22px 18px 34px;width:100%;max-width:480px;max-height:80vh;overflow-y:auto;">
+            <div style="text-align:center;font-size:13px;font-weight:800;color:#1e293b;margin-bottom:16px;">언어 선택</div>
+            <div id="tim-lang-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;"></div>
+            <button onclick="document.getElementById('tim-lang-modal').style.display='none';"
+                style="margin-top:16px;width:100%;padding:12px;border-radius:14px;background:#f1f5f9;border:none;font-size:14px;font-weight:700;color:#64748b;cursor:pointer;">닫기</button>
+        </div>
+    </div>
+
 </body>
+</html>
