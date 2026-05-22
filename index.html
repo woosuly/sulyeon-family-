@@ -5872,11 +5872,14 @@ function initRealtimeSync() {
             else  localStorage.removeItem('timKey_gpt');
             timUpdateKeyBadges();
             var st=document.getElementById('tim-apikey-modal-status');
-            if(st){ st.textContent='✅ 저장됐습니다!'; st.style.color='#166534'; }
+            if(st){
+                st.style.cssText='font-size:13px;font-weight:800;color:#166534;text-align:center;padding:8px 0;min-height:16px;margin-bottom:10px;';
+                st.textContent='✅ API 키가 등록되었습니다!';
+            }
             setTimeout(function(){
-                if(st) st.textContent='';
+                if(st){ st.textContent=''; st.style.cssText='font-size:11px;color:#166534;text-align:center;min-height:16px;margin-bottom:10px;'; }
                 timCloseApiKeyModal();
-            },1200);
+            },2000);
         }
 
         // ── 하위 호환 (구 timSaveKey / timToggleKeyPanel) ────────────────
@@ -6094,6 +6097,20 @@ function initRealtimeSync() {
         }
 
         // ── 탭 전환 ──
+        // ── 마이크 권한 요청 ────────────────────────────────────────────
+        async function _timGrantMic() {
+            if (window._micGranted) return true;
+            try {
+                var s = await navigator.mediaDevices.getUserMedia({ audio: true });
+                s.getTracks().forEach(function(t) { t.stop(); });
+                window._micGranted = true;
+                return true;
+            } catch(e) {
+                alert('마이크 권한이 거부되었거나 사용할 수 없습니다.\n브라우저 설정에서 마이크를 허용해 주세요.');
+                return false;
+            }
+        }
+
         // ════════════════════════════════════════════════════════════════
         // 🎙️ 통역 엔진 v3 — 모드 선택 모달 + AI 실시간 동시통역
         //   · 탭 클릭 → 모드 선택 모달 팝업
