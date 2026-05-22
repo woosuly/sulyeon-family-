@@ -1834,16 +1834,7 @@
                     </div>
                     <span style="font-size:9px;font-weight:700;color:#22c55e;letter-spacing:1px;">● SEOLYEON</span>
                 </div>
-                <!-- API 키 입력 패널 (토글) -->
-                <div id="tim-key-panel" style="display:none;margin:0 14px 10px;background:#fffbeb;border:1.5px solid #fde68a;border-radius:12px;padding:10px 12px;">
-                    <div style="font-size:10px;font-weight:800;color:#92400e;margin-bottom:6px;">🔑 GEMINI API KEY</div>
-                    <div style="display:flex;gap:6px;">
-                        <input type="password" id="tim-api-input" placeholder="Gemini API 키 입력..."
-                            style="flex:1;border:1.5px solid #fde68a;border-radius:8px;padding:7px 9px;font-size:12px;outline:none;background:white;font-family:monospace;" />
-                        <button onclick="timSaveKey()" style="padding:7px 12px;border-radius:8px;background:#1e293b;border:none;color:white;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;">저장</button>
-                    </div>
-                    <div id="tim-key-status" style="font-size:10px;margin-top:4px;color:#166534;"></div>
-                </div>
+
 
                 <!-- 언어 선택 바 -->
                 <div style="display:flex;align-items:center;gap:8px;padding:0 14px;margin-bottom:10px;">
@@ -6103,448 +6094,386 @@ function initRealtimeSync() {
         }
 
         // ── 탭 전환 ──
-        function timSwitchTab(idx){
-            for(var i=0;i<3;i++){
-                var btn=document.getElementById('timTab'+i);
-                var pan=document.getElementById('timPanel'+i);
-                if(btn) btn.classList.toggle('active',i===idx);
-                if(pan){
-                    pan.style.display=(i===idx)?'flex':'none';
-                    if(i===idx) pan.style.flexDirection='column';
+        // ════════════════════════════════════════════════════════════════
+        // 🎙️ 통역 엔진 v3 — 모드 선택 모달 + AI 실시간 동시통역
+        //   · 탭 클릭 → 모드 선택 모달 팝업
+        //   · 일반 모드: 마이크 번갈아 누르기 (continuous STT)
+        //   · AI 실시간 모드: 상대 언어만 무한 락온 + 자동 TTS
+        //   · TTS: voices 프리캐시로 딜레이 없이 즉시 발화
+        // ════════════════════════════════════════════════════════════════
+
+        // ── 탭 전환 (통역 탭은 모드 선택 모달 인터셉트) ─────────────────
+        function timSwitchTab(idx) {
+            for (var i = 0; i < 3; i++) {
+                var btn = document.getElementById('timTab' + i);
+                var pan = document.getElementById('timPanel' + i);
+                if (btn) btn.classList.toggle('active', i === idx);
+                if (pan) {
+                    pan.style.display = (i === idx) ? 'flex' : 'none';
+                    if (i === idx) pan.style.flexDirection = 'column';
                 }
             }
-            if(idx===1) timUpdInterpLbl();
-        }
-        function timUpdInterpLbl(){
-            var a=document.getElementById('tim-my-lbl');
-            var b=document.getElementById('tim-peer-lbl');
-            if(a) a.textContent=timSrc.f+' '+timSrc.n;
-            if(b) b.textContent=timTgt.f+' '+timTgt.n;
-        }
-
-        // ── timTranslate: 텍스트 번역 ──
-        async function timTranslate(){
-            var text=(document.getElementById('tim-input').value||'').trim();
-            if(!text){ timOut(timErr('번역할 문장을 입력하세요.')); return; }
-            if(!timGetKey()){ timOut(timErr('API 키 없음 — 🔑 아이콘을 눌러 키를 등록해 주세요')); return; }
-            var btn=document.getElementById('tim-trans-btn');
-            if(btn){ btn.disabled=true; btn.textContent='번역 중...'; }
-            timOut(timLoading(timTgt.n+' 번역 중...'));
-            try{
-                var prompt='당신은 최고 수준의 동시통역사이자 '+timTgt.n+' 전문가.\n'+timSrc.n+'('+timSrc.g+') → '+timTgt.n+'('+timTgt.g+')\n\n'+'현지 구어체로 번역. JSON만 출력.\n'+'{"translated":"번역문","pronunciation":"한글발음","tip":"에티켓팁"}\n\n번역:\n'+text;
-                var raw=await timCallAI('translate',prompt);
-                var p=timParseJSON(raw);
-                if(p&&p.translated){
-                    timShowResult(timCard(p.translated,p.pronunciation||'',text,p.tip||''));
-                } else {
-                    timShowResult(timCard(raw.trim(),'',text,''));
-                }
-            }catch(e){
-                timShowResult(timErr(e.message));
-            } finally {
-                if(btn){ btn.disabled=false; btn.textContent='번역하기 →'; }
+            if (idx === 1) {
+                timUpdInterpLbl();
+                // 기존 마이크 엔진 셧다운 후 모드 선택 팝업
+                timStopMyMic();
+                timStopPeerMic();
+                timStopLiveMode();
+                var modal = document.getElementById('tim-interp-mode-modal');
+                if (modal) modal.style.display = 'flex';
             }
         }
 
-        // ── timGallerySelected: 이미지 멀티모달 번역 ──
-        async function timGallerySelected(input){
-            var file=input.files[0]; if(!file) return;
-            input.value='';
-            if(!timGetKey()){ timOut(timErr('API 키 없음 — 🔑 아이콘을 눌러 키를 등록해 주세요')); return; }
-            timOut(timLoading('이미지 AI 분석 중...'));
-            var mime=file.type||'image/jpeg';
-            var reader=new FileReader();
-            reader.onload=async function(e){
-                var b64=e.target.result.split(',')[1];
-                try{
-                    var prompt='당신은 최고 수준의 동시통역사이자 '+timTgt.n+' 현지 여행 가이드.\n\n이미지 텍스트를 모두 추출하고 JSON만 출력. 마크다운 금지.\n'+'{"extracted":"원문","translated":"'+timTgt.n+' 번역","korean":"한국어 번역","pronunciation":"한글발음","context":"현지 가이드 팁 2~3문장"}';
-                    var raw=await timCallAI('ocr',prompt,b64,mime);
-                    var p=timParseJSON(raw);
-                    if(!p) throw new Error('분석 실패 — 다시 시도해 주세요.');
-                    var h='<div style="border-left:3px solid #3b82f6;border-radius:0 16px 16px 0;background:white;padding:18px;margin-top:4px;box-shadow:0 2px 12px rgba(0,0,0,.06);">';
-                    if(p.extracted)     h+='<div style="font-size:10px;font-weight:700;color:#94a3b8;margin-bottom:3px;">📝 원문</div><div style="font-size:13px;color:#64748b;margin-bottom:10px;line-height:1.6;white-space:pre-wrap;">'+escHtml(p.extracted)+'</div>';
-                    if(p.translated)    h+='<div style="font-size:10px;font-weight:800;color:#3b82f6;margin-bottom:3px;">'+timTgt.s+' TRANSLATION</div><div style="font-size:20px;font-weight:900;color:#1e293b;line-height:1.4;margin-bottom:8px;">'+escHtml(p.translated)+'</div>';
-                    if(p.pronunciation) h+='<div style="background:#eff6ff;padding:10px 14px;border-radius:12px;font-size:18px;font-weight:800;color:#1d4ed8;margin-bottom:8px;">'+escHtml(p.pronunciation)+'</div>';
-                    if(p.korean)        h+='<div style="font-size:13px;color:#64748b;margin-bottom:8px;line-height:1.5;">'+escHtml(p.korean)+'</div>';
-                    if(p.context)       h+='<div style="background:#fef3c7;border-radius:10px;padding:10px 12px;font-size:12px;color:#92400e;line-height:1.5;">🐱 '+escHtml(p.context)+'</div>';
-                    h+='<div style="text-align:center;font-size:9px;color:#cbd5e1;margin-top:10px;letter-spacing:1px;">SEOLYEON FAMILY PREMIUM</div></div>';
-                    timShowResult(h);
-                }catch(err){ timShowResult(timErr(err.message)); }
+        function timUpdInterpLbl() {
+            var a = document.getElementById('tim-my-lbl');
+            var b = document.getElementById('tim-peer-lbl');
+            if (a) a.textContent = timSrc.f + ' ' + timSrc.n;
+            if (b) b.textContent = timTgt.f + ' ' + timTgt.n;
+        }
+
+        // ── 모드 선택 콜백 ────────────────────────────────────────────────
+        function timSelectInterpMode(mode) {
+            var modal = document.getElementById('tim-interp-mode-modal');
+            if (modal) modal.style.display = 'none';
+            if (mode === 'live') {
+                timStartLiveMode();
+            }
+            // 'normal'은 아무 동작 없이 일반 마이크 버튼 UI 대기
+        }
+
+        // ════════════════════════════════════════════════════════════════
+        // 🌟 AI 실시간 동시통역 모드 (상대 언어 무한 락온)
+        // ════════════════════════════════════════════════════════════════
+        var _timMyR = null, _timPeerR = null, _timLiveR = null;
+        var _timMyOn = false, _timPeerOn = false, _timLiveOn = false;
+
+        async function timStartLiveMode() {
+            if (!timGetKey()) { timOpenApiKeyModal(); return; }
+            if (!await _timGrantMic()) return;
+
+            timStopMyMic();
+            timStopPeerMic();
+
+            var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SR) { alert('Chrome이 필요합니다.'); return; }
+
+            _timLiveR = new SR();
+            _timLiveR.lang = timTgt.sr;       // ★ 상대방 언어만 타겟
+            _timLiveR.interimResults = true;
+            _timLiveR.continuous = true;       // ★ 무한 연속 청취
+            _timLiveOn = true;
+
+            // PEER 버튼 UI 라이브 모드 표시
+            var pBtn = document.getElementById('tim-peer-btn');
+            var pIco = document.getElementById('tim-peer-mic-icon');
+            if (pBtn) { pBtn.style.background = '#f3e8ff'; pBtn.style.borderColor = '#c084fc'; }
+            if (pIco) { pIco.style.background = '#e9d5ff'; pIco.textContent = '✨'; }
+            _timPeerS('✨ AI 동시통역 가동 중');
+            _timSetInterim('상대방 발화 대기 중...');
+
+            _timLiveR.onresult = function(e) {
+                var interim = '', final = '';
+                for (var i = e.resultIndex; i < e.results.length; i++) {
+                    if (e.results[i].isFinal) final += e.results[i][0].transcript;
+                    else interim += e.results[i][0].transcript;
+                }
+                if (interim) _timSetInterim('⚡ "' + interim + '"');
+                if (final.trim()) {
+                    _timSetInterim('🤖 번역 중...');
+                    _timPeerS('🤖 동시통역 중...');
+                    _timTrBubble(final.trim(), 'peer', timTgt.n, timSrc.n, timSrc.g, timSrc.sr);
+                }
             };
-            reader.readAsDataURL(file);
-        }
-
-        // ── timLoadCat: 점진적 로드 (첫 10개 → 나머지 10개) ──
-        function _timSitRenderItems(items, cat, koList, appendTo){
-            var usage=JSON.parse(localStorage.getItem('timPU')||'{}');
-            var h='';
-            items.forEach(function(item,_){
-                var i=item._idx;
-                h+='<div style="background:#f8fafc;border-radius:14px;padding:14px;margin-bottom:8px;cursor:pointer;border:1.5px solid transparent;transition:.1s;" '+
-                   'data-cat="'+cat+'" data-idx="'+i+'" onclick="timPClick(this)">'+
-                   '<div style="font-size:11px;color:#94a3b8;font-style:italic;margin-bottom:3px;">"'+escHtml(item.original||koList[i])+'"</div>'+
-                   '<div style="font-size:15px;font-weight:800;color:#1e293b;line-height:1.4;">'+escHtml(item.translated||'')+'</div>'+
-                   '<div style="font-size:15px;font-weight:800;color:#1d4ed8;margin-top:3px;">'+escHtml(item.pronunciation||'')+'</div>'+
-                   '</div>';
-            });
-            if(appendTo){
-                appendTo.insertAdjacentHTML('beforeend', h);
-            } else {
-                return h;
-            }
-        }
-
-        async function _timFetchCat(cat, sentences, startIdx){
-            // 짧고 명확한 프롬프트 — 응답 속도 최우선
-            var prompt=timTgt.n+'('+timTgt.g+')로 번역+한글발음. JSON배열만:[{"original":"원문","translated":"번역","pronunciation":"발음"}]\n\n'+
-                sentences.map(function(s,i){return (i+1)+'. '+s;}).join('\n');
-            var raw=await timCallAI('translate',prompt);
-            var arr=timParseJSONArray(raw);
-            if(!arr||!arr.length) return [];
-            return arr.map(function(item,i){
-                item._idx = startIdx+i;
-                return item;
-            });
-        }
-
-        async function timLoadCat(cat){
-            if(!timGetKey()){ timSitOut(timErr('API 키 없음 — 🔑 아이콘을 눌러 등록해 주세요')); timSwitchTab(2); return; }
-            var koList=TIM_SIT[cat]||TIM_SIT['식당'];
-            timSwitchTab(2);
-            timSitU[cat]=(timSitU[cat]||0)+1;
-            localStorage.setItem('timSitU',JSON.stringify(timSitU));
-
-            // 결과 영역 먼저 표시
-            var wrap=document.getElementById('tim-sit-result-wrap');
-            var grid=document.querySelector('#timPanel2 > div:first-child');
-            if(wrap) wrap.style.display='block';
-            if(grid) grid.style.display='none';
-
-            var sitOut=document.getElementById('tim-sit-output');
-            var headerH='<div style="font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:1px;margin-bottom:8px;">'+cat.toUpperCase()+' — '+timTgt.s+'</div>';
-            if(sitOut) sitOut.innerHTML=headerH+
-                '<div id="tim-sit-progress" style="text-align:center;padding:16px;font-size:13px;color:#64748b;">'+
-                '<div style="font-size:28px;animation:trPulse 1s ease-in-out infinite;">🐱</div>'+
-                '<div style="margin-top:6px;">첫 번째 문구 로딩 중...</div></div>';
-
-            // 1단계: 첫 10개 (빠르게 표시)
-            var first=koList.slice(0,10);
-            try{
-                var arr1=await _timFetchCat(cat,first,0);
-                var prog=document.getElementById('tim-sit-progress');
-                if(prog) prog.remove();
-                _timSitRenderItems(arr1, cat, koList, sitOut);
-
-                // 나머지 있으면 안내 추가 후 백그라운드 로드
-                var rest=koList.slice(10);
-                if(rest.length>0){
-                    var moreDiv=document.createElement('div');
-                    moreDiv.id='tim-sit-more';
-                    moreDiv.style.cssText='text-align:center;padding:10px;font-size:12px;color:#94a3b8;';
-                    moreDiv.textContent='나머지 '+rest.length+'개 로딩 중...';
-                    sitOut.appendChild(moreDiv);
-                    // 백그라운드 로드 (await 없이)
-                    _timFetchCat(cat,rest,10).then(function(arr2){
-                        var m=document.getElementById('tim-sit-more');
-                        if(m) m.remove();
-                        _timSitRenderItems(arr2, cat, koList, sitOut);
-                    }).catch(function(){ var m=document.getElementById('tim-sit-more'); if(m) m.remove(); });
+            _timLiveR.onerror = function(e) {
+                if (e.error === 'no-speech') return;
+                console.warn('[LiveMode]', e.error);
+            };
+            // ★ 무한 재시작 가드
+            _timLiveR.onend = function() {
+                if (_timLiveOn && _timLiveR) {
+                    try { _timLiveR.start(); } catch(err) {}
                 }
-            }catch(e){
-                if(sitOut) sitOut.innerHTML=headerH;
-                timSitOut(timErr(e.message));
+            };
+            try { _timLiveR.start(); } catch(err) { console.error(err); }
+        }
+
+        function timStopLiveMode() {
+            _timLiveOn = false;
+            if (_timLiveR) { try { _timLiveR.stop(); _timLiveR.abort(); } catch(e) {} }
+            _timLiveR = null;
+            // PEER 버튼 UI 원복
+            var pBtn = document.getElementById('tim-peer-btn');
+            var pIco = document.getElementById('tim-peer-mic-icon');
+            if (pBtn) { pBtn.style.background = '#f0fdf4'; pBtn.style.borderColor = '#10b981'; }
+            if (pIco) { pIco.style.background = '#d1fae5'; pIco.textContent = '🎙️'; }
+            _timPeerS('● 대기 중');
+            _timSetInterim('');
+        }
+
+        // ════════════════════════════════════════════════════════════════
+        // 일반 모드 — 내 음성 (연속 STT)
+        // ════════════════════════════════════════════════════════════════
+        async function timGrantMic() { return await _timGrantMic(); }
+        async function timStartMyMic() {
+            if (!timGetKey()) { timOpenApiKeyModal(); return; }
+            if (!await _timGrantMic()) return;
+            if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+                alert('Chrome이 필요합니다.'); return;
             }
-        }
-        function timPClick(el){
-            var u=JSON.parse(localStorage.getItem('timPU')||'{}');
-            u[el.dataset.cat+'_'+el.dataset.idx]=(u[el.dataset.cat+'_'+el.dataset.idx]||0)+1;
-            localStorage.setItem('timPU',JSON.stringify(u));
-            var t=el.querySelector('div:nth-child(2)');
-            if(t) timSpeak(t.textContent);
-        }
-        function timOpenSit(){ timSwitchTab(2); showSection('translator-section'); }
-        function timOpenMic(){ timSwitchTab(1); showSection('translator-section'); }
+            if (_timLiveOn) timStopLiveMode();
+            if (_timPeerOn) timStopPeerMic();
 
-        // ── 실시간 통역 ──
-        var _timMyR=null,_timPeerR=null,_timMyOn=false,_timPeerOn=false;
-        async function _timGrantMic(){
-            if(window._micGranted) return true;
-            try{ var s=await navigator.mediaDevices.getUserMedia({audio:true}); s.getTracks().forEach(function(t){t.stop();}); window._micGranted=true; return true; }
-            catch(e){ alert('마이크 권한이 필요합니다.'); return false; }
-        }
-        function timToggleMyMic(){ _timMyOn?timStopMyMic():timStartMyMic(); }
-        function timTogglePeerMic(){ _timPeerOn?timStopPeerMic():timStartPeerMic(); }
-
-        // ════════════════════════════════════════════
-        // 🎙️ 실시간 통역 — 회의모드 버블 방식
-        //    연속 녹음: onend 시 자동 재시작
-        //    발화자별 버블 (MY=파랑 / PEER=초록)
-        // ════════════════════════════════════════════
-
-        // 대화 버블 추가
-        function _timAddBubble(side, original, translated, ttsLang){
-            var log = document.getElementById('tim-interp-log');
-            if(!log) return;
-            // 첫 발화 시 안내 메시지 제거
-            var placeholder = log.querySelector('div[style*="text-align:center"]');
-            if(placeholder) placeholder.remove();
-
-            var isMe = (side==='my');
-            var color    = isMe ? '#3b82f6'  : '#10b981';
-            var bgOrig   = isMe ? '#eff6ff'  : '#f0fdf4';
-            var bgTrans  = isMe ? '#dbeafe'  : '#d1fae5';
-            var flag     = isMe ? timSrc.f   : timTgt.f;
-            var flagDst  = isMe ? timTgt.f   : timSrc.f;
-            var align    = isMe ? 'flex-end' : 'flex-start';
-
-            var bubble = document.createElement('div');
-            bubble.style.cssText = 'display:flex;flex-direction:column;align-items:'+align+';gap:3px;';
-            bubble.innerHTML =
-                '<div style="font-size:9px;font-weight:800;color:'+color+';letter-spacing:.4px;">'+flag+' '+(isMe?timSrc.n:timTgt.n)+'</div>'+
-                '<div style="max-width:90%;background:'+bgOrig+';border-radius:'+(isMe?'14px 14px 4px 14px':'14px 14px 14px 4px')+';padding:10px 12px;">'+
-                    '<div style="font-size:13px;color:#1e293b;line-height:1.5;">'+escHtml(original)+'</div>'+
-                '</div>'+
-                '<div style="max-width:90%;background:'+bgTrans+';border-radius:'+(isMe?'4px 14px 14px 14px':'14px 4px 14px 14px')+';padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;">'+
-                    '<div style="font-size:12px;color:'+color+';font-weight:700;line-height:1.5;flex:1;">'+flagDst+' '+escHtml(translated)+'</div>'+
-                    '<button data-tts="'+escHtml(translated)+'" data-lang="'+ttsLang+'" onclick="timSpeakLang(this.dataset.tts,this.dataset.lang)" '+
-                        'style="flex-shrink:0;width:28px;height:28px;border-radius:50%;border:none;background:rgba(255,255,255,0.7);font-size:13px;cursor:pointer;">🔊</button>'+
-                '</div>';
-            log.appendChild(bubble);
-            log.scrollTop = log.scrollHeight;
-
-            // 히든 textarea 하위 호환 기록
-            var hidId = isMe ? 'tim-log-my' : 'tim-log-peer';
-            var hidEl = document.getElementById(hidId);
-            if(hidEl){ hidEl.value += (hidEl.value?'\n':'')+original+'\n[→] '+translated; }
-        }
-
-        function _timSetInterim(text){
-            var el=document.getElementById('tim-interp-interim');
-            if(!el) return;
-            if(text){ el.textContent=text; el.style.display='block'; }
-            else    { el.textContent='';   el.style.display='none';  }
-        }
-
-        // 마이크 버튼 UI 갱신
-        function _timMyBtnUI(on){
-            var btn=document.getElementById('tim-my-btn');
-            var ico=document.getElementById('tim-my-mic-icon');
-            if(!btn) return;
-            if(on){
-                btn.style.background='#3b82f6'; btn.style.borderColor='#1d4ed8';
-                if(ico){ ico.style.background='#1d4ed8'; ico.textContent='⏹'; }
-            } else {
-                btn.style.background='#eff6ff'; btn.style.borderColor='#3b82f6';
-                if(ico){ ico.style.background='#dbeafe'; ico.textContent='🎙️'; }
-            }
-        }
-        function _timPeerBtnUI(on){
-            var btn=document.getElementById('tim-peer-btn');
-            var ico=document.getElementById('tim-peer-mic-icon');
-            if(!btn) return;
-            if(on){
-                btn.style.background='#10b981'; btn.style.borderColor='#059669';
-                if(ico){ ico.style.background='#059669'; ico.textContent='⏹'; }
-            } else {
-                btn.style.background='#f0fdf4'; btn.style.borderColor='#10b981';
-                if(ico){ ico.style.background='#d1fae5'; ico.textContent='🎙️'; }
-            }
-        }
-
-        // STT 시작 (연속 모드: onend 자동 재시작)
-        async function timStartMyMic(){
-            if(!timGetKey()){ timOut(timErr('API 키를 먼저 입력해 주세요.')); timSwitchTab(0); return; }
-            if(!await _timGrantMic()) return;
-            if(!('SpeechRecognition' in window||'webkitSpeechRecognition' in window)){ alert('Chrome이 필요합니다.'); return; }
-            if(_timPeerOn) timStopPeerMic();
-            var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-            _timMyR=new SR();
-            _timMyR.lang=timSrc.sr;
-            _timMyR.interimResults=true;
-            _timMyR.continuous=false;
-            _timMyOn=true;
+            var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            _timMyR = new SR();
+            _timMyR.lang = timSrc.sr;
+            _timMyR.interimResults = true;
+            _timMyR.continuous = true;
+            _timMyOn = true;
             _timMyBtnUI(true);
             _timMyS('🔴 듣는 중...');
-            _timMyR.onresult=function(e){
-                var interim='',final='';
-                for(var i=e.resultIndex;i<e.results.length;i++){
-                    if(e.results[i].isFinal) final+=e.results[i][0].transcript;
-                    else interim+=e.results[i][0].transcript;
+
+            _timMyR.onresult = function(e) {
+                var interim = '', final = '';
+                for (var i = e.resultIndex; i < e.results.length; i++) {
+                    if (e.results[i].isFinal) final += e.results[i][0].transcript;
+                    else interim += e.results[i][0].transcript;
                 }
-                if(interim) _timSetInterim('"'+interim+'"');
-                if(final){
+                if (interim) _timSetInterim('"' + interim + '"');
+                if (final.trim()) {
                     _timSetInterim('');
                     _timMyS('🐱 통역 중...');
-                    _timTrBubble(final,'my',timSrc.n,timTgt.n,timTgt.g,timTgt.sr);
+                    _timTrBubble(final.trim(), 'my', timSrc.n, timTgt.n, timTgt.g, timTgt.sr);
                 }
             };
-            _timMyR.onerror=function(e){
-                if(e.error==='no-speech') return; // 무음 무시
-                _timMyS('오류: '+e.error); timStopMyMic();
+            _timMyR.onerror = function(e) {
+                if (e.error === 'no-speech') return;
+                _timMyS('오류: ' + e.error);
             };
-            _timMyR.onend=function(){
-                // 연속 모드: 마이크가 켜져 있으면 자동 재시작
-                if(_timMyOn) setTimeout(function(){ if(_timMyOn&&_timMyR) try{_timMyR.start();}catch(er){} },200);
+            _timMyR.onend = function() {
+                if (_timMyOn && _timMyR) { try { _timMyR.start(); } catch(e) {} }
                 else timStopMyMic();
             };
-            _timMyR.start();
+            try { _timMyR.start(); } catch(e) { console.error(e); }
         }
-        function timStopMyMic(){
-            _timMyOn=false;
-            if(_timMyR) try{_timMyR.abort();}catch(e){}
-            _timMyR=null;
+
+        function timStopMyMic() {
+            _timMyOn = false;
+            if (_timMyR) { try { _timMyR.stop(); _timMyR.abort(); } catch(e) {} }
+            _timMyR = null;
             _timMyBtnUI(false);
             _timMyS('● 대기 중');
             _timSetInterim('');
         }
 
-        async function timStartPeerMic(){
-            if(!timGetKey()){ timOut(timErr('API 키를 먼저 입력해 주세요.')); timSwitchTab(0); return; }
-            if(!await _timGrantMic()) return;
-            if(!('SpeechRecognition' in window||'webkitSpeechRecognition' in window)){ alert('Chrome이 필요합니다.'); return; }
-            if(_timMyOn) timStopMyMic();
-            var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-            _timPeerR=new SR();
-            _timPeerR.lang=timTgt.sr;
-            _timPeerR.interimResults=true;
-            _timPeerR.continuous=false;
-            _timPeerOn=true;
+        // ════════════════════════════════════════════════════════════════
+        // 일반 모드 — 상대 음성 (연속 STT)
+        // ════════════════════════════════════════════════════════════════
+        async function timStartPeerMic() {
+            if (!timGetKey()) { timOpenApiKeyModal(); return; }
+            if (!await _timGrantMic()) return;
+            if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+                alert('Chrome이 필요합니다.'); return;
+            }
+            if (_timLiveOn) timStopLiveMode();
+            if (_timMyOn) timStopMyMic();
+
+            var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            _timPeerR = new SR();
+            _timPeerR.lang = timTgt.sr;
+            _timPeerR.interimResults = true;
+            _timPeerR.continuous = true;
+            _timPeerOn = true;
             _timPeerBtnUI(true);
             _timPeerS('🔴 듣는 중...');
-            _timPeerR.onresult=function(e){
-                var interim='',final='';
-                for(var i=e.resultIndex;i<e.results.length;i++){
-                    if(e.results[i].isFinal) final+=e.results[i][0].transcript;
-                    else interim+=e.results[i][0].transcript;
+
+            _timPeerR.onresult = function(e) {
+                var interim = '', final = '';
+                for (var i = e.resultIndex; i < e.results.length; i++) {
+                    if (e.results[i].isFinal) final += e.results[i][0].transcript;
+                    else interim += e.results[i][0].transcript;
                 }
-                if(interim) _timSetInterim('"'+interim+'"');
-                if(final){
+                if (interim) _timSetInterim('"' + interim + '"');
+                if (final.trim()) {
                     _timSetInterim('');
                     _timPeerS('🐱 역통역 중...');
-                    _timTrBubble(final,'peer',timTgt.n,timSrc.n,timSrc.g,timSrc.sr);
+                    _timTrBubble(final.trim(), 'peer', timTgt.n, timSrc.n, timSrc.g, timSrc.sr);
                 }
             };
-            _timPeerR.onerror=function(e){
-                if(e.error==='no-speech') return;
-                _timPeerS('오류: '+e.error); timStopPeerMic();
+            _timPeerR.onerror = function(e) {
+                if (e.error === 'no-speech') return;
+                _timPeerS('오류: ' + e.error);
             };
-            _timPeerR.onend=function(){
-                if(_timPeerOn) setTimeout(function(){ if(_timPeerOn&&_timPeerR) try{_timPeerR.start();}catch(er){} },200);
+            _timPeerR.onend = function() {
+                if (_timPeerOn && _timPeerR) { try { _timPeerR.start(); } catch(e) {} }
                 else timStopPeerMic();
             };
-            _timPeerR.start();
+            try { _timPeerR.start(); } catch(e) { console.error(e); }
         }
-        function timStopPeerMic(){
-            _timPeerOn=false;
-            if(_timPeerR) try{_timPeerR.abort();}catch(e){}
-            _timPeerR=null;
+
+        function timStopPeerMic() {
+            _timPeerOn = false;
+            if (_timPeerR) { try { _timPeerR.stop(); _timPeerR.abort(); } catch(e) {} }
+            _timPeerR = null;
             _timPeerBtnUI(false);
             _timPeerS('● 대기 중');
             _timSetInterim('');
         }
 
-        // AI 번역 → 버블 추가
-        async function _timTrBubble(text,side,fromN,toN,toG,toSr){
-            try{
-                var prompt=fromN+'→'+toN+'('+toG+') 번역. 1줄만. 입력: '+text;
-                var tr=await timCallAI('interpret',prompt);
-                if(tr){
-                    tr=tr.trim();
-                    _timAddBubble(side,text,tr,toSr);
-                    timSpeakLang(tr,toSr);
-                }
-                if(side==='my')   _timMyS('● 대기 중');
-                else              _timPeerS('● 대기 중');
-            }catch(e){
-                console.warn('[_timTrBubble]',e.message);
-                if(side==='my')   _timMyS('● 대기 중');
-                else              _timPeerS('● 대기 중');
+        function timToggleMyMic()   { _timMyOn   ? timStopMyMic()   : timStartMyMic(); }
+        function timTogglePeerMic() { _timPeerOn ? timStopPeerMic() : timStartPeerMic(); }
+
+        // ── 마이크 버튼 UI ───────────────────────────────────────────────
+        function _timMyBtnUI(on) {
+            var btn = document.getElementById('tim-my-btn');
+            var ico = document.getElementById('tim-my-mic-icon');
+            if (!btn) return;
+            if (on) {
+                btn.style.background = '#3b82f6'; btn.style.borderColor = '#1d4ed8';
+                if (ico) { ico.style.background = '#1d4ed8'; ico.textContent = '⏹'; }
+            } else {
+                btn.style.background = '#eff6ff'; btn.style.borderColor = '#3b82f6';
+                if (ico) { ico.style.background = '#dbeafe'; ico.textContent = '🎙️'; }
+            }
+        }
+        function _timPeerBtnUI(on) {
+            var btn = document.getElementById('tim-peer-btn');
+            var ico = document.getElementById('tim-peer-mic-icon');
+            if (!btn) return;
+            if (on) {
+                btn.style.background = '#10b981'; btn.style.borderColor = '#059669';
+                if (ico) { ico.style.background = '#059669'; ico.textContent = '⏹'; }
+            } else {
+                btn.style.background = '#f0fdf4'; btn.style.borderColor = '#10b981';
+                if (ico) { ico.style.background = '#d1fae5'; ico.textContent = '🎙️'; }
             }
         }
 
-        // 하위 호환 (_timTrSpeak → _timTrBubble)
-        function _timTrSpeak(text,fromN,toN,toG,toSr,logId,statusFn){
-            var side = logId==='tim-log-peer'?'my':'peer';
-            _timTrBubble(text,side,fromN,toN,toG,toSr);
+        // ── 대화 버블 렌더링 + 자동 TTS ─────────────────────────────────
+        function _timAddBubble(side, original, translated, ttsLang) {
+            var log = document.getElementById('tim-interp-log');
+            if (!log) return;
+
+            var placeholder = log.querySelector('div[style*="text-align:center"]');
+            if (placeholder) placeholder.remove();
+
+            var isMe   = (side === 'my');
+            var color  = isMe ? '#3b82f6'  : '#10b981';
+            var bgOrig = isMe ? '#eff6ff'  : '#f0fdf4';
+            var bgTrans= isMe ? '#dbeafe'  : '#d1fae5';
+            var flag   = isMe ? timSrc.f   : timTgt.f;
+            var flagDst= isMe ? timTgt.f   : timSrc.f;
+            var align  = isMe ? 'flex-end' : 'flex-start';
+            var r1 = isMe ? '14px 14px 4px 14px'  : '14px 14px 14px 4px';
+            var r2 = isMe ? '4px 14px 14px 14px'  : '14px 4px 14px 14px';
+
+            var bubble = document.createElement('div');
+            bubble.style.cssText = 'display:flex;flex-direction:column;align-items:' + align + ';gap:3px;margin-bottom:12px;animation:fadeIn 0.2s ease-out;';
+            bubble.innerHTML =
+                '<div style="font-size:9px;font-weight:800;color:' + color + ';letter-spacing:.4px;">' + flag + ' ' + (isMe ? timSrc.n : timTgt.n) + '</div>' +
+                '<div style="max-width:90%;background:' + bgOrig + ';border-radius:' + r1 + ';padding:10px 12px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">' +
+                    '<div style="font-size:13px;color:#1e293b;line-height:1.5;">' + escHtml(original) + '</div>' +
+                '</div>' +
+                '<div style="max-width:90%;background:' + bgTrans + ';border-radius:' + r2 + ';padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">' +
+                    '<div style="font-size:12px;color:' + color + ';font-weight:700;line-height:1.5;flex:1;">' + flagDst + ' ' + escHtml(translated) + '</div>' +
+                    '<button data-tts="' + escHtml(translated) + '" data-lang="' + ttsLang + '" onclick="timSpeakLang(this.dataset.tts,this.dataset.lang)" ' +
+                        'style="flex-shrink:0;width:28px;height:28px;border-radius:50%;border:none;background:rgba(255,255,255,0.8);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;">🔊</button>' +
+                '</div>';
+
+            log.appendChild(bubble);
+            log.scrollTop = log.scrollHeight;
+
+            var hidEl = document.getElementById(isMe ? 'tim-log-my' : 'tim-log-peer');
+            if (hidEl) hidEl.value += (hidEl.value ? '\n' : '') + original + '\n[→] ' + translated;
+
+            // ★ 즉시 자동 TTS 발화
+            timSpeakLang(translated, ttsLang);
         }
 
-        function _timAppend(id,text){
-            var el=document.getElementById(id); if(!el) return;
-            el.value=(el.value?el.value+'\n':'')+text; el.scrollTop=el.scrollHeight;
-        }
-        function _timMyS(m){var e=document.getElementById('tim-my-status');if(e)e.textContent=m;}
-        function _timMyI(m){ _timSetInterim(m); }
-        function _timPeerS(m){var e=document.getElementById('tim-peer-status');if(e)e.textContent=m;}
-        function _timPeerI(m){ _timSetInterim(m); }
-        function timClearInterpLog(){
-            var log=document.getElementById('tim-interp-log');
-            if(log) log.innerHTML='<div style="text-align:center;padding:20px;font-size:12px;color:#cbd5e1;">마이크 버튼을 눌러 통역을 시작하세요</div>';
-            var my=document.getElementById('tim-log-my'),pe=document.getElementById('tim-log-peer');
-            if(my) my.value=''; if(pe) pe.value='';
+        // ── 인식 중 텍스트 ───────────────────────────────────────────────
+        function _timSetInterim(text) {
+            var el = document.getElementById('tim-interp-interim');
+            if (!el) return;
+            if (text) { el.textContent = text; el.style.display = 'block'; }
+            else      { el.textContent = '';   el.style.display = 'none';  }
         }
 
-        // ── UI 헬퍼 ──
-        function timOut(h){ var el=document.getElementById('tim-output'); if(el) el.innerHTML=h; }
-        function timShowResult(h){
-            var card=document.getElementById('tim-result-card');
-            if(card) card.style.display='block';
-            timOut(h);
-            // 결과 카드로 부드럽게 스크롤
-            setTimeout(function(){ if(card) card.scrollIntoView({behavior:'smooth',block:'nearest'}); },100);
-        }
-        function timClearResult(){
-            var card=document.getElementById('tim-result-card');
-            if(card) card.style.display='none';
-            timOut('');
-        }
-        function timClearAll(){
-            var i=document.getElementById('tim-input'); if(i) i.value='';
-            timClearResult();
-        }
-        function timCloseSitResult(){
-            var wrap=document.getElementById('tim-sit-result-wrap');
-            if(wrap) wrap.style.display='none';
-            // 카테고리 그리드 다시 표시
-            var grid=document.querySelector('#timPanel2 > div:first-child');
-            if(grid) grid.style.display='grid';
-        }
-        function timSitOut(h){ var el=document.getElementById('tim-sit-output'); if(el) el.innerHTML=h; }
-        function timLoading(m){ return '<div style="text-align:center;padding:24px;"><div style="font-size:32px;animation:trPulse 1.2s ease-in-out infinite;">🐱</div><div style="font-size:13px;color:#64748b;margin-top:8px;font-weight:600;">'+escHtml(m)+'</div></div>'; }
-        function timErr(m){ return '<div style="color:#ef4444;padding:12px;background:#fef2f2;border-radius:10px;font-size:13px;">❌ '+escHtml(m)+'</div>'; }
-        function timCard(trans,pron,meaning,tip){
-            timLast=trans;
-            var h='<div style="border-left:3px solid #3b82f6;border-radius:0 16px 16px 0;background:white;padding:18px;margin-top:4px;box-shadow:0 2px 12px rgba(0,0,0,.06);">';
-            h+='<div style="font-size:10px;font-weight:800;color:#3b82f6;letter-spacing:.5px;margin-bottom:5px;">'+timTgt.s+' TRANSLATION</div>';
-            h+='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">';
-            h+='<div style="font-size:22px;font-weight:900;color:#1e293b;line-height:1.4;flex:1;">'+escHtml(trans)+'</div>';
-            // TTS 버튼: data-tts 속성으로 텍스트 전달 (문자열 이스케이프 불필요)
-            h+='<button data-tts="'+escHtml(trans)+'" onclick="timSpeak(this.dataset.tts)" style="flex-shrink:0;width:40px;height:40px;border-radius:50%;border:none;background:#eff6ff;font-size:18px;cursor:pointer;">🔊</button>';
-            h+='</div>';
-            if(pron) h+='<div style="margin-top:10px;background:#eff6ff;padding:10px 14px;border-radius:12px;font-size:18px;font-weight:800;color:#1d4ed8;">'+escHtml(pron)+'</div>';
-            if(meaning&&meaning!==trans) h+='<div style="margin-top:7px;font-size:13px;color:#64748b;line-height:1.5;">'+escHtml(meaning)+'</div>';
-            if(tip) h+='<div style="margin-top:7px;background:#fef3c7;border-radius:10px;padding:9px 12px;font-size:12px;color:#92400e;line-height:1.5;">💡 '+escHtml(tip)+'</div>';
-            h+='<div style="text-align:center;font-size:9px;color:#cbd5e1;margin-top:10px;letter-spacing:1px;">SEOLYEON FAMILY PREMIUM</div>';
-            h+='</div>';
-            return h;
+        // ── AI 번역 → 버블 ───────────────────────────────────────────────
+        async function _timTrBubble(text, side, fromN, toN, toG, toSr) {
+            try {
+                var prompt = fromN + '→' + toN + '(' + toG + ') 번역. 1줄만. 입력: ' + text;
+                var tr = await timCallAI('interpret', prompt);
+                if (tr) {
+                    tr = tr.trim();
+                    _timAddBubble(side, text, tr, toSr);
+                }
+                if (side === 'my')  _timMyS('● 대기 중');
+                else                _timPeerS('● 대기 중');
+            } catch(e) {
+                console.warn('[_timTrBubble]', e.message);
+                if (side === 'my')  _timMyS('● 대기 중');
+                else                _timPeerS('● 대기 중');
+            }
         }
 
-        // ── TTS ──
-        function timSpeak(text){ if(text) timSpeakLang(text,timTgt.sr); }
-        function timSpeakLang(text,lang){
-            if(!text) return;
-            window.speechSynthesis.cancel();
-            var doSpeak=function(){
-                var u=new SpeechSynthesisUtterance(text);
-                u.lang=lang; u.rate=0.85; u.pitch=0.9;
-                var lc=lang.split('-')[0];
-                var v=window.speechSynthesis.getVoices().find(function(x){return x.lang.indexOf(lc)===0;})||null;
-                if(v) u.voice=v;
-                window.speechSynthesis.speak(u);
+        function _timTrSpeak(text, fromN, toN, toG, toSr, logId, statusFn) {
+            var side = logId === 'tim-log-peer' ? 'my' : 'peer';
+            _timTrBubble(text, side, fromN, toN, toG, toSr);
+        }
+        function _timAppend(id, text) {
+            var el = document.getElementById(id); if (!el) return;
+            el.value = (el.value ? el.value + '\n' : '') + text; el.scrollTop = el.scrollHeight;
+        }
+        function _timMyS(m)   { var e = document.getElementById('tim-my-status');   if(e) e.textContent = m; }
+        function _timMyI(m)   { _timSetInterim(m); }
+        function _timPeerS(m) { var e = document.getElementById('tim-peer-status'); if(e) e.textContent = m; }
+        function _timPeerI(m) { _timSetInterim(m); }
+
+        function timClearInterpLog() {
+            var log = document.getElementById('tim-interp-log');
+            if (log) log.innerHTML = '<div style="text-align:center;padding:20px;font-size:12px;color:#cbd5e1;">마이크 버튼을 눌러 통역을 시작하세요</div>';
+            var my = document.getElementById('tim-log-my'), pe = document.getElementById('tim-log-peer');
+            if (my) my.value = ''; if (pe) pe.value = '';
+        }
+
+        // ── TTS — voices 프리캐시 + 즉시 발화 ──────────────────────────
+        window._timVoices = [];
+        if (window.speechSynthesis) {
+            var _preload = window.speechSynthesis.getVoices();
+            if (_preload && _preload.length) window._timVoices = _preload;
+            window.speechSynthesis.onvoiceschanged = function() {
+                window._timVoices = window.speechSynthesis.getVoices();
             };
-            var voices=window.speechSynthesis.getVoices();
-            if(voices&&voices.length>0) doSpeak();
-            else{ window.speechSynthesis.onvoiceschanged=function(){window.speechSynthesis.onvoiceschanged=null;doSpeak();}; }
         }
+
+        function timSpeakLang(text, lang) {
+            if (!text) return;
+            try {
+                window.speechSynthesis.cancel();
+                var doSpeak = function() {
+                    var u = new SpeechSynthesisUtterance(text);
+                    u.lang = lang; u.rate = 0.90; u.pitch = 1.0;
+                    var voices = window._timVoices.length ? window._timVoices : window.speechSynthesis.getVoices();
+                    var lc = lang.toLowerCase();
+                    var best = voices.find(function(v) { return v.lang.toLowerCase() === lc; }) ||
+                               voices.find(function(v) { return v.lang.toLowerCase().indexOf(lc.split('-')[0]) === 0; });
+                    if (best) u.voice = best;
+                    u.onerror = function(e) { console.warn('[TTS]', e); };
+                    window.speechSynthesis.speak(u);
+                };
+                var voices = window._timVoices.length ? window._timVoices : window.speechSynthesis.getVoices();
+                if (voices && voices.length > 0) {
+                    window._timVoices = voices;
+                    doSpeak();
+                } else {
+                    window.speechSynthesis.onvoiceschanged = function() {
+                        window._timVoices = window.speechSynthesis.getVoices();
+                        window.speechSynthesis.onvoiceschanged = null;
+                        doSpeak();
+                    };
+                }
+            } catch(err) { console.error('[timSpeakLang]', err); }
+        }
+
         window.addEventListener('load',function(){
             setTimeout(function(){
                 var k=localStorage.getItem('timApiKey');
@@ -7250,6 +7179,45 @@ function initRealtimeSync() {
                 <button onclick="timCloseApiKeyModal()" style="padding:12px;border-radius:10px;background:#f1f5f9;border:none;font-size:13px;font-weight:700;color:#64748b;cursor:pointer;">취소</button>
                 <button onclick="timSaveAllKeys()" style="padding:12px;border-radius:10px;background:#1e293b;border:none;color:white;font-size:13px;font-weight:800;cursor:pointer;">저장</button>
             </div>
+        </div>
+    </div>
+
+
+    <!-- ═══ 통역 모드 선택 모달 ═══ -->
+    <div id="tim-interp-mode-modal"
+        style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,0.5);
+               align-items:center;justify-content:center;"
+        onclick="if(event.target===this) document.getElementById('tim-interp-mode-modal').style.display='none';">
+        <div style="background:white;border-radius:24px;padding:24px 20px;width:88%;max-width:340px;
+                    box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:timModalIn .2s ease-out;">
+            <div style="text-align:center;margin-bottom:18px;">
+                <div style="font-size:11px;font-weight:800;color:var(--month-header);letter-spacing:1px;margin-bottom:4px;">INTERPRETATION MODE</div>
+                <div style="font-size:16px;font-weight:900;color:#1e293b;">통역 모드 선택</div>
+                <div style="font-size:12px;color:#94a3b8;margin-top:4px;">상황에 맞는 최적의 통역 방식을 고르세요</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+                <button onclick="timSelectInterpMode('normal')"
+                    style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;
+                           border:1.5px solid #d1d5db;background:#f9fafb;cursor:pointer;text-align:left;width:100%;">
+                    <span style="font-size:26px;flex-shrink:0;">🎙️</span>
+                    <div>
+                        <div style="font-size:13px;font-weight:800;color:#374151;">일반 대화 통역</div>
+                        <div style="font-size:11px;color:#64748b;margin-top:2px;">마이크를 번갈아 누르며 주고받기</div>
+                    </div>
+                </button>
+                <button onclick="timSelectInterpMode('live')"
+                    style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;
+                           border:1.5px solid #c084fc;background:#f3e8ff;cursor:pointer;text-align:left;width:100%;">
+                    <span style="font-size:26px;flex-shrink:0;">✨</span>
+                    <div>
+                        <div style="font-size:13px;font-weight:800;color:#6b21a8;">AI 실시간 동시통역</div>
+                        <div style="font-size:11px;color:#701a75;margin-top:2px;">상대방 언어만 상시 연속 청취·통역</div>
+                    </div>
+                </button>
+            </div>
+            <button onclick="document.getElementById('tim-interp-mode-modal').style.display='none';"
+                style="margin-top:14px;width:100%;padding:11px;border-radius:12px;background:#f1f5f9;
+                       border:none;font-size:13px;font-weight:700;color:#64748b;cursor:pointer;">취소</button>
         </div>
     </div>
 
