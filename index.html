@@ -1329,12 +1329,15 @@
             </div>
         </div>
         <nav style="flex:1;overflow-y:auto;padding:10px 8px;">
-            <div class="drawer-item active" id="di-main"       onclick="drawerGo('main-section')">🏠 <span>대시보드</span></div>
+            <div class="drawer-item active" id="di-main"       onclick="drawerGo('main-section')">🏠 <span>홈</span></div>
+            <div class="drawer-item" id="di-dash"              onclick="drawerGo('dash-section')">📊 <span>요약</span></div>
             <div class="drawer-item" id="di-schedule"          onclick="drawerGo('schedule-section')">📅 <span>일정</span></div>
             <div class="drawer-item" id="di-asset"             onclick="drawerGo('asset-section')">💰 <span>가계부</span></div>
             <div class="drawer-item" id="di-photo"             onclick="drawerGo('photo-section')">📸 <span>앨범</span></div>
             <div class="drawer-item" id="di-travel"            onclick="drawerGo('travel-section')">✈️ <span>여행 &amp; 여가</span></div>
             <div class="drawer-item" id="di-chat"              onclick="drawerGo('chat-section')">🫧 <span>채팅</span><span id="drw-badge" style="display:none;background:#ef4444;color:white;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:800;margin-left:auto;"></span></div>
+            <div class="drawer-item" id="di-shop"              onclick="drawerGo('shop-section')">🛒 <span>쇼핑 · 장보기</span></div>
+            <div class="drawer-item" id="di-fixed"             onclick="closeDrawer();fxOpen()">🔁 <span>고정지출</span></div>
             <div style="height:1px;background:#e2e8f0;margin:6px 4px;"></div>
             <div class="drawer-item drawer-item-accent" id="di-news" onclick="drawerGo('news-section')">📰 <span>NEWS</span></div>
         </nav>
@@ -1424,7 +1427,35 @@
             </div>
 
             <!-- ② 슬라이드 래퍼 -->
-            <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;min-height:0;-webkit-overflow-scrolling:touch;">
+            <div id="home-scroll" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;min-height:0;-webkit-overflow-scrolling:touch;">
+                        <div id="home-today" class="home-today"></div>
+                        <div id="fam-home-banners"></div>
+                        <div class="fam-feed-body" id="fam-feed-body"></div>
+                        <span id="chat-unread-badge" style="display:none"></span>
+                        <div class="footer-info">Family Shared v55.0 &nbsp;·&nbsp; Jung Wooseol 2026</div>
+                        <div style="height:150px"></div>
+                        </div><!-- /main-scroll -->
+            </div><!-- /main-wrap -->
+            <div class="home-cmd">
+                <div id="home-sugg" class="home-sugg"></div>
+                <div class="home-hints">
+                    <button onclick="famPickCmd('/일정')">📅 일정</button><button onclick="famPickCmd('/가계부')">💰 가계부</button><button onclick="famPickCmd('/영수증')">📷 영수증</button><button onclick="famPickCmd('/쇼핑')">🛒 장보기</button><button onclick="famPickCmd('/ai')">🌐 AI 검색</button><button onclick="famPickCmd('/채팅')">🫧 채팅</button><button onclick="famPickCmd('/검색')">🔎 찾기</button>
+                </div>
+                <div class="home-cmd-in">
+                    <button class="home-cmd-btn" title="어시스턴트 기록" onclick="famRun('/도움말')">❔</button>
+                    <input id="home-cmd-input" placeholder="무엇이든 입력하세요 · / 로 명령" autocomplete="off" enterkeyhint="send" oninput="famCmdInput(this)" onkeydown="famCmdKey(event)">
+                    <button class="home-cmd-btn go" onclick="famSubmit()">➤</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 📊 요약 (기존 홈 대시보드) -->
+        <section id="dash-section" class="page-section">
+            <div style="width:100%;max-width:1100px;padding:10px 14px 20px;box-sizing:border-box">
+                <div class="sch-header" style="margin-bottom:10px">
+                    <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:20px;">📊</span><h3 style="margin:0;font-size:clamp(15px,2vw,18px);font-weight:800;">요약</h3></div>
+                    <button onclick="showSection('main-section')" class="btn-home">🏠 Home</button>
+                </div>
                         <div class="main-dashboard">
                         <!-- 왼쪽 -->
                         <div class="dash-left">
@@ -1495,40 +1526,7 @@
                     </div>
                         </div><!-- /dash-right -->
                         </div><!-- /main-dashboard -->
-                        <!-- 배너 5개 -->
-                        <!-- 좌우 스와이프 퀵링크 아이콘 바 -->
-                        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0 -14px;padding:4px 14px 6px;touch-action:pan-x;">
-                            <div id="quicklink-row" style="display:flex;gap:12px;width:max-content;">
-                                <button onclick="drawerGo('news-section')" class="ql-icon-btn">
-                                    <div class="ql-icon-circle" style="background:linear-gradient(135deg,#1e3a5f,#3a6a96);color:white;font-size:11px;font-weight:900;letter-spacing:.5px;">NEWS</div>
-                                    <span style="font-weight:800;">News</span>
-                                </button>
-                                <button onclick="drawerGo('schedule-section')" class="ql-icon-btn">
-                                    <div class="ql-icon-circle" style="background:#e0f2fe;">📅</div>
-                                    <span>일정</span>
-                                </button>
-                                <button onclick="drawerGo('asset-section')" class="ql-icon-btn">
-                                    <div class="ql-icon-circle" style="background:#dcfce7;">💰</div>
-                                    <span>가계부</span>
-                                </button>
-                                <button onclick="drawerGo('photo-section')" class="ql-icon-btn">
-                                    <div class="ql-icon-circle" style="background:#fae8ff;">📸</div>
-                                    <span>앨범</span>
-                                </button>
-                                <button onclick="drawerGo('travel-section')" class="ql-icon-btn">
-                                    <div class="ql-icon-circle" style="background:#fef9c3;">✈️</div>
-                                    <span>여행</span>
-                                </button>
-                                <button onclick="drawerGo('chat-section')" class="ql-icon-btn" style="position:relative;">
-                                    <div class="ql-icon-circle" style="background:#e0f2fe;">🫧</div>
-                                    <span>채팅</span>
-                                    <span id="chat-unread-badge" class="chat-badge" style="position:absolute;top:0;right:0;"></span>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="footer-info">Family Shared v53.0 &nbsp;·&nbsp; Jung Wooseol 2026</div>
-                        </div><!-- /main-scroll -->
-            </div><!-- /main-wrap -->
+            </div>
         </section>
 
         <!-- 일정 -->
@@ -2401,6 +2399,26 @@
                     <button onclick="showSection('asset-section')" class="btn-home">◀ Back</button>
                 </div>
                 <div id="ana-root"></div>
+                <div class="fam-box" style="margin-top:12px"><h4>📑 월간 AI 리포트</h4><div id="rpt-root"></div></div>
+            </div>
+        </section>
+
+        <!-- 🛒 쇼핑 · 장보기 -->
+        <section id="shop-section" class="page-section">
+            <div class="card" style="padding:clamp(12px,2vw,20px);">
+                <div class="sch-header">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:20px;">🛒</span>
+                        <h3 style="margin:0;font-size:clamp(15px,2vw,18px);font-weight:800;">쇼핑 · 장보기</h3>
+                    </div>
+                    <button onclick="showSection('main-section')" class="btn-home">🏠 Home</button>
+                </div>
+                <div id="shop-grid" class="shop-grid"></div>
+                <div class="fam-box">
+                    <h4 style="display:flex;align-items:center">📝 장보기 목록 <small id="shop-count" style="margin-left:8px;color:#94a3b8;font-weight:600"></small><button class="fam-btn" style="margin-left:auto;padding:4px 10px;font-size:11px" onclick="famShopClearDone()">완료 지우기</button></h4>
+                    <div style="display:flex;gap:8px;margin-bottom:6px"><input id="shop-new" class="fam-sel" style="flex:1" placeholder="우유, 계란 (쉼표로 여러 개)" onkeydown="if(event.key==='Enter'){event.preventDefault();famShopAddInput()}"><button class="fam-btn pri" onclick="famShopAddInput()">추가</button></div>
+                    <div id="shop-list"></div>
+                </div>
             </div>
         </section>
     </main>
@@ -4458,15 +4476,20 @@ function initRealtimeSync() {
         }
 
         // ── 월간 캘린더 렌더 ─────────────────────────────────────────────
-        // ── 일정 구성원 체크 필터 ──────────────────────────────────────
-        const SCH_F = (function(){ try { return JSON.parse(localStorage.getItem('schFilter')||'null'); } catch(e){ return null; } })() || { '정우설':true, '한미연':true, '공통':true, '여행':true };
+        // ── 일정 구성원 필터 (드롭다운) ──────────────────────────────────
+        const SCH_F = (function(){ try { return JSON.parse(localStorage.getItem('schFilter2')||'null'); } catch(e){ return null; } })() || { mode:'all', trip:true };
+        const SCH_MODES = [['all','👥 전체'],['ws','👨 정우설 + 공통'],['hm','👩 한미연 + 공통'],['ws1','👨 정우설만'],['hm1','👩 한미연만'],['co','👨‍👩‍👧 공통만']];
         function schKey(ev){ return (ev.member==='정우설'||ev.member==='한미연') ? ev.member : '공통'; }
-        function schShow(ev){ if (ev.planId && SCH_F['여행']===false) return false; return SCH_F[schKey(ev)]!==false; }
-        function schToggle(k,on){ SCH_F[k]=on; try{ localStorage.setItem('schFilter',JSON.stringify(SCH_F)); }catch(e){} renderSch(); if (typeof renderMainDashboard==='function') renderMainDashboard(); }
+        function schShow(ev){
+            if (ev.planId && !SCH_F.trip) return false;
+            const k=schKey(ev), m=SCH_F.mode;
+            return m==='all' || (m==='ws'&&k!=='한미연') || (m==='hm'&&k!=='정우설') || (m==='ws1'&&k==='정우설') || (m==='hm1'&&k==='한미연') || (m==='co'&&k==='공통');
+        }
+        function schSet(k,v){ SCH_F[k]=v; try{ localStorage.setItem('schFilter2',JSON.stringify(SCH_F)); }catch(e){} renderSch(); if (typeof renderMainDashboard==='function') renderMainDashboard(); }
         function schRenderChips(){
             const el=document.getElementById('sch-filter-chips'); if(!el) return;
-            el.innerHTML=[['정우설','👨','정우설'],['한미연','👩','한미연'],['공통','👨‍👩‍👧','공통'],['여행','✈️','여행·여가']].map(([k,ic,n])=>
-                `<label class="sch-fchip ${SCH_F[k]===false?'off':''}"><input type="checkbox" ${SCH_F[k]===false?'':'checked'} onchange="schToggle('${k}',this.checked)"> ${ic} ${n}</label>`).join('');
+            el.innerHTML = `<select class="fam-mini-sel" onchange="schSet('mode',this.value)">${SCH_MODES.map(([k,n])=>`<option value="${k}" ${SCH_F.mode===k?'selected':''}>${n}</option>`).join('')}</select>
+                <label class="sch-fchip ${SCH_F.trip?'':'off'}"><input type="checkbox" ${SCH_F.trip?'checked':''} onchange="schSet('trip',this.checked)"> ✈️ 여행·여가 표시</label>`;
         }
         function schAddPlan(ds){
             closeSchDetail();
@@ -5447,13 +5470,13 @@ function initRealtimeSync() {
 
         // ── 여행 목록: 구성원·유형 체크 + 다가오는/지난 기록(최신순) ──
         const PLAN_TYPES = [['여행','✈️'],['캠핑','⛺'],['골프','⛳'],['스크린골프','🏌️'],['등산','🏔️'],['기타','📌']];
-        const PLAN_F = (function(){ try { return JSON.parse(localStorage.getItem('planFilter')||'null'); } catch(e){ return null; } })() || { m:{'정우설':true,'한미연':true,'공통':true}, t:{} };
-        function planToggle(g,k,on){ PLAN_F[g][k]=on; try{ localStorage.setItem('planFilter',JSON.stringify(PLAN_F)); }catch(e){} renderPlans(); }
+        const PLAN_F = (function(){ try { return JSON.parse(localStorage.getItem('planFilter2')||'null'); } catch(e){ return null; } })() || { m:'all', t:'all' };
+        function planSet(g,v){ PLAN_F[g]=v; try{ localStorage.setItem('planFilter2',JSON.stringify(PLAN_F)); }catch(e){} renderPlans(); }
         function planChips(){
             const el=document.getElementById('plan-chips'); if(!el) return;
-            const ch=(g,k,label)=>`<label class="sch-fchip ${PLAN_F[g][k]===false?'off':''}"><input type="checkbox" ${PLAN_F[g][k]===false?'':'checked'} onchange="planToggle('${g}','${k}',this.checked)"> ${label}</label>`;
-            el.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;">${[['정우설','👨'],['한미연','👩'],['공통','👨‍👩‍👧']].map(([k,ic])=>ch('m',k,ic+' '+k)).join('')}</div>
-                <div style="display:flex;flex-wrap:wrap;gap:6px;">${PLAN_TYPES.map(([k,ic])=>ch('t',k,ic+' '+(k==='스크린골프'?'스크린':k))).join('')}</div>`;
+            el.innerHTML = `<div style="display:flex;gap:6px;">
+                <select class="fam-mini-sel" style="flex:1" onchange="planSet('m',this.value)">${[['all','👥 구성원 전체'],['정우설','👨 정우설'],['한미연','👩 한미연'],['공통','👨‍👩‍👧 공통']].map(([k,n])=>`<option value="${k}" ${PLAN_F.m===k?'selected':''}>${n}</option>`).join('')}</select>
+                <select class="fam-mini-sel" style="flex:1" onchange="planSet('t',this.value)"><option value="all">🗂 유형 전체</option>${PLAN_TYPES.map(([k,ic])=>`<option value="${k}" ${PLAN_F.t===k?'selected':''}>${ic} ${k}</option>`).join('')}</select></div>`;
         }
         function planCard(p){
             const card = document.createElement('div');
@@ -5485,7 +5508,7 @@ function initRealtimeSync() {
             let data = [...(planData || [])];
             const mk = p => (p.member==='정우설'||p.member==='한미연') ? p.member : '공통';
             const tk = p => PLAN_TYPES.some(([k])=>k===p.subType) ? p.subType : '기타';
-            data = data.filter(p => PLAN_F.m[mk(p)]!==false && PLAN_F.t[tk(p)]!==false);
+            data = data.filter(p => (PLAN_F.m==='all' || mk(p)===PLAN_F.m) && (PLAN_F.t==='all' || tk(p)===PLAN_F.t));
             if (planFilters.area !== 'all') data = data.filter(p => p.mType === planFilters.area);
             const fPeriod = planFilters.period;
             if (fPeriod !== 'all') {
@@ -7429,11 +7452,11 @@ function initRealtimeSync() {
 
     async function famCallAI(system, user, opt) {
         opt = opt || {};
-        const p = famProv(), key = (famKeys()[p] || '').trim(), model = famModel(p), max = opt.maxTokens || 2500;
+        const p = opt.provider || famProv(), key = (famKeys()[p] || '').trim(), model = famModel(p), max = opt.maxTokens || 2500, img = opt.image;
         if (!key) throw new Error(FAM_NAMES[p] + ' API 키가 없습니다. 오른쪽 위 ⚙️ 설정에서 입력하세요.');
         let res, j, sources = [];
         if (p === 'claude') {
-            const body = { model, max_tokens: max, system, messages: [{ role: 'user', content: user }] };
+            const body = { model, max_tokens: max, system, messages: [{ role: 'user', content: img ? [{ type: 'image', source: { type: 'base64', media_type: img.mime, data: img.data } }, { type: 'text', text: user }] : user }] };
             if (opt.search) body.tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 12 }];
             res = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' }, body: JSON.stringify(body) });
             j = await res.json(); if (!res.ok) throw new Error(j.error?.message || res.status);
@@ -7444,7 +7467,7 @@ function initRealtimeSync() {
             return { text: (j.content || []).filter(b => b.type === 'text').map(b => b.text).join(''), sources };
         }
         if (p === 'gemini') {
-            const body = { systemInstruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts: [{ text: user }] }], generationConfig: { maxOutputTokens: max } };
+            const body = { systemInstruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts: img ? [{ inline_data: { mime_type: img.mime, data: img.data } }, { text: user }] : [{ text: user }] }], generationConfig: { maxOutputTokens: max } };
             if (opt.search) body.tools = [{ google_search: {} }];
             res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
             j = await res.json(); if (!res.ok) throw new Error(j.error?.message || res.status);
@@ -7460,7 +7483,7 @@ function initRealtimeSync() {
             (j.output || []).forEach(o => (o.content || []).forEach(c => { if (!j.output_text && c.text) text += c.text; (c.annotations || []).forEach(a => { if (a.url) sources.push({ url: a.url, title: a.title || a.url }); }); }));
             return { text, sources };
         }
-        res = await fetch('https://api.openai.com/v1/chat/completions', { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + key }, body: JSON.stringify({ model, messages: [{ role: 'system', content: system }, { role: 'user', content: user }] }) });
+        res = await fetch('https://api.openai.com/v1/chat/completions', { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + key }, body: JSON.stringify({ model, messages: [{ role: 'system', content: system }, { role: 'user', content: img ? [{ type: 'text', text: user }, { type: 'image_url', image_url: { url: 'data:' + img.mime + ';base64,' + img.data } }] : user }] }) });
         j = await res.json(); if (!res.ok) throw new Error(j.error?.message || res.status);
         return { text: j.choices?.[0]?.message?.content || '', sources };
     }
@@ -7662,14 +7685,14 @@ headline은 오늘의 흐름을 한 문장으로.
         const chk = (grp, val, on, label) => `<label class="fam-chk ${on ? '' : 'off'}"><input type="checkbox" data-ana="${grp}" value="${famEsc(val)}" ${on ? 'checked' : ''}> ${label}</label>`;
         const catChecks = t => Object.keys(cats).filter(k => k.startsWith(t + '|')).sort((a, b) => cats[b] - cats[a]).map(k => chk('cat', k, !ana.catOff[k], famEsc(k.split('|')[1]))).join('') || '<span class="fam-note" style="margin:0">해당 내역 없음</span>';
         root.innerHTML = `
-            <div class="fam-box"><h4>기간</h4>
-                <div class="fam-chks">${P.map(([k, n]) => `<button class="fam-btn ${ana.period === k ? 'pri' : ''}" style="padding:7px 11px;font-size:12px" onclick="ana.period='${k}';anaRender()">${n}</button>`).join('')}</div>
+            <div class="fam-box"><h4>조건</h4>
+                <div class="fam-grid2">
+                    <select class="fam-sel" onchange="ana.period=this.value;anaRender()">${P.map(([k, n]) => `<option value="${k}" ${ana.period === k ? 'selected' : ''}>📅 ${n}</option>`).join('')}</select>
+                    <select class="fam-sel" onchange="anaSetMember(this.value)">${[['all','👥 구성원 전체'],['정우설','👨 정우설'],['한미연','👩 한미연'],['공통','👨‍👩‍👧 공통']].map(([k,n]) => `<option value="${k}" ${anaMemberSel() === k ? 'selected' : ''}>${n}</option>`).join('')}</select>
+                    <select class="fam-sel" onchange="anaSetType(this.value)">${[['all','📥📤 수입·지출'],['수입','📥 수입만'],['지출','📤 지출만']].map(([k,n]) => `<option value="${k}" ${anaTypeSel() === k ? 'selected' : ''}>${n}</option>`).join('')}</select>
+                    <button class="fam-btn" onclick="anaOpenCats()">🏷️ 항목 ${Object.keys(cats).filter(k => !ana.catOff[k]).length}/${Object.keys(cats).length} ▾</button>
+                </div>
                 ${ana.period === 'custom' ? `<div style="display:flex;gap:8px;margin-top:10px;align-items:center"><input type="month" class="fam-in" value="${ana.from}" onchange="ana.from=this.value;anaRender()"><span>~</span><input type="month" class="fam-in" value="${ana.to}" onchange="ana.to=this.value;anaRender()"></div>` : ''}
-                <span class="fam-lbl">가족 구성원</span><div class="fam-chks">${ANA_MEMBERS.map(([m, ic]) => chk('member', m, ana.members[m], ic + ' ' + m)).join('')}</div>
-                <span class="fam-lbl">수입 / 지출</span><div class="fam-chks">${chk('type', '수입', ana.types['수입'], '📥 수입')}${chk('type', '지출', ana.types['지출'], '📤 지출')}</div>
-                ${ana.types['수입'] ? `<span class="fam-lbl">수입 항목</span><div class="fam-chks">${catChecks('수입')}</div>` : ''}
-                ${ana.types['지출'] ? `<span class="fam-lbl">지출 항목</span><div class="fam-chks">${catChecks('지출')}</div>` : ''}
-                <div class="fam-btns"><button class="fam-btn" style="padding:6px 10px;font-size:12px" onclick="ana.catOff={};ana.excl={};anaRender()">항목 전체 선택</button><button class="fam-btn" style="padding:6px 10px;font-size:12px" onclick="anaAllOff()">항목 전체 해제</button></div>
             </div>
             <div class="fam-sum">
                 <div style="background:#f0fdf4"><span style="color:#166534">수입</span><b style="color:#166534">${anaW(inc)}</b></div>
@@ -7689,6 +7712,18 @@ headline은 오늘의 흐름을 한 문장으로.
                 <div style="margin-top:8px">${base.filter(e => !ana.catOff[e.type + '|' + e.category]).sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 400).map(e => `<label class="fam-row" style="cursor:pointer"><input type="checkbox" data-ana="ex" value="${famEsc(e._id)}" ${ana.excl[e._id] ? '' : 'checked'} style="width:16px;height:16px;accent-color:var(--month-header)"><span style="flex:none;width:44px;color:#94a3b8;font-size:11px">${famEsc(String(e.date).slice(5))}</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${famEsc(e.category)}${e.memo ? ' · ' + famEsc(e.memo) : ''} <span style="color:#94a3b8;font-size:11px">${famEsc(e._m)}</span></span><b style="flex:none;color:${e.type === '수입' ? '#166534' : '#991b1b'}">${e.type === '수입' ? '+' : '-'}${anaW(e.amt)}</b></label>`).join('')}</div>
             </details>`;
         anaDrawChart(rows, months);
+    }
+    function anaMemberSel() { const on = Object.keys(ana.members).filter(k => ana.members[k]); return on.length === 3 ? 'all' : on[0] || 'all'; }
+    function anaSetMember(v) { ['공통', '정우설', '한미연'].forEach(k => ana.members[k] = (v === 'all' || v === k)); anaRender(); }
+    function anaTypeSel() { return ana.types['수입'] && ana.types['지출'] ? 'all' : ana.types['수입'] ? '수입' : '지출'; }
+    function anaSetType(v) { ana.types['수입'] = v !== '지출'; ana.types['지출'] = v !== '수입'; anaRender(); }
+    function anaOpenCats() {
+        const base = anaBase(), cats = {}; base.forEach(e => { const k = e.type + '|' + e.category; cats[k] = (cats[k] || 0) + e.amt; });
+        const grp = t => Object.keys(cats).filter(k => k.startsWith(t + '|')).sort((a, b) => cats[b] - cats[a]);
+        const row = k => `<label class="fam-row" style="cursor:pointer"><input type="checkbox" data-ana="cat" value="${famEsc(k)}" ${ana.catOff[k] ? '' : 'checked'} style="width:18px;height:18px;accent-color:var(--month-header)"><span style="flex:1">${famEsc(k.split('|')[1])}</span><span style="color:#94a3b8;font-size:12px">${anaW(cats[k])}</span></label>`;
+        famSheet(`<div class="fam-h"><b>🏷️ 항목 선택</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
+            ${['수입', '지출'].filter(t => ana.types[t]).map(t => `<div class="fam-box"><h4>${t === '수입' ? '📥 수입' : '📤 지출'}</h4>${grp(t).map(row).join('') || '<div class="fam-note">해당 내역 없음</div>'}</div>`).join('')}
+            <div class="fam-btns"><button class="fam-btn" onclick="ana.catOff={};anaRender();anaOpenCats()">전체 선택</button><button class="fam-btn" onclick="anaAllOff();anaOpenCats()">전체 해제</button><button class="fam-btn pri" style="margin-left:auto" onclick="famSheetClose()">완료</button></div>`);
     }
     function anaAllOff() { anaBase().forEach(e => { ana.catOff[e.type + '|' + e.category] = true; }); anaRender(); }
     function anaDrawChart(rows, months) {
@@ -7746,6 +7781,616 @@ headline은 오늘의 흐름을 한 문장으로.
     })();
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { const ns = document.getElementById('news-section'); if (ns && ns.classList.contains('active')) newsOnEnter(); } });
     window.addEventListener('popstate', () => { const m = document.getElementById('fam-settings'); if (m && m.style.display === 'flex') m.style.display = 'none'; });
+    </script>
+
+
+    <!-- ═══════════ v54: 홈 어시스턴트 · 쇼핑 · 고정지출 · 리포트 · 채팅 AI ═══════════ -->
+    <style>
+        .fam-mini-sel{border:1.5px solid #e2e8f0;border-radius:20px;padding:7px 12px;font-size:12px;font-weight:700;color:#334155;background:#fff;outline:none;font-family:inherit}
+        .fam-grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+        .home-cmd{position:fixed;left:0;right:0;bottom:0;z-index:900;padding:8px 12px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(to top,var(--month-bg) 70%,transparent)}
+        .home-cmd-in{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #dbe3ee;border-radius:26px;padding:6px 6px 6px 8px;box-shadow:0 6px 24px rgba(15,23,42,.12)}
+        .home-cmd-in input{flex:1;border:none;outline:none;font-size:15px;padding:8px 4px;background:none;font-family:inherit;color:#1e293b;min-width:0}
+        .home-cmd-btn{flex:none;width:38px;height:38px;border-radius:50%;border:none;cursor:pointer;font-size:17px;background:#f1f5f9}
+        .home-cmd-btn.go{background:var(--month-header);color:#fff}
+        .home-sugg{max-width:760px;margin:0 auto 8px;background:#fff;border:1px solid #e2e8f0;border-radius:16px;box-shadow:0 8px 24px rgba(15,23,42,.12);overflow:hidden;display:none}
+        .home-sugg button{display:flex;width:100%;gap:10px;align-items:center;padding:10px 14px;border:none;background:none;text-align:left;cursor:pointer;font-family:inherit}
+        .home-sugg button:hover,.home-sugg button.on{background:#f1f5f9}
+        .home-sugg b{font-size:14px;color:#1e293b;min-width:70px}
+        .home-sugg span{font-size:12px;color:#94a3b8}
+        .home-hints{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;max-width:760px;margin:0 auto 6px;padding:0 2px}
+        .home-hints button{flex:none;border:1px solid #e2e8f0;background:#fff;border-radius:16px;padding:5px 11px;font-size:12px;color:#475569;cursor:pointer;font-family:inherit}
+        .fam-feed{position:fixed;left:0;right:0;bottom:0;z-index:950;display:none;justify-content:center;pointer-events:none}
+        .fam-feed-box{pointer-events:auto;width:100%;max-width:760px;max-height:72vh;background:#fff;border-radius:22px 22px 0 0;box-shadow:0 -10px 40px rgba(15,23,42,.22);display:flex;flex-direction:column;margin-bottom:calc(64px + env(safe-area-inset-bottom))}
+        .fam-feed-h{display:flex;align-items:center;gap:8px;padding:12px 14px 8px;border-bottom:1px solid #f1f5f9}
+        .fam-feed-h b{flex:1;font-size:14px;color:#1e293b}
+        .fam-feed-body{padding:4px 14px 8px;display:flex;flex-direction:column;gap:10px;width:100%;max-width:760px;margin:0 auto;box-sizing:border-box}
+        .home-today{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px 14px 4px;width:100%;max-width:760px;margin:0 auto;box-sizing:border-box}
+        .ht-tile{background:#fff;border:1px solid #eef2f7;border-radius:14px;padding:9px 10px;cursor:pointer;min-width:0;box-shadow:0 2px 8px rgba(15,23,42,.04)}
+        .ht-tile small{display:block;font-size:10.5px;color:#94a3b8;font-weight:700}
+        .ht-tile b{display:block;font-size:14px;color:#1e293b;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .ht-tile span{display:block;font-size:11px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        @media(max-width:420px){.home-today{grid-template-columns:repeat(2,1fr)}}
+        #home-scroll{scroll-padding-bottom:170px}
+        #home-scroll>*{flex-shrink:0}
+        #fam-home-banners{width:100%;max-width:760px;margin:0 auto;padding:4px 14px 0;box-sizing:border-box}
+        .ff-hello{text-align:center;color:#64748b;font-size:13px;padding:22px 8px 6px;line-height:1.7}
+        .ff-hello b{display:block;font-size:17px;color:#1e293b;margin-bottom:4px}
+        .rc-row{display:grid;grid-template-columns:22px 1fr;gap:8px;padding:8px 0;border-bottom:1px solid #eef2f7}
+        .rc-row:last-of-type{border-bottom:0}
+        .rc-row .ff-form{grid-template-columns:1fr 1fr 1fr}
+        .rc-row .ff-form .s2{grid-column:span 2}
+        .rc-dup{font-size:10.5px;color:#dc2626;font-weight:700}
+        .rc-hist{font-size:10.5px;color:#059669;font-weight:700}
+        .ff-me{align-self:flex-end;max-width:85%;background:var(--month-header);color:#fff;padding:9px 13px;border-radius:16px 16px 4px 16px;font-size:14px}
+        .ff-card{align-self:stretch;background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:12px 13px;font-size:13.5px;color:#1e293b;line-height:1.6}
+        .ff-card h5{margin:0 0 8px;font-size:13px;font-weight:800;color:#1e293b}
+        .ff-res{display:flex;gap:10px;align-items:center;width:100%;padding:8px 6px;border:none;border-bottom:1px solid #eef2f7;background:none;text-align:left;cursor:pointer;font-family:inherit;font-size:13px;color:#1e293b}
+        .ff-res:last-child{border-bottom:0}
+        .ff-res i{font-style:normal;flex:none;width:22px;text-align:center}
+        .ff-res small{display:block;color:#94a3b8;font-size:11px}
+        .ff-form{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+        .ff-form .full{grid-column:1/-1}
+        .ff-form label{font-size:10.5px;font-weight:700;color:#64748b;display:block;margin-bottom:3px}
+        .ff-form input,.ff-form select{width:100%;box-sizing:border-box;border:1.5px solid #e2e8f0;border-radius:9px;padding:8px 9px;font-size:13.5px;background:#fff;font-family:inherit;color:#1e293b;outline:none}
+        .shop-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+        @media(max-width:420px){.shop-grid{grid-template-columns:repeat(3,1fr)}}
+        .shop-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;border-radius:14px;border:1px solid #eef2f7;background:#fff;text-decoration:none;color:#1e293b;font-size:11.5px;font-weight:700}
+        .shop-btn i{font-style:normal;width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:15px}
+        .shop-item{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid #f1f5f9}
+        .shop-item input[type=checkbox]{width:20px;height:20px;accent-color:var(--month-header);flex:none}
+        .shop-item.done span{text-decoration:line-through;color:#94a3b8}
+        .home-banner{display:flex;align-items:center;gap:10px;margin:0 0 10px;padding:10px 14px;border-radius:14px;background:#fff;border:1px solid #e2e8f0;font-size:13px;cursor:pointer}
+        .home-banner b{flex:1;color:#1e293b}
+        #fam-mention{position:fixed;z-index:9500;display:none;background:#fff;border:1px solid #e2e8f0;border-radius:14px;box-shadow:0 8px 24px rgba(15,23,42,.18);overflow:hidden}
+        #fam-mention button{display:flex;gap:8px;align-items:center;width:100%;padding:10px 14px;border:none;background:none;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;color:#1e293b}
+        #fam-mention button:hover{background:#f1f5f9}
+    </style>
+
+    <!-- 공용 시트 · 어시스턴트 피드 · 멘션 · 영수증 입력 -->
+    <div id="fam-sheet" class="fam-ov" onclick="if(event.target===this)famSheetClose()"><div class="fam-sheet" id="fam-sheet-body"></div></div>
+
+    <div id="fam-mention"></div>
+    <input type="file" id="fam-receipt-input" accept="image/*" multiple style="display:none" onchange="famReceiptFile(this)">
+
+    <script>
+    // ═══════════════════════════════════════════════════════════
+    // 공용 유틸
+    // ═══════════════════════════════════════════════════════════
+    const famYmd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const famUser = () => { try { return (typeof chatUser !== 'undefined' && chatUser) || localStorage.getItem('chatUser') || ''; } catch (e) { return ''; } };
+    const EXP_CATS = ['생활비', '의료비', '쇼핑', '식사', '교통비', '여가', '여행비', '가족', '기타지출'];
+    const INC_CATS = ['급여', '상여', '주식', '기타수입'];
+    function famSheet(html) { document.getElementById('fam-sheet-body').innerHTML = html; document.getElementById('fam-sheet').style.display = 'flex'; }
+    function famSheetClose() { document.getElementById('fam-sheet').style.display = 'none'; }
+
+    // ═══════════════════════════════════════════════════════════
+    // 한국어 해석기 (날짜·시간·구성원·금액·분류)
+    // ═══════════════════════════════════════════════════════════
+    function famParseDate(t, base) {
+        base = base ? new Date(base) : new Date(); base.setHours(0, 0, 0, 0);
+        let m, d = null;
+        const cut = re => { t = t.replace(re, ' '); };
+        if ((m = t.match(/(\d{4})[-./](\d{1,2})[-./](\d{1,2})/))) { d = new Date(+m[1], +m[2] - 1, +m[3]); cut(m[0]); }
+        else if ((m = t.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/))) { d = new Date(base.getFullYear(), +m[1] - 1, +m[2]); cut(m[0]); }
+        else if ((m = t.match(/(?:^|\s)(\d{1,2})\/(\d{1,2})(?=\s|$)/))) { d = new Date(base.getFullYear(), +m[1] - 1, +m[2]); cut(m[0]); }
+        else if ((m = t.match(/(오늘|내일|모레|글피)/))) { d = new Date(base); d.setDate(d.getDate() + { 오늘: 0, 내일: 1, 모레: 2, 글피: 3 }[m[1]]); cut(m[0]); }
+        else if ((m = t.match(/(이번\s*주|다음\s*주|담주)?\s*([월화수목금토일])요일/))) {
+            const dow = '일월화수목금토'.indexOf(m[2]); d = new Date(base);
+            if (m[1] && /다음|담주/.test(m[1])) { const mon = new Date(base); mon.setDate(base.getDate() + ((8 - base.getDay()) % 7 || 7)); d = new Date(mon); d.setDate(mon.getDate() + ((dow + 6) % 7)); }
+            else if (m[1]) { const mon = new Date(base); mon.setDate(base.getDate() - ((base.getDay() + 6) % 7)); d = new Date(mon); d.setDate(mon.getDate() + ((dow + 6) % 7)); }
+            else { d.setDate(base.getDate() + ((dow - base.getDay() + 7) % 7)); }
+            cut(m[0]);
+        }
+        else if ((m = t.match(/(?:^|\s)(\d{1,2})\s*일(?![가-힣])/))) { d = new Date(base.getFullYear(), base.getMonth(), +m[1]); if (d < base) d.setMonth(d.getMonth() + 1); cut(m[0]); }
+        return { date: d ? famYmd(d) : '', rest: t };
+    }
+    function famParseTime(t) {
+        let m;
+        if ((m = t.match(/(\d{1,2}):(\d{2})/))) { t = t.replace(m[0], ' '); return { time: `${String(+m[1]).padStart(2, '0')}:${m[2]}`, rest: t }; }
+        if ((m = t.match(/(오전|오후|아침|저녁|밤|새벽)?\s*(\d{1,2})\s*시\s*(?:(\d{1,2})\s*분|(반))?/))) {
+            let h = +m[2], mi = m[3] ? +m[3] : m[4] ? 30 : 0;
+            if (/오후|저녁|밤/.test(m[1] || '') && h < 12) h += 12;
+            else if (/오전|아침|새벽/.test(m[1] || '') && h === 12) h = 0;
+            else if (!m[1] && h >= 1 && h <= 6) h += 12;
+            t = t.replace(m[0], ' ');
+            return { time: `${String(h).padStart(2, '0')}:${String(mi).padStart(2, '0')}`, rest: t };
+        }
+        return { time: '', rest: t };
+    }
+    function famParseMember(t, def) {
+        const rules = [[/정우설|우설|남편|아빠/, '정우설'], [/한미연|미연|아내|엄마/, '한미연'], [/공통|같이|우리|가족(?!\s*모임)/, '공통']];
+        for (const [re, v] of rules) { const m = t.match(re); if (m) return { member: v, rest: t.replace(m[0], ' ') }; }
+        return { member: def, rest: t };
+    }
+    function famParseAmount(t) {
+        let m, amt = 0;
+        if ((m = t.match(/(\d+(?:\.\d+)?)\s*만\s*(?:(\d+)\s*천)?\s*원?/))) amt = Math.round(parseFloat(m[1]) * 10000 + (m[2] ? +m[2] * 1000 : 0));
+        else if ((m = t.match(/(\d+)\s*천\s*원?/))) amt = +m[1] * 1000;
+        else if ((m = t.match(/(\d{1,3}(?:,\d{3})+|\d+)\s*원/))) amt = +m[1].replace(/,/g, '');
+        else if ((m = t.match(/(?:^|\s)(\d{1,3}(?:,\d{3})+|\d{3,})(?=\s|$)/))) amt = +m[1].replace(/,/g, '');
+        return { amt, rest: m ? t.replace(m[0], ' ') : t };
+    }
+    function famGuessCat(t, type) {
+        if (type === '수입') return /급여|월급/.test(t) ? '급여' : /상여|보너스|성과급/.test(t) ? '상여' : /주식|배당/.test(t) ? '주식' : '기타수입';
+        const R = [['식사', /점심|저녁|아침|식사|밥|카페|커피|배달|외식|치킨|피자|간식|술|회식/], ['교통비', /택시|버스|지하철|주유|기름|톨비|하이패스|주차|KTX|기차|교통/], ['의료비', /병원|약국|약값|치과|한의원|검진|의원/], ['여행비', /여행|호텔|숙소|항공|비행기|펜션|리조트/], ['여가', /영화|공연|골프|캠핑|헬스|운동|넷플릭스|구독|취미/], ['가족', /용돈|선물|부모님|경조사|축의금|조의금|생일/], ['생활비', /관리비|전기|가스|수도|통신|인터넷|마트|장보기|생필품|세탁/], ['쇼핑', /쇼핑|옷|신발|가방|쿠팡|컬리|구매|주문/]];
+        for (const [c, re] of R) if (re.test(t)) return c;
+        return '기타지출';
+    }
+    const famClean = t => t.replace(/\s+/g, ' ').replace(/^[\s,·]+|[\s,·]+$/g, '').trim();
+    const famNormMemo = s => String(s || '').replace(/\[고정\]/g, '').split(' · ')[0].replace(/\s+/g, '').toLowerCase();
+    const famFirstWord = s => (String(s || '').replace(/\[고정\]/g, '').trim().split(/[\s·,]+/)[0] || '').toLowerCase();
+    // 같은 가게·내용을 예전에 어느 분류로 저장했는지 (많이 쓴 순)
+    function famHistCat(memo, type) {
+        if (typeof anaAll !== 'function') return '';
+        const k = famNormMemo(memo), f = famFirstWord(memo); if (!k) return '';
+        const c1 = {}, c2 = {};
+        anaAll().forEach(e => {
+            if (e.type !== type || !e.memo) return;
+            if (famNormMemo(e.memo) === k) c1[e.category] = (c1[e.category] || 0) + 1;
+            else if (f.length >= 2 && famFirstWord(e.memo) === f) c2[e.category] = (c2[e.category] || 0) + 1;
+        });
+        const pick = o => (Object.entries(o).sort((a, b) => b[1] - a[1])[0] || [''])[0];
+        const c = pick(c1) || pick(c2);
+        return (type === '수입' ? INC_CATS : EXP_CATS).includes(c) ? c : '';
+    }
+    function famIsDup(date, amt, type) { return typeof anaAll === 'function' && anaAll().some(e => e.date === date && e.amt === amt && e.type === type); }
+    function famParseAsset(text) {
+        const a = famParseAmount(text), d = famParseDate(a.rest), mb = famParseMember(d.rest, famUser() || '정우설');
+        const type = /급여|월급|상여|보너스|배당|입금|수입|환급|받음|받았/.test(text) ? '수입' : '지출';
+        const pay = /현금/.test(text) ? '현금' : '카드';
+        const memo = famClean(mb.rest.replace(/현금|카드|원$/g, ' '));
+        const hist = famHistCat(memo, type);
+        return { amt: a.amt, date: d.date || famYmd(new Date()), member: mb.member, type, category: hist || famGuessCat(text, type), _hist: !!hist, pay, memo };
+    }
+    function famParseSch(text) {
+        const d = famParseDate(text), tm = famParseTime(d.rest), mb = famParseMember(tm.rest, famUser() || '정우설');
+        return { date: d.date || famYmd(new Date()), time: tm.time, member: mb.member, memo: famClean(mb.rest), _found: !!(d.date || tm.time) };
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 🤖 홈 어시스턴트 (입력창 · 명령 · 피드)
+    // ═══════════════════════════════════════════════════════════
+    const CMDS = [
+        ['/일정', '내일 7시 치과', '일정 추가'], ['/가계부', '점심 12000', '가계부 기록'], ['/영수증', '', '사진으로 가계부 기록'],
+        ['/채팅', '저녁 뭐 먹어?', '가족 채팅 보내기'], ['/쇼핑', '우유 계란', '장보기 목록 추가'], ['/검색', '캠핑', '앱 안에서 찾기'],
+        ['/ai', '이번 주말 서울 날씨', 'AI 웹 검색'], ['/뉴스', '', '오늘 NEWS'], ['/리포트', '', '지난달 가계부 리포트'], ['/고정지출', '', '고정지출 관리'], ['/지우기', '', '홈 대화 지우기']
+    ];
+    let famSuggIdx = 0;
+    function famCmdInput(el) {
+        const v = el.value, box = document.getElementById('home-sugg');
+        if (!v.startsWith('/') || v.includes(' ')) { box.style.display = 'none'; return; }
+        const list = CMDS.filter(c => c[0].startsWith(v.toLowerCase()) || c[0].startsWith(v));
+        if (!list.length) { box.style.display = 'none'; return; }
+        famSuggIdx = 0;
+        box.innerHTML = list.map((c, i) => `<button class="${i === 0 ? 'on' : ''}" onclick="famPickCmd('${c[0]}')"><b>${c[0]}</b><span>${c[2]}${c[1] ? ' · 예) ' + famEsc(c[1]) : ''}</span></button>`).join('');
+        box.style.display = 'block';
+    }
+    function famPickCmd(c) {
+        const el = document.getElementById('home-cmd-input'); document.getElementById('home-sugg').style.display = 'none';
+        if (['/영수증', '/뉴스', '/리포트', '/고정지출', '/지우기'].includes(c)) { el.value = ''; famRun(c); return; }
+        el.value = c + ' '; el.focus();
+    }
+    function famCmdKey(e) {
+        const box = document.getElementById('home-sugg');
+        if (e.key === 'Enter') { e.preventDefault(); if (box.style.display === 'block') { const b = box.querySelectorAll('button')[famSuggIdx]; if (b) { b.click(); return; } } famSubmit(); }
+        else if (box.style.display === 'block' && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+            e.preventDefault(); const bs = box.querySelectorAll('button'); famSuggIdx = (famSuggIdx + (e.key === 'ArrowDown' ? 1 : bs.length - 1)) % bs.length; bs.forEach((b, i) => b.classList.toggle('on', i === famSuggIdx));
+        }
+    }
+    function famSubmit() { const el = document.getElementById('home-cmd-input'); const v = el.value.trim(); if (!v) return; el.value = ''; document.getElementById('home-sugg').style.display = 'none'; famRun(v); }
+    function famFeedHello() {
+        const b = document.getElementById('fam-feed-body'); if (!b || b.children.length) return;
+        b.innerHTML = `<div class="ff-hello"><b>무엇을 도와드릴까요?</b>말하듯 입력하면 일정·가계부·장보기로 정리합니다.<br>예) 내일 저녁 7시 치과 · 점심 12000 · /쇼핑 우유 계란<br>영수증·결제내역 캡처는 📷 영수증</div>`;
+    }
+    function famFeedOpen() { const m = document.getElementById('main-section'); if (m && !m.classList.contains('active')) showSection('main-section'); }
+    function famFeedClose() {}
+    function famFeedClear() { document.getElementById('fam-feed-body').innerHTML = ''; famFeedHello(); }
+    function famFeedAdd(html, cls) {
+        const b = document.getElementById('fam-feed-body'), h = b.querySelector('.ff-hello'); if (h) h.remove();
+        const d = document.createElement('div'); d.className = cls || 'ff-card'; d.innerHTML = html; b.appendChild(d); famFeedOpen();
+        setTimeout(() => { const sc = document.getElementById('home-scroll'); if (sc) sc.scrollTop = sc.scrollHeight; }, 30); return d;
+    }
+    function famMe(t) { famFeedAdd(famEsc(t), 'ff-me'); }
+
+    function famRun(raw) {
+        const m = raw.match(/^\/(\S+)\s*([\s\S]*)$/), cmd = m ? m[1].toLowerCase() : '', arg = m ? m[2].trim() : raw;
+        if (cmd === '지우기') return famFeedClear();
+        famMe(raw);
+        if (cmd === '일정') return famSchCard(arg);
+        if (cmd === '가계부') return famAssetCard(arg);
+        if (cmd === '영수증') { famFeedAdd('📷 영수증 사진이나 결제내역 캡처를 선택하세요. 여러 장도 됩니다.'); document.getElementById('fam-receipt-input').click(); return; }
+        if (cmd === '채팅') return famChatSend(arg);
+        if (cmd === '쇼핑') return arg ? famShopAdd(arg, true) : (famFeedClose(), showSection('shop-section'));
+        if (cmd === '검색') return famSearch(arg);
+        if (cmd === 'ai' || cmd === 'ai검색') return famAsk(arg);
+        if (cmd === '뉴스' || cmd === 'news') { famFeedClose(); return showSection('news-section'); }
+        if (cmd === '리포트') { famFeedClose(); showSection('asset-analysis-section'); return; }
+        if (cmd === '고정지출') { famFeedClose(); return fxOpen(); }
+        if (cmd === '도움말' || cmd === 'help') return famFeedAdd('<h5>사용할 수 있는 명령</h5>' + CMDS.map(c => `<div><b>${c[0]}</b> ${c[1] ? famEsc(c[1]) + ' — ' : ''}${c[2]}</div>`).join('') + '<div class="fam-note">슬래시 없이 써도 금액이 있으면 가계부, 날짜·시간이 있으면 일정, 질문이면 AI로 연결합니다.</div>');
+        if (m) return famFeedAdd(`"/${famEsc(cmd)}"는 없는 명령입니다. <b>/도움말</b>을 입력해 보세요.`);
+        // 슬래시 없음 → 자동 분류
+        const a = famParseAmount(raw);
+        if (a.amt >= 100) return famAssetCard(raw);
+        const s = famParseSch(raw);
+        if (s._found) return famSchCard(raw);
+        if (/[?？]\s*$/.test(raw) || /^(뭐|무엇|어떻게|왜|언제|어디|누가|추천|알려|비교|설명)/.test(raw)) return famAsk(raw);
+        return famSearch(raw, true);
+    }
+
+    // ── 일정 확인 카드 ──
+    function famMemberSel(id, v) { return `<select id="${id}">${['정우설', '한미연', '공통'].map(x => `<option ${x === v ? 'selected' : ''}>${x}</option>`).join('')}</select>`; }
+    function famSchCard(text) {
+        if (!text) return famFeedAdd('예) <b>/일정 내일 오후 7시 치과</b>');
+        const p = famParseSch(text), id = 'c' + Date.now();
+        famFeedAdd(`<h5>📅 일정으로 저장할까요?</h5><div class="ff-form">
+            <div class="full"><label>내용</label><input id="${id}-memo" value="${famEsc(p.memo || text)}"></div>
+            <div><label>날짜</label><input type="date" id="${id}-date" value="${p.date}"></div>
+            <div><label>시간 (비우면 종일)</label><input type="time" id="${id}-time" value="${p.time}"></div>
+            <div><label>구성원</label>${famMemberSel(id + '-mem', p.member)}</div>
+            <div><label>중요도</label><select id="${id}-pri"><option>일반</option><option>중요</option></select></div>
+            </div><div class="fam-btns"><button class="fam-btn pri" onclick="famSchSave('${id}',this)">저장</button></div>`);
+    }
+    async function famSchSave(id, btn) {
+        const g = k => document.getElementById(id + '-' + k).value.trim();
+        if (!g('memo') || !g('date')) { famToast('내용과 날짜를 확인하세요'); return; }
+        btn.disabled = true;
+        const sid = 'sch_' + Date.now(), mem = g('mem'), time = g('time');
+        try {
+            await db.collection('schedules').doc(sid).set({ id: sid, date: g('date'), priority: g('pri'), member: mem, category: mem === '공통' ? '가족' : '개인', timeType: time ? 'timed' : 'allday', startTime: time, endTime: '', place: '', memo: g('memo'), repeat: null });
+            btn.closest('.ff-card').innerHTML = `✅ <b>${famEsc(g('date'))}${time ? ' ' + time : ''}</b> ${famEsc(g('memo'))} · ${famEsc(mem)} — 일정에 저장했습니다. <button class="fam-btn" style="padding:4px 9px;font-size:12px" onclick="famGoSch('${g('date')}')">달력에서 보기</button>`;
+        } catch (e) { btn.disabled = false; famToast('저장 실패: ' + e.message); }
+    }
+    function famGoSch(date) { famFeedClose(); showSection('schedule-section'); setTimeout(() => { try { curViewDate = new Date(date + 'T00:00:00'); renderSch(); openDayDetail(date); } catch (e) {} }, 350); }
+
+    // ── 가계부 확인 카드 ──
+    function famAssetCard(text, pre) {
+        if (!text && !pre) return famFeedAdd('예) <b>/가계부 점심 12000</b> · <b>/가계부 월급 350만 입금</b>');
+        const p = pre || famParseAsset(text), id = 'c' + Date.now() + Math.floor(Math.random() * 99);
+        const cats = t => (t === '수입' ? INC_CATS : EXP_CATS).map(c => `<option ${c === p.category ? 'selected' : ''}>${c}</option>`).join('');
+        famFeedAdd(`<h5>💰 가계부에 기록할까요?</h5>${p._dup ? '<div class="rc-dup" style="margin:-4px 0 8px">⚠️ 같은 날짜·금액 내역이 이미 있습니다. 중복인지 확인하세요.</div>' : ''}<div class="ff-form">
+            <div class="full"><label>내용</label><input id="${id}-memo" value="${famEsc(p.memo)}"></div>
+            <div><label>금액 (원)</label><input type="number" inputmode="numeric" id="${id}-amt" value="${p.amt || ''}"></div>
+            <div><label>날짜</label><input type="date" id="${id}-date" value="${p.date}"></div>
+            <div><label>구분</label><select id="${id}-type" onchange="document.getElementById('${id}-cat').innerHTML=(this.value==='수입'?INC_CATS:EXP_CATS).map(c=>'<option>'+c+'</option>').join('')"><option ${p.type === '지출' ? 'selected' : ''}>지출</option><option ${p.type === '수입' ? 'selected' : ''}>수입</option></select></div>
+            <div><label>분류${p._hist ? ' <span class="rc-hist">· 지난 기록 기준</span>' : ''}</label><select id="${id}-cat">${cats(p.type)}</select></div>
+            <div><label>구성원</label>${famMemberSel(id + '-mem', p.member)}</div>
+            <div><label>결제</label><select id="${id}-pay"><option ${p.pay === '카드' ? 'selected' : ''}>카드</option><option ${p.pay === '현금' ? 'selected' : ''}>현금</option></select></div>
+            </div><div class="fam-btns"><button class="fam-btn pri" onclick="famAssetSave('${id}',this)">저장</button></div>`);
+    }
+    async function famAssetSave(id, btn) {
+        const g = k => document.getElementById(id + '-' + k).value.trim();
+        const amt = Number(g('amt')) || 0; if (!amt) { famToast('금액을 입력하세요'); return; }
+        btn.disabled = true;
+        const aid = 'as_' + Date.now() + Math.floor(Math.random() * 99), type = g('type');
+        try {
+            await db.collection('assets').doc(aid).set({ id: aid, member: g('mem'), date: g('date'), type, category: g('cat'), pay: type === '지출' ? g('pay') : '', amt, memo: g('memo') });
+            btn.closest('.ff-card').innerHTML = `✅ ${famEsc(g('date'))} ${type} <b>${amt.toLocaleString('ko-KR')}원</b> · ${famEsc(g('cat'))} · ${famEsc(g('mem'))} — 가계부에 기록했습니다.`;
+        } catch (e) { btn.disabled = false; famToast('저장 실패: ' + e.message); }
+    }
+
+    // ── 채팅 보내기 ──
+    async function famChatSend(text) {
+        if (!text) return famFeedAdd('예) <b>/채팅 오늘 늦어요</b>');
+        if (!famUser()) { famFeedClose(); if (typeof openProfileModal === 'function') openProfileModal(); return; }
+        try {
+            await db.collection('messages').add({ type: 'text', text, sender: famUser(), createdAt: firebase.firestore.FieldValue.serverTimestamp(), isRead: false });
+            famFeedAdd(`✅ 가족 채팅으로 보냈습니다. <button class="fam-btn" style="padding:4px 9px;font-size:12px" onclick="famFeedClose();showSection('chat-section')">채팅 열기</button>`);
+            if (/@(claude|클로드|gpt|지피티|gemini|제미나이|재미나이)/i.test(text)) famChatAI(text);
+        } catch (e) { famFeedAdd('⚠️ 전송 실패: ' + famEsc(e.message)); }
+    }
+
+    // ── 통합 검색 ──
+    function famSearch(q, offerAI) {
+        if (!q) return famFeedAdd('예) <b>/검색 캠핑</b>');
+        const ql = q.toLowerCase(), hit = s => String(s || '').toLowerCase().includes(ql), res = [];
+        (typeof schData !== 'undefined' ? schData : []).forEach(s => { if (hit(s.memo) || hit(s.place)) res.push({ ic: '📅', t: s.memo || '', sub: `${s.date}${s.startTime ? ' ' + s.startTime : ''} · ${s.member || '공통'}`, d: s.date, go: `famGoSch('${s.date}')` }); });
+        Object.values(typeof assetData !== 'undefined' ? assetData : {}).forEach(arr => (arr || []).forEach(a => { if (hit(a.memo) || hit(a.category)) res.push({ ic: '💰', t: `${a.category} ${Number(a.amt || 0).toLocaleString('ko-KR')}원${a.memo ? ' · ' + a.memo : ''}`, sub: `${a.date} · ${a.type} · ${a.member}`, d: a.date, go: `famFeedClose();showSection('asset-cal-section')` }); }));
+        (typeof planData !== 'undefined' ? planData : []).forEach((p, i) => { if (hit(p.loc) || hit(p.supplies) || hit(p.memo) || hit(p.subType)) res.push({ ic: '✈️', t: `${p.loc || '미정'} (${p.subType || ''})`, sub: `${p.start || ''} ~ ${p.end || ''}`, d: p.start || '', go: `famGoPlan('${famEsc(p.id)}')` }); });
+        (typeof chatMessages !== 'undefined' ? chatMessages : []).forEach(c => { if (c.text && hit(c.text)) { const dt = c.createdAt?.toDate ? famYmd(c.createdAt.toDate()) : ''; res.push({ ic: '🫧', t: c.text.slice(0, 60), sub: `${dt} · ${c.isAI ? 'AI' : c.sender || ''}`, d: dt, go: `famFeedClose();showSection('chat-section')` }); } });
+        (famShopItems || []).forEach(s => { if (hit(s.text)) res.push({ ic: '🛒', t: s.text, sub: s.done ? '구매 완료' : '장보기 목록', d: '', go: `famFeedClose();showSection('shop-section')` }); });
+        res.sort((a, b) => String(b.d).localeCompare(String(a.d)));
+        famFeedAdd(`<h5>🔎 "${famEsc(q)}" 검색 결과 ${res.length}건</h5>${res.slice(0, 30).map(r => `<button class="ff-res" onclick="${r.go}"><i>${r.ic}</i><div><div>${famEsc(r.t)}</div><small>${famEsc(r.sub)}</small></div></button>`).join('') || '<div class="fam-note">앱 안에서 찾지 못했습니다.</div>'}
+            ${offerAI !== false ? `<div class="fam-btns"><button class="fam-btn" onclick="famAsk(${famEsc(JSON.stringify(q))})">🌐 AI에게 웹 검색으로 묻기</button></div>` : ''}`);
+    }
+    function famGoPlan(id) { const p = (planData || []).find(x => String(x.id) === String(id)); famFeedClose(); showSection('travel-section'); if (p) setTimeout(() => openTravelDetail(p), 350); }
+
+    // ── AI 웹 검색 ──
+    async function famAsk(q) {
+        if (!q) return famFeedAdd('예) <b>/ai 이번 주말 서울 날씨</b>');
+        const c = famFeedAdd('<span class="fam-spin"></span>AI가 웹을 검색하는 중…');
+        try {
+            const r = await famCallAI('너는 가족이 함께 쓰는 앱의 AI 비서다. 필요하면 웹 검색으로 최신 정보를 확인하고, 한국어로 짧고 정확하게 답한다. 모르면 모른다고 한다.', q, { search: true, maxTokens: 1500 });
+            const seen = new Set(), src = (r.sources || []).filter(s => /^https?:/.test(s.url) && !seen.has(s.url) && seen.add(s.url)).slice(0, 5);
+            c.innerHTML = `<div class="fam-ai">${famMd(r.text || '(응답 없음)')}</div>${src.length ? `<div style="margin-top:8px;border-top:1px solid #e2e8f0;padding-top:6px">${src.map(s => `<a href="${famEsc(s.url)}" target="_blank" rel="noopener" style="display:block;font-size:11.5px;color:#2563eb;padding:2px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">↗ ${famEsc(s.title)}</a>`).join('')}</div>` : ''}<div class="fam-note">${famEsc(FAM_NAMES[famProv()])} · 웹 검색</div>`;
+        } catch (e) { c.innerHTML = '⚠️ ' + famEsc(e.message); }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 📷 영수증 → 가계부
+    // ═══════════════════════════════════════════════════════════
+    function famReceiptOpen() { famFeedAdd('📷 영수증 사진을 선택하거나 촬영하세요.'); document.getElementById('fam-receipt-input').click(); }
+    function famImgToB64(file, max) {
+        return new Promise((ok, no) => {
+            const img = new Image(), url = URL.createObjectURL(file);
+            img.onload = () => { const r = Math.min(1, max / Math.max(img.width, img.height)); const c = document.createElement('canvas'); c.width = Math.round(img.width * r); c.height = Math.round(img.height * r); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); ok(c.toDataURL('image/jpeg', 0.85).split(',')[1]); };
+            img.onerror = () => no(new Error('이미지를 읽지 못했습니다')); img.src = url;
+        });
+    }
+    async function famReceiptFile(input) {
+        const files = Array.from(input.files || []); input.value = ''; if (!files.length) return;
+        for (const f of files) await famReceiptOne(f, files.length > 1 ? `(${files.indexOf(f) + 1}/${files.length}) ` : '');
+    }
+    async function famReceiptOne(f, tag) {
+        const c = famFeedAdd(`<span class="fam-spin"></span>${tag}이미지를 읽는 중… (10~30초)`);
+        try {
+            const data = await famImgToB64(f, 1800), today = famYmd(new Date());
+            const r = await famCallAI('너는 영수증·결제내역 캡처를 읽어 가계부 항목을 만드는 도우미다. 이미지에 보이는 내용만 쓰고 추측하지 않는다.',
+                `이미지가 영수증이면 총 결제금액으로 1건, 카드사·은행 앱 화면이나 결제 문자 캡처처럼 거래가 여러 건 보이면 거래마다 1건씩 만든다.
+취소된 거래와 그 원거래는 뺀다. 잔액·한도·포인트·할인 전 금액은 쓰지 않는다.
+오늘은 ${today}이다. 연도가 안 보이면 오늘 기준 가장 가까운 과거 날짜로 쓴다.
+JSON만 출력: {"items":[{"date":"YYYY-MM-DD 또는 빈 문자열","store":"가맹점·상호","amount":숫자,"type":"지출|수입","category":"지출이면 ${EXP_CATS.join('|')}, 수입이면 ${INC_CATS.join('|')} 중 하나","pay":"카드|현금","items":"영수증 품목 3개 이내 쉼표로, 없으면 빈 문자열"}]}`,
+                { image: { mime: 'image/jpeg', data }, maxTokens: 2500 });
+            const t = r.text || '', a = t.indexOf('{'), b = t.lastIndexOf('}'); if (a < 0) throw new Error('내용을 읽지 못했습니다');
+            const j = JSON.parse(t.slice(a, b + 1));
+            const raw = Array.isArray(j.items) ? j.items : [{ date: j.date, store: j.store, amount: j.total, category: j.category, pay: j.pay, items: j.items }];
+            const list = raw.map(x => {
+                const type = x.type === '수입' ? '수입' : '지출', cats = type === '수입' ? INC_CATS : EXP_CATS;
+                const store = famClean(String(x.store || '')), memo = famClean(`${store}${x.items ? ' · ' + x.items : ''}`);
+                const amt = Math.round(Math.abs(Number(String(x.amount ?? '').replace(/[^\d.-]/g, '')) || 0));
+                const date = /^\d{4}-\d{2}-\d{2}$/.test(x.date || '') ? x.date : today;
+                const hist = famHistCat(store || memo, type);
+                return { amt, date, type, member: famUser() || '정우설', pay: x.pay === '현금' ? '현금' : '카드', memo, category: hist || (cats.includes(x.category) ? x.category : cats[cats.length - 1]), _hist: !!hist, _dup: famIsDup(date, amt, type) };
+            }).filter(x => x.amt > 0);
+            if (!list.length) throw new Error('금액을 찾지 못했습니다');
+            c.innerHTML = `🧾 ${tag}${list.length}건 인식 — 확인 후 저장하세요.`;
+            if (list.length === 1) famAssetCard('', list[0]); else famReceiptList(list);
+        } catch (e) { c.innerHTML = '⚠️ ' + famEsc(e.message) + ' — ⚙️ 설정에서 AI 키를 확인하세요.'; }
+    }
+    const famRcData = {};
+    function famReceiptList(list) {
+        const id = 'rc' + Date.now(); famRcData[id] = list;
+        const catOpts = p => (p.type === '수입' ? INC_CATS : EXP_CATS).map(c => `<option ${c === p.category ? 'selected' : ''}>${c}</option>`).join('');
+        famFeedAdd(`<h5>💰 ${list.length}건을 가계부에 기록할까요?</h5>
+            <div class="ff-form" style="grid-template-columns:1fr 1fr;margin-bottom:6px"><div><label>구성원</label>${famMemberSel(id + '-mem', list[0].member)}</div><div><label>결제</label><select id="${id}-pay"><option ${list[0].pay === '카드' ? 'selected' : ''}>카드</option><option ${list[0].pay === '현금' ? 'selected' : ''}>현금</option></select></div></div>
+            <div id="${id}">${list.map((p, i) => `<div class="rc-row" data-i="${i}"><input type="checkbox" ${p._dup ? '' : 'checked'} style="width:18px;height:18px;margin-top:20px;accent-color:var(--month-header)">
+                <div class="ff-form">
+                    <div class="s2"><label>${p.type === '수입' ? '📥 수입' : '내용'}${p._dup ? ' <span class="rc-dup">· 이미 같은 날짜·금액 있음</span>' : ''}</label><input data-k="memo" value="${famEsc(p.memo)}"></div>
+                    <div><label>분류${p._hist ? ' <span class="rc-hist">· 기록</span>' : ''}</label><select data-k="cat">${catOpts(p)}</select></div>
+                    <div><label>금액</label><input data-k="amt" type="number" inputmode="numeric" value="${p.amt}"></div>
+                    <div class="s2"><label>날짜</label><input data-k="date" type="date" value="${p.date}"></div>
+                </div></div>`).join('')}</div>
+            <div class="fam-btns"><button class="fam-btn pri" onclick="famRcSave('${id}',this)">선택한 건 저장</button></div>`);
+    }
+    async function famRcSave(id, btn) {
+        const list = famRcData[id] || [], mem = document.getElementById(id + '-mem').value, pay = document.getElementById(id + '-pay').value;
+        const rows = [...document.querySelectorAll(`#${id} .rc-row`)].filter(r => r.querySelector('input[type=checkbox]').checked);
+        if (!rows.length) { famToast('저장할 항목을 선택하세요'); return; }
+        btn.disabled = true;
+        try {
+            const bt = db.batch(); let n = 0, sum = 0;
+            rows.forEach((r, k) => {
+                const p = list[+r.dataset.i], g = q => r.querySelector(`[data-k="${q}"]`).value.trim(), amt = Number(g('amt')) || 0; if (!amt) return;
+                const aid = 'as_' + Date.now() + '_' + k;
+                bt.set(db.collection('assets').doc(aid), { id: aid, member: mem, date: g('date'), type: p.type, category: g('cat'), pay: p.type === '지출' ? pay : '', amt, memo: g('memo') }); n++; sum += amt;
+            });
+            await bt.commit(); delete famRcData[id];
+            btn.closest('.ff-card').innerHTML = `✅ ${n}건 · 합계 <b>${sum.toLocaleString('ko-KR')}원</b> — 가계부에 기록했습니다. (${famEsc(mem)})`;
+        } catch (e) { btn.disabled = false; famToast('저장 실패: ' + e.message); }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 🛒 쇼핑 · 장보기 목록
+    // ═══════════════════════════════════════════════════════════
+    const SHOPS = [['컬리', 'https://www.kurly.com', '#5f0080'], ['쿠팡', 'https://www.coupang.com', '#e52528'], ['쿠팡이츠', 'https://www.coupangeats.com', '#00a5e5'], ['SSG', 'https://www.ssg.com', '#ff5452'],
+        ['G마켓', 'https://www.gmarket.co.kr', '#00a650'], ['11번가', 'https://www.11st.co.kr', '#ff0038'], ['네이버쇼핑', 'https://shopping.naver.com', '#03c75a'], ['배달의민족', 'https://www.baemin.com', '#2ac1bc'],
+        ['요기요', 'https://www.yogiyo.co.kr', '#fa0050'], ['오늘의집', 'https://ohou.se', '#35c5f0'], ['다이소몰', 'https://www.daisomall.co.kr', '#e60012'], ['무신사', 'https://www.musinsa.com', '#111111']];
+    let famShopItems = [], famShopUnsub = null;
+    function famShopListen() {
+        if (famShopUnsub) return;
+        try { famShopUnsub = db.collection('shoppingList').onSnapshot(s => { famShopItems = s.docs.map(d => ({ id: d.id, ...d.data() })); famShopRender(); famHomeBanners(); }, () => {}); } catch (e) {}
+    }
+    function famShopRender() {
+        const el = document.getElementById('shop-list'); if (!el) return;
+        const items = [...famShopItems].sort((a, b) => (a.done - b.done) || ((b.createdAt || 0) - (a.createdAt || 0)));
+        el.innerHTML = items.length ? items.map(i => `<div class="shop-item ${i.done ? 'done' : ''}"><input type="checkbox" ${i.done ? 'checked' : ''} onchange="famShopToggle('${i.id}',this.checked)"><span style="flex:1;font-size:14px">${famEsc(i.text)}</span><small style="color:#94a3b8;font-size:11px">${famEsc(i.by || '')}</small><button class="fam-x" style="width:26px;height:26px;font-size:11px" onclick="famShopDel('${i.id}')">✕</button></div>`).join('')
+            : '<div class="fam-note" style="text-align:center;padding:14px 0">장보기 목록이 비어 있습니다.</div>';
+        const cnt = document.getElementById('shop-count'); if (cnt) cnt.textContent = items.filter(i => !i.done).length ? `남은 ${items.filter(i => !i.done).length}개` : '';
+    }
+    async function famShopAdd(text, fromFeed) {
+        const raw = String(text || ''), items = raw.split(/[,，\n]/.test(raw) || !fromFeed ? /[,，\n]/ : /\s+/).map(x => x.trim()).filter(Boolean);
+        if (!items.length) return;
+        try {
+            const b = db.batch(); items.forEach((t, i) => { const id = 'shop_' + Date.now() + '_' + i; b.set(db.collection('shoppingList').doc(id), { id, text: t, done: false, by: famUser(), createdAt: Date.now() + i }); }); await b.commit();
+            if (fromFeed) famFeedAdd(`✅ 장보기 목록에 ${items.map(famEsc).join(', ')} 추가했습니다. <button class="fam-btn" style="padding:4px 9px;font-size:12px" onclick="famFeedClose();showSection('shop-section')">목록 보기</button>`);
+        } catch (e) { famToast('추가 실패: ' + e.message); }
+    }
+    function famShopAddInput() { const el = document.getElementById('shop-new'); const v = el.value.trim(); if (!v) return; el.value = ''; famShopAdd(v, false); }
+    function famShopToggle(id, on) { db.collection('shoppingList').doc(id).update({ done: on }).catch(e => famToast(e.message)); }
+    function famShopDel(id) { db.collection('shoppingList').doc(id).delete().catch(e => famToast(e.message)); }
+    function famShopClearDone() { const done = famShopItems.filter(i => i.done); if (!done.length) return; if (!confirm(`구매 완료 ${done.length}개를 지울까요?`)) return; const b = db.batch(); done.forEach(i => b.delete(db.collection('shoppingList').doc(i.id))); b.commit(); }
+    function famShopGrid() { const el = document.getElementById('shop-grid'); if (el) el.innerHTML = SHOPS.map(([n, u, c]) => `<a class="shop-btn" href="${u}" target="_blank" rel="noopener"><i style="background:${c}">${famEsc(n.slice(0, 1))}</i>${famEsc(n)}</a>`).join(''); }
+
+    // ═══════════════════════════════════════════════════════════
+    // 🔁 고정지출 자동 등록
+    // ═══════════════════════════════════════════════════════════
+    let fxList = [], fxUnsub = null, fxRunning = false;
+    function fxListen() { if (fxUnsub) return; try { fxUnsub = db.collection('fixedExpenses').onSnapshot(s => { fxList = s.docs.map(d => ({ id: d.id, ...d.data() })); fxRun(); if (document.getElementById('fam-sheet').style.display === 'flex' && document.getElementById('fx-root')) fxOpen(); }, () => {}); } catch (e) {} }
+    async function fxRun() {
+        if (fxRunning || !fxList.length) return; fxRunning = true;
+        try {
+            const now = new Date(), ym = famYmd(now).slice(0, 7), last = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            for (const f of fxList.filter(f => f.active !== false)) {
+                const day = Math.min(Math.max(1, +f.day || 1), last); if (now.getDate() < day) continue;
+                const id = `fx_${f.id}_${ym}`, ref = db.collection('assets').doc(id), snap = await ref.get();
+                if (!snap.exists) await ref.set({ id, member: f.member || '공통', date: `${ym}-${String(day).padStart(2, '0')}`, type: '지출', category: f.category || '생활비', pay: f.pay || '카드', amt: Number(f.amt) || 0, memo: `[고정] ${f.name || ''}`, fixedId: f.id });
+            }
+        } catch (e) { console.warn('[고정지출]', e); }
+        fxRunning = false;
+    }
+    function fxOpen() {
+        const rows = fxList.slice().sort((a, b) => (+a.day || 0) - (+b.day || 0));
+        famSheet(`<div id="fx-root"><div class="fam-h"><b>🔁 고정지출</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
+            <div class="fam-note" style="margin:0 0 10px">매월 지정일이 되면 가계부에 자동으로 기록됩니다. 같은 달에 두 번 기록되지 않습니다.</div>
+            <div class="fam-box">${rows.length ? rows.map(f => `<div class="fam-row"><input type="checkbox" ${f.active !== false ? 'checked' : ''} onchange="fxSet('${f.id}',{active:this.checked})" style="width:18px;height:18px;accent-color:var(--month-header)"><span style="flex:1"><b>${famEsc(f.name)}</b><br><small style="color:#94a3b8">매월 ${+f.day}일 · ${famEsc(f.category)} · ${famEsc(f.member)} · ${famEsc(f.pay)}</small></span><b>${(Number(f.amt) || 0).toLocaleString('ko-KR')}원</b><button class="fam-x" style="width:26px;height:26px;font-size:11px" onclick="fxDel('${f.id}')">✕</button></div>`).join('') : '<div class="fam-note">등록된 고정지출이 없습니다.</div>'}
+                ${rows.length ? `<div class="fam-note" style="text-align:right">월 합계 ${rows.filter(f => f.active !== false).reduce((a, f) => a + (Number(f.amt) || 0), 0).toLocaleString('ko-KR')}원</div>` : ''}</div>
+            <div class="fam-box"><h4>＋ 추가</h4><div class="ff-form">
+                <div class="full"><label>이름</label><input id="fx-name" placeholder="예: 아파트 관리비"></div>
+                <div><label>금액 (원)</label><input id="fx-amt" type="number" inputmode="numeric"></div>
+                <div><label>매월 며칠</label><input id="fx-day" type="number" min="1" max="31" value="25"></div>
+                <div><label>분류</label><select id="fx-cat">${EXP_CATS.map(c => `<option ${c === '생활비' ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+                <div><label>구성원</label>${famMemberSel('fx-mem', '공통')}</div>
+                <div><label>결제</label><select id="fx-pay"><option>카드</option><option>현금</option></select></div>
+            </div><div class="fam-btns"><button class="fam-btn pri" onclick="fxAdd()">추가</button></div></div></div>`);
+    }
+    async function fxAdd() {
+        const g = k => document.getElementById('fx-' + k).value.trim(), amt = Number(g('amt')) || 0;
+        if (!g('name') || !amt) { famToast('이름과 금액을 입력하세요'); return; }
+        const id = 'fixed_' + Date.now();
+        try { await db.collection('fixedExpenses').doc(id).set({ id, name: g('name'), amt, day: Math.min(31, Math.max(1, +g('day') || 1)), category: g('cat'), member: g('mem'), pay: g('pay'), active: true }); famToast('추가했습니다'); }
+        catch (e) { famToast('추가 실패: ' + e.message); }
+    }
+    function fxSet(id, v) { db.collection('fixedExpenses').doc(id).update(v).catch(e => famToast(e.message)); }
+    function fxDel(id) { if (confirm('이 고정지출을 삭제할까요? 이미 기록된 가계부 내역은 남습니다.')) db.collection('fixedExpenses').doc(id).delete().catch(e => famToast(e.message)); }
+
+    // ═══════════════════════════════════════════════════════════
+    // 📑 월간 AI 가계부 리포트
+    // ═══════════════════════════════════════════════════════════
+    const rpt = { ym: '', doc: null, unsub: null, busy: false };
+    function rptPrevYM(n) { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - (n || 1)); return famYmd(d).slice(0, 7); }
+    function rptWatch(ym) {
+        rpt.ym = ym; if (rpt.unsub) { try { rpt.unsub(); } catch (e) {} }
+        try { rpt.unsub = db.collection('budgetReports').doc(ym).onSnapshot(d => { rpt.doc = d.exists ? d.data() : null; rptRender(); famHomeBanners(); }, () => { rpt.doc = null; rptRender(); }); } catch (e) { rptRender(); }
+    }
+    function rptMonthData(ym) {
+        const all = anaAll().filter(e => e._ym === ym), sum = (arr, t) => arr.filter(e => e.type === t).reduce((a, e) => a + e.amt, 0);
+        const byCat = {}; all.filter(e => e.type === '지출').forEach(e => byCat[e.category] = (byCat[e.category] || 0) + e.amt);
+        const byMem = {}; all.filter(e => e.type === '지출').forEach(e => byMem[e._m] = (byMem[e._m] || 0) + e.amt);
+        return { ym, n: all.length, inc: sum(all, '수입'), exp: sum(all, '지출'), byCat, byMem, fixed: all.filter(e => e.fixedId).reduce((a, e) => a + e.amt, 0) };
+    }
+    function rptRender() {
+        const el = document.getElementById('rpt-root'); if (!el) return;
+        const opts = Array.from({ length: 12 }, (_, i) => rptPrevYM(i + 1)), d = rptMonthData(rpt.ym);
+        el.innerHTML = `<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><select class="fam-sel" style="flex:1" onchange="rptWatch(this.value)">${opts.map(o => `<option value="${o}" ${o === rpt.ym ? 'selected' : ''}>${o.replace('-', '년 ')}월</option>`).join('')}</select>
+            ${d.n ? `<button class="fam-btn ${rpt.doc ? '' : 'pri'}" onclick="rptMake()" ${rpt.busy ? 'disabled' : ''}>${rpt.doc ? '다시 만들기' : '리포트 만들기'}</button>` : ''}</div>
+            <div class="fam-note" style="margin:0 0 8px">${d.n ? `수입 ${anaW(d.inc)} · 지출 ${anaW(d.exp)} · ${d.n}건${d.fixed ? ' · 고정지출 ' + anaW(d.fixed) : ''}` : '이 달의 가계부 내역이 없습니다.'}</div>
+            ${rpt.busy ? '<div><span class="fam-spin"></span>리포트를 만드는 중…</div>' : rpt.doc ? `<div class="fam-ai">${famMd(rpt.doc.text || '')}</div><div class="fam-note">${famEsc(rpt.doc.by || '')} · ${famEsc(rpt.doc.ai || '')}</div>` : ''}`;
+    }
+    async function rptMake() {
+        const ym = rpt.ym, cur = rptMonthData(ym), prev = rptMonthData(prevOf(ym)), p3 = [1, 2, 3].map(i => rptMonthData(prevOf(ym, i)));
+        function prevOf(y, n) { const d = new Date(y + '-01T00:00:00'); d.setMonth(d.getMonth() - (n || 1)); return famYmd(d).slice(0, 7); }
+        const fmt = o => `${o.ym}: 수입 ${o.inc}, 지출 ${o.exp}, 항목 ${Object.entries(o.byCat).map(([k, v]) => k + ' ' + v).join(', ') || '없음'}, 구성원별 지출 ${Object.entries(o.byMem).map(([k, v]) => k + ' ' + v).join(', ') || '없음'}, 고정지출 ${o.fixed}`;
+        rpt.busy = true; rptRender();
+        try {
+            const r = await famCallAI('너는 부부가 함께 보는 가족 가계부의 월간 리포트를 쓰는 재무 코치다. 주어진 숫자만 근거로, 평이한 한국어로 짧고 구체적으로 쓴다. 금액은 만원 단위로 반올림한다. 훈계하지 않는다.',
+                `대상 월 ${fmt(cur)}\n전월 ${fmt(prev)}\n직전 3개월: ${p3.map(fmt).join(' / ')}\n\n형식:\n**한 줄 요약**\n**잘한 점** (1~2개)\n**늘어난 지출** (전월·3개월 평균 대비 숫자)\n**구성원별 한 줄**\n**다음 달 제안** (현실적인 2~3개)`, { maxTokens: 1500 });
+            const doc = { ym, text: r.text || '', by: famUser() || '가족', ai: FAM_NAMES[famProv()] + ' · ' + famModel(famProv()), createdAt: Date.now() };
+            try { await db.collection('budgetReports').doc(ym).set(doc); } catch (e) { rpt.doc = doc; }
+        } catch (e) { famToast('리포트 실패: ' + e.message); }
+        rpt.busy = false; rptRender();
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 🏠 홈 배너 (리포트 안내 · 장보기)
+    // ═══════════════════════════════════════════════════════════
+    let rptHomeDoc = undefined;
+    function famHomeBanners() {
+        const el = document.getElementById('fam-home-banners'); if (!el) return;
+        let h = '';
+        const pym = rptPrevYM(1);
+        if (new Date().getDate() <= 10 && rptHomeDoc === null && typeof anaAll === 'function' && anaAll().some(e => e._ym === pym))
+            h += `<div class="home-banner" onclick="showSection('asset-analysis-section')"><span>📑</span><b>${+pym.slice(5)}월 가계부 리포트를 만들 수 있어요</b><span style="color:#94a3b8">›</span></div>`;
+        el.innerHTML = h;
+        famHomeToday();
+    }
+    function famHomeToday() {
+        const el = document.getElementById('home-today'); if (!el) return;
+        const now = new Date(), t = famYmd(now), ym = t.slice(0, 7), hm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        const sch = (typeof schData !== 'undefined' ? schData : []).filter(x => x.date === t).sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
+        const nx = sch.find(x => x.startTime && x.startTime >= hm) || sch.find(x => !x.startTime) || null;
+        const exp = typeof anaAll === 'function' ? anaAll().filter(e => e._ym === ym && e.type === '지출').reduce((a, e) => a + e.amt, 0) : 0;
+        const trip = (typeof planData !== 'undefined' ? planData : []).filter(p => p.start && (p.end || p.start) >= t).sort((a, b) => a.start.localeCompare(b.start))[0];
+        const dd = trip ? Math.round((new Date(trip.start + 'T00:00:00') - new Date(t + 'T00:00:00')) / 864e5) : null;
+        const shop = (famShopItems || []).filter(i => !i.done);
+        const man = n => n >= 10000 ? `${Math.round(n / 10000).toLocaleString('ko-KR')}만원` : `${n.toLocaleString('ko-KR')}원`;
+        el.innerHTML = `
+            <div class="ht-tile" onclick="showSection('schedule-section')"><small>📅 오늘 일정</small><b>${sch.length ? sch.length + '건' : '없음'}</b><span>${nx ? famEsc((nx.startTime ? nx.startTime + ' ' : '') + (nx.memo || '')) : '&nbsp;'}</span></div>
+            <div class="ht-tile" onclick="showSection('asset-section')"><small>💰 ${+ym.slice(5)}월 지출</small><b>${man(exp)}</b><span>&nbsp;</span></div>
+            <div class="ht-tile" onclick="showSection('travel-section')"><small>✈️ 다음 여행</small><b>${trip ? (dd > 0 ? 'D-' + dd : '진행 중') : '없음'}</b><span>${trip ? famEsc(trip.loc || '') : '&nbsp;'}</span></div>
+            <div class="ht-tile" onclick="showSection('shop-section')"><small>🛒 장보기</small><b>${shop.length ? shop.length + '개' : '없음'}</b><span>${shop.length ? famEsc(shop.slice(0, 3).map(i => i.text).join(', ')) : '&nbsp;'}</span></div>`;
+    }
+    function famHomeReportWatch() { try { db.collection('budgetReports').doc(rptPrevYM(1)).onSnapshot(d => { rptHomeDoc = d.exists ? d.data() : null; famHomeBanners(); }, () => {}); } catch (e) {} }
+
+    // ═══════════════════════════════════════════════════════════
+    // 🫧 채팅 @AI 멘션
+    // ═══════════════════════════════════════════════════════════
+    const MENTION = [['Claude', 'claude', '🟠'], ['GPT', 'gpt', '🟢'], ['Gemini', 'gemini', '🔵']];
+    function famMentionCheck() {
+        const ta = document.getElementById('chat-input'), box = document.getElementById('fam-mention'); if (!ta || !box) return;
+        const m = ta.value.slice(0, ta.selectionStart || ta.value.length).match(/@([A-Za-z가-힣]*)$/);
+        if (!m) { box.style.display = 'none'; return; }
+        const q = m[1].toLowerCase(), list = MENTION.filter(x => x[0].toLowerCase().startsWith(q) || q === '');
+        if (!list.length) { box.style.display = 'none'; return; }
+        const r = ta.getBoundingClientRect();
+        box.style.left = Math.max(8, r.left) + 'px'; box.style.bottom = (window.innerHeight - r.top + 6) + 'px'; box.style.minWidth = '160px';
+        box.innerHTML = list.map(([n, k, ic]) => `<button onmousedown="event.preventDefault()" onclick="famMentionPick('${n}')">${ic} @${n}<span style="margin-left:auto;font-size:11px;color:#94a3b8;font-weight:500">${(famKeys()[k] || '') ? '' : '키 없음'}</span></button>`).join('');
+        box.style.display = 'block';
+    }
+    function famMentionPick(n) {
+        const ta = document.getElementById('chat-input'); const pos = ta.selectionStart || ta.value.length;
+        const before = ta.value.slice(0, pos).replace(/@([A-Za-z가-힣]*)$/, '@' + n + ' '); ta.value = before + ta.value.slice(pos);
+        document.getElementById('fam-mention').style.display = 'none'; ta.focus(); ta.setSelectionRange(before.length, before.length);
+    }
+    function famMentionProvider(text) {
+        if (/@(claude|클로드)/i.test(text)) return 'claude';
+        if (/@(gpt|지피티|챗gpt)/i.test(text)) return 'gpt';
+        if (/@(gemini|제미나이|재미나이)/i.test(text)) return 'gemini';
+        return '';
+    }
+    async function famChatAI(text) {
+        const p = famMentionProvider(text); if (!p) return;
+        if (!(famKeys()[p] || '')) { famToast(FAM_NAMES[p] + ' API 키가 없습니다. ⚙️ 설정에서 입력하세요.'); return; }
+        famToast(FAM_NAMES[p] + '가 답변하는 중…');
+        const ctx = (typeof chatMessages !== 'undefined' ? chatMessages : []).filter(m => m.text).slice(-12).map(m => `${m.isAI ? (m.aiName || 'AI') : (m.sender || '')}: ${m.text}`).join('\n');
+        try {
+            const r = await famCallAI(`너는 부부가 쓰는 가족 채팅방에 초대된 AI "${FAM_NAMES[p]}"다. 대화 맥락을 보고 마지막 질문에 한국어로 짧고 친근하게 답한다. 최신 정보가 필요하면 웹 검색을 쓴다.`,
+                `최근 대화:\n${ctx}\n\n방금 질문: ${text.replace(/@\S+/g, '').trim()}`, { provider: p, search: true, maxTokens: 900 });
+            await db.collection('messages').add({ type: 'text', text: (r.text || '').trim() || '(응답 없음)', sender: FAM_NAMES[p], isAI: true, aiName: FAM_NAMES[p], isRead: true, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+        } catch (e) { famToast(FAM_NAMES[p] + ' 오류: ' + e.message); }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 연결 · 초기화
+    // ═══════════════════════════════════════════════════════════
+    (function () {
+        const origSend = window.sendChatMessage;
+        if (typeof origSend === 'function') {
+            window.sendChatMessage = async function () {
+                const ta = document.getElementById('chat-input'), text = (ta && ta.value || '').trim();
+                const box = document.getElementById('fam-mention'); if (box) box.style.display = 'none';
+                const r = await origSend.apply(this, arguments);
+                if (text && famMentionProvider(text) && !(typeof chatEditId !== 'undefined' && chatEditId)) famChatAI(text);
+                return r;
+            };
+        }
+        const prevShow = window.showSection;
+        window.showSection = function (id, push) {
+            prevShow(id, push);
+            if (id === 'dash-section') { const de = document.getElementById('di-dash'); if (de) de.classList.add('active'); try { renderMainDashboard(); } catch (e) {} }
+            if (id === 'main-section') { famHomeToday(); famFeedHello(); }
+            if (id === 'shop-section') { const de = document.getElementById('di-shop'); if (de) de.classList.add('active'); famShopGrid(); famShopRender(); }
+            if (id === 'asset-analysis-section') { if (!rpt.ym) rptWatch(rptPrevYM(1)); else rptRender(); }
+            { const mb = document.getElementById('fam-mention'); if (mb) mb.style.display = 'none'; }
+            if (id !== 'main-section') { famFeedClose(); const s = document.getElementById('home-sugg'); if (s) s.style.display = 'none'; }
+        };
+        document.addEventListener('input', e => { if (e.target && e.target.id === 'chat-input') famMentionCheck(); });
+        document.addEventListener('click', e => { const b = document.getElementById('fam-mention'); if (b && b.style.display === 'block' && !e.target.closest('#fam-mention') && e.target.id !== 'chat-input') b.style.display = 'none'; });
+        const _rmd = window.renderMainDashboard;
+        if (typeof _rmd === 'function') window.renderMainDashboard = function () { const r = _rmd.apply(this, arguments); famHomeToday(); return r; };
+        famFeedHello();
+        const boot = () => { famShopListen(); fxListen(); famHomeReportWatch(); setTimeout(fxRun, 6000); setInterval(fxRun, 30 * 60e3); famShopGrid(); };
+        if (typeof db !== 'undefined') setTimeout(boot, 1500);
+    })();
     </script>
 
 </body>
