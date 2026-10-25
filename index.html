@@ -1430,20 +1430,22 @@
             <div id="home-scroll" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;min-height:0;-webkit-overflow-scrolling:touch;">
                         <div id="home-today" class="home-today"></div>
                         <div id="fam-home-banners"></div>
+                        <div class="ff-tools"><button onclick="famHistOpen()">🕘 지난 대화</button><button id="ff-new" onclick="famFeedNew()">↺ 새 대화</button></div>
                         <div class="fam-feed-body" id="fam-feed-body"></div>
                         <span id="chat-unread-badge" style="display:none"></span>
-                        <div class="footer-info">Family Shared v55.0 &nbsp;·&nbsp; Jung Wooseol 2026</div>
+                        <div class="footer-info">Family Shared v58.0 &nbsp;·&nbsp; Jung Wooseol 2026</div>
                         <div style="height:150px"></div>
                         </div><!-- /main-scroll -->
             </div><!-- /main-wrap -->
             <div class="home-cmd">
                 <div id="home-sugg" class="home-sugg"></div>
                 <div class="home-hints">
-                    <button onclick="famPickCmd('/일정')">📅 일정</button><button onclick="famPickCmd('/가계부')">💰 가계부</button><button onclick="famPickCmd('/영수증')">📷 영수증</button><button onclick="famPickCmd('/쇼핑')">🛒 장보기</button><button onclick="famPickCmd('/ai')">🌐 AI 검색</button><button onclick="famPickCmd('/채팅')">🫧 채팅</button><button onclick="famPickCmd('/검색')">🔎 찾기</button>
+                    <button onclick="famPickCmd('/일정')">📅 일정</button><button onclick="famPickCmd('/가계부')">💰 가계부</button><button onclick="famReceiptMenu()">📷 영수증</button><button onclick="famPickCmd('/쇼핑')">🛒 장보기</button><button onclick="famPickCmd('/ai')">🌐 AI 검색</button><button onclick="famPickCmd('/채팅')">🫧 채팅</button><button onclick="famPickCmd('/검색')">🔎 찾기</button>
                 </div>
                 <div class="home-cmd-in">
-                    <button class="home-cmd-btn" title="어시스턴트 기록" onclick="famRun('/도움말')">❔</button>
+                    <button class="home-cmd-btn" title="사진·파일" onclick="famPlusMenu()" style="font-size:22px;font-weight:300">＋</button>
                     <input id="home-cmd-input" placeholder="무엇이든 입력하세요 · / 로 명령" autocomplete="off" enterkeyhint="send" oninput="famCmdInput(this)" onkeydown="famCmdKey(event)">
+                    <button class="home-cmd-btn" title="도움말" onclick="famHelp()" style="background:none;width:30px;font-size:15px;color:#94a3b8">❔</button>
                     <button class="home-cmd-btn go" onclick="famSubmit()">➤</button>
                 </div>
             </div>
@@ -7456,7 +7458,7 @@ function initRealtimeSync() {
         if (!key) throw new Error(FAM_NAMES[p] + ' API 키가 없습니다. 오른쪽 위 ⚙️ 설정에서 입력하세요.');
         let res, j, sources = [];
         if (p === 'claude') {
-            const body = { model, max_tokens: max, system, messages: [{ role: 'user', content: img ? [{ type: 'image', source: { type: 'base64', media_type: img.mime, data: img.data } }, { type: 'text', text: user }] : user }] };
+            const body = { model, max_tokens: max, system, messages: [{ role: 'user', content: img ? [{ type: img.mime === 'application/pdf' ? 'document' : 'image', source: { type: 'base64', media_type: img.mime, data: img.data } }, { type: 'text', text: user }] : user }] };
             if (opt.search) body.tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 12 }];
             res = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' }, body: JSON.stringify(body) });
             j = await res.json(); if (!res.ok) throw new Error(j.error?.message || res.status);
@@ -7483,7 +7485,7 @@ function initRealtimeSync() {
             (j.output || []).forEach(o => (o.content || []).forEach(c => { if (!j.output_text && c.text) text += c.text; (c.annotations || []).forEach(a => { if (a.url) sources.push({ url: a.url, title: a.title || a.url }); }); }));
             return { text, sources };
         }
-        res = await fetch('https://api.openai.com/v1/chat/completions', { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + key }, body: JSON.stringify({ model, messages: [{ role: 'system', content: system }, { role: 'user', content: img ? [{ type: 'text', text: user }, { type: 'image_url', image_url: { url: 'data:' + img.mime + ';base64,' + img.data } }] : user }] }) });
+        res = await fetch('https://api.openai.com/v1/chat/completions', { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + key }, body: JSON.stringify({ model, messages: [{ role: 'system', content: system }, { role: 'user', content: img ? [{ type: 'text', text: user }, img.mime === 'application/pdf' ? { type: 'file', file: { filename: img.name || 'document.pdf', file_data: 'data:application/pdf;base64,' + img.data } } : { type: 'image_url', image_url: { url: 'data:' + img.mime + ';base64,' + img.data } }] : user }], max_completion_tokens: max }) });
         j = await res.json(); if (!res.ok) throw new Error(j.error?.message || res.status);
         return { text: j.choices?.[0]?.message?.content || '', sources };
     }
@@ -7813,6 +7815,10 @@ headline은 오늘의 흐름을 한 문장으로.
         @media(max-width:420px){.home-today{grid-template-columns:repeat(2,1fr)}}
         #home-scroll{scroll-padding-bottom:170px}
         #home-scroll>*{flex-shrink:0}
+        .ff-tools{display:flex;justify-content:flex-end;gap:4px;width:100%;max-width:760px;margin:0 auto;padding:2px 14px 0;box-sizing:border-box}
+        .ff-tools button{border:none;background:none;color:#94a3b8;font-size:11.5px;font-weight:600;padding:4px 6px;cursor:pointer;font-family:inherit}
+        .ff-hist-view .fam-btn,.ff-hist-view input,.ff-hist-view select,.ff-hist-view .ff-res{pointer-events:none}
+        .ff-hist-view .fam-btns{display:none}
         #fam-home-banners{width:100%;max-width:760px;margin:0 auto;padding:4px 14px 0;box-sizing:border-box}
         .ff-hello{text-align:center;color:#64748b;font-size:13px;padding:22px 8px 6px;line-height:1.7}
         .ff-hello b{display:block;font-size:17px;color:#1e293b;margin-bottom:4px}
@@ -7852,6 +7858,8 @@ headline은 오늘의 흐름을 한 문장으로.
 
     <div id="fam-mention"></div>
     <input type="file" id="fam-receipt-input" accept="image/*" multiple style="display:none" onchange="famReceiptFile(this)">
+    <input type="file" id="fam-cam-input" accept="image/*" capture="environment" style="display:none" onchange="famReceiptFile(this)">
+    <input type="file" id="fam-doc-input" accept="image/*,application/pdf,.pdf,.txt,.md,.csv,.json,.html,.xml,.log" style="display:none" onchange="famDocFile(this)">
 
     <script>
     // ═══════════════════════════════════════════════════════════
@@ -7954,7 +7962,7 @@ headline은 오늘의 흐름을 한 문장으로.
     const CMDS = [
         ['/일정', '내일 7시 치과', '일정 추가'], ['/가계부', '점심 12000', '가계부 기록'], ['/영수증', '', '사진으로 가계부 기록'],
         ['/채팅', '저녁 뭐 먹어?', '가족 채팅 보내기'], ['/쇼핑', '우유 계란', '장보기 목록 추가'], ['/검색', '캠핑', '앱 안에서 찾기'],
-        ['/ai', '이번 주말 서울 날씨', 'AI 웹 검색'], ['/뉴스', '', '오늘 NEWS'], ['/리포트', '', '지난달 가계부 리포트'], ['/고정지출', '', '고정지출 관리'], ['/지우기', '', '홈 대화 지우기']
+        ['/ai', '이번 주말 서울 날씨', 'AI 웹 검색'], ['/뉴스', '', '오늘 NEWS'], ['/리포트', '', '지난달 가계부 리포트'], ['/고정지출', '', '고정지출 관리'], ['/파일', '', '사진·PDF 요약·번역'], ['/새대화', '', '대화 초기화 (기록은 지난 대화에 보관)'], ['/지난대화', '', '지난 대화 보기']
     ];
     let famSuggIdx = 0;
     function famCmdInput(el) {
@@ -7968,7 +7976,7 @@ headline은 오늘의 흐름을 한 문장으로.
     }
     function famPickCmd(c) {
         const el = document.getElementById('home-cmd-input'); document.getElementById('home-sugg').style.display = 'none';
-        if (['/영수증', '/뉴스', '/리포트', '/고정지출', '/지우기'].includes(c)) { el.value = ''; famRun(c); return; }
+        if (['/영수증', '/뉴스', '/리포트', '/고정지출', '/지우기', '/새대화', '/지난대화', '/파일', '/도움말'].includes(c)) { el.value = ''; famRun(c); return; }
         el.value = c + ' '; el.focus();
     }
     function famCmdKey(e) {
@@ -7979,13 +7987,65 @@ headline은 오늘의 흐름을 한 문장으로.
         }
     }
     function famSubmit() { const el = document.getElementById('home-cmd-input'); const v = el.value.trim(); if (!v) return; el.value = ''; document.getElementById('home-sugg').style.display = 'none'; famRun(v); }
+    function famFeedSave() {
+        const b = document.getElementById('fam-feed-body'); if (!b) return;
+        const c = b.cloneNode(true); c.querySelectorAll('.ff-hello').forEach(x => x.remove());
+        c.querySelectorAll('.fam-spin').forEach(x => { const card = x.closest('.ff-card'); if (card) card.innerHTML = '⚠️ 처리 중에 앱이 닫혔습니다. 다시 시도해 주세요.'; });
+        let h = c.innerHTML;
+        while (h.length > 1500000 && c.firstElementChild) { c.firstElementChild.remove(); h = c.innerHTML; }
+        try { localStorage.setItem('famFeed', h); } catch (e) {}
+    }
+    let famFeedSaveT = null;
+    function famFeedWatch() {
+        const b = document.getElementById('fam-feed-body'); if (!b || b._watch) return; b._watch = 1;
+        try { const h = localStorage.getItem('famFeed'); if (h && !b.querySelector('.ff-card,.ff-me')) b.innerHTML = h; } catch (e) {}
+        new MutationObserver(() => { clearTimeout(famFeedSaveT); famFeedSaveT = setTimeout(famFeedSave, 600); }).observe(b, { childList: true, subtree: true, characterData: true });
+        setTimeout(() => { const sc = document.getElementById('home-scroll'); if (sc) sc.scrollTop = sc.scrollHeight; }, 300);
+    }
     function famFeedHello() {
         const b = document.getElementById('fam-feed-body'); if (!b || b.children.length) return;
-        b.innerHTML = `<div class="ff-hello"><b>무엇을 도와드릴까요?</b>말하듯 입력하면 일정·가계부·장보기로 정리합니다.<br>예) 내일 저녁 7시 치과 · 점심 12000 · /쇼핑 우유 계란<br>영수증·결제내역 캡처는 📷 영수증</div>`;
+        b.innerHTML = `<div class="ff-hello"><b>무엇을 도와드릴까요?</b>말하듯 입력하면 일정·가계부·장보기로 정리합니다.<br>예) 내일 저녁 7시 치과 · 점심 12000 · /쇼핑 우유 계란<br>영수증 촬영·사진, 파일 요약·번역은 ＋ 버튼</div>`;
     }
     function famFeedOpen() { const m = document.getElementById('main-section'); if (m && !m.classList.contains('active')) showSection('main-section'); }
     function famFeedClose() {}
-    function famFeedClear() { document.getElementById('fam-feed-body').innerHTML = ''; famFeedHello(); }
+    function famFeedClear() { famFeedNew(); }
+    // ── 새 대화 · 지난 대화 (이 폰에 보관) ──
+    function famHistGet() { try { return JSON.parse(localStorage.getItem('famFeedHist') || '[]'); } catch (e) { return []; } }
+    function famHistPut(list) {
+        for (let n = list.length; n >= 0; n--) { try { localStorage.setItem('famFeedHist', JSON.stringify(list.slice(0, n))); return; } catch (e) {} }
+    }
+    function famFeedNew() {
+        const b = document.getElementById('fam-feed-body'); famFeedSave();
+        const items = b.querySelectorAll('.ff-card,.ff-me');
+        if (!items.length) { famToast('새 대화입니다'); return; }
+        let html = ''; try { html = localStorage.getItem('famFeed') || ''; } catch (e) {}
+        const first = b.querySelector('.ff-me'), title = (first ? first.textContent : items[0].textContent).trim().slice(0, 40);
+        const list = famHistGet(); list.unshift({ id: 'h' + Date.now(), ts: Date.now(), title, n: b.querySelectorAll('.ff-me').length, html });
+        famHistPut(list.slice(0, 100));
+        b.innerHTML = ''; try { localStorage.removeItem('famFeed'); } catch (e) {} famFeedHello();
+        famToast('새 대화를 시작합니다 · 이전 대화는 🕘 지난 대화에 있습니다');
+    }
+    function famHistOpen() {
+        const list = famHistGet(), fmt = t => { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+        famSheet(`<div class="fam-h"><b>🕘 지난 대화</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
+            <div class="fam-box">${list.length ? list.map(h => `<div style="display:flex;align-items:center;border-bottom:1px solid #eef2f7"><button class="ff-res" style="border:0;flex:1" onclick="famHistView('${h.id}')"><i>💬</i><div>${famEsc(h.title || '(내용 없음)')}<small>${fmt(h.ts)} · 입력 ${h.n || 0}개</small></div></button><button class="fam-x" style="width:26px;height:26px;font-size:11px;flex:none" onclick="famHistDel('${h.id}')">✕</button></div>`).join('') : '<div class="fam-note">보관된 대화가 없습니다. ↺ 새 대화를 누르면 지금 대화가 여기로 옮겨집니다.</div>'}</div>
+            <div class="fam-note">이 폰에만 저장됩니다.</div>`);
+    }
+    function famHistView(id) {
+        const h = famHistGet().find(x => x.id === id); if (!h) return;
+        famSheet(`<div class="fam-h"><button class="fam-btn" style="padding:5px 10px;font-size:12px" onclick="famHistOpen()">◀ 목록</button><b style="flex:1;margin-left:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${famEsc(h.title || '')}</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
+            <div class="fam-feed-body ff-hist-view" style="padding:0">${h.html}</div>
+            <div class="fam-btns"><button class="fam-btn" onclick="famHistRestore('${id}')">이 대화 이어서 하기</button></div>`);
+    }
+    function famHistRestore(id) {
+        const list = famHistGet(), h = list.find(x => x.id === id); if (!h) return;
+        const b = document.getElementById('fam-feed-body');
+        if (b.querySelector('.ff-card,.ff-me')) famFeedNew();
+        famHistPut(famHistGet().filter(x => x.id !== id));
+        b.innerHTML = h.html; famSheetClose(); famFeedSave();
+        setTimeout(() => { const sc = document.getElementById('home-scroll'); if (sc) sc.scrollTop = sc.scrollHeight; }, 50);
+    }
+    function famHistDel(id) { if (!confirm('이 대화를 삭제할까요?')) return; famHistPut(famHistGet().filter(x => x.id !== id)); famHistOpen(); }
     function famFeedAdd(html, cls) {
         const b = document.getElementById('fam-feed-body'), h = b.querySelector('.ff-hello'); if (h) h.remove();
         const d = document.createElement('div'); d.className = cls || 'ff-card'; d.innerHTML = html; b.appendChild(d); famFeedOpen();
@@ -7995,11 +8055,14 @@ headline은 오늘의 흐름을 한 문장으로.
 
     function famRun(raw) {
         const m = raw.match(/^\/(\S+)\s*([\s\S]*)$/), cmd = m ? m[1].toLowerCase() : '', arg = m ? m[2].trim() : raw;
-        if (cmd === '지우기') return famFeedClear();
+        if (cmd === '지우기' || cmd === '새대화') return famFeedNew();
+        if (cmd === '지난대화') return famHistOpen();
+        if (cmd === '도움말' || cmd === 'help') return famHelp();
+        if (cmd === '영수증') return famReceiptMenu();
+        if (cmd === '파일') return famDocPick();
         famMe(raw);
         if (cmd === '일정') return famSchCard(arg);
         if (cmd === '가계부') return famAssetCard(arg);
-        if (cmd === '영수증') { famFeedAdd('📷 영수증 사진이나 결제내역 캡처를 선택하세요. 여러 장도 됩니다.'); document.getElementById('fam-receipt-input').click(); return; }
         if (cmd === '채팅') return famChatSend(arg);
         if (cmd === '쇼핑') return arg ? famShopAdd(arg, true) : (famFeedClose(), showSection('shop-section'));
         if (cmd === '검색') return famSearch(arg);
@@ -8007,7 +8070,6 @@ headline은 오늘의 흐름을 한 문장으로.
         if (cmd === '뉴스' || cmd === 'news') { famFeedClose(); return showSection('news-section'); }
         if (cmd === '리포트') { famFeedClose(); showSection('asset-analysis-section'); return; }
         if (cmd === '고정지출') { famFeedClose(); return fxOpen(); }
-        if (cmd === '도움말' || cmd === 'help') return famFeedAdd('<h5>사용할 수 있는 명령</h5>' + CMDS.map(c => `<div><b>${c[0]}</b> ${c[1] ? famEsc(c[1]) + ' — ' : ''}${c[2]}</div>`).join('') + '<div class="fam-note">슬래시 없이 써도 금액이 있으면 가계부, 날짜·시간이 있으면 일정, 질문이면 AI로 연결합니다.</div>');
         if (m) return famFeedAdd(`"/${famEsc(cmd)}"는 없는 명령입니다. <b>/도움말</b>을 입력해 보세요.`);
         // 슬래시 없음 → 자동 분류
         const a = famParseAmount(raw);
@@ -8163,6 +8225,7 @@ JSON만 출력: {"items":[{"date":"YYYY-MM-DD 또는 빈 문자열","store":"가
             <div class="fam-btns"><button class="fam-btn pri" onclick="famRcSave('${id}',this)">선택한 건 저장</button></div>`);
     }
     async function famRcSave(id, btn) {
+        if (!famRcData[id]) { famToast('앱을 다시 열어 정보가 사라졌습니다. 사진을 다시 올려주세요.'); return; }
         const list = famRcData[id] || [], mem = document.getElementById(id + '-mem').value, pay = document.getElementById(id + '-pay').value;
         const rows = [...document.querySelectorAll(`#${id} .rc-row`)].filter(r => r.querySelector('input[type=checkbox]').checked);
         if (!rows.length) { famToast('저장할 항목을 선택하세요'); return; }
@@ -8178,6 +8241,86 @@ JSON만 출력: {"items":[{"date":"YYYY-MM-DD 또는 빈 문자열","store":"가
             btn.closest('.ff-card').innerHTML = `✅ ${n}건 · 합계 <b>${sum.toLocaleString('ko-KR')}원</b> — 가계부에 기록했습니다. (${famEsc(mem)})`;
         } catch (e) { btn.disabled = false; famToast('저장 실패: ' + e.message); }
     }
+
+    // ═══════════════════════════════════════════════════════════
+    // ❔ 도움말 · ＋ 메뉴 (팝업)
+    // ═══════════════════════════════════════════════════════════
+    function famHelp() {
+        famSheet(`<div class="fam-h"><b>❔ 사용법</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
+            <div class="fam-box"><h4>그냥 입력하면</h4><div style="font-size:13px;line-height:1.8;color:#334155">
+                금액이 있으면 → 가계부 <span style="color:#94a3b8">예) 점심 12000 · 택시 1만5천원 현금</span><br>
+                날짜·시간이 있으면 → 일정 <span style="color:#94a3b8">예) 내일 저녁 7시 치과</span><br>
+                질문이면 → AI 웹 검색 <span style="color:#94a3b8">예) 이번 주말 서울 날씨?</span><br>
+                그 외 → 앱 안에서 찾기</div></div>
+            <div class="fam-box"><h4>/ 명령</h4>${CMDS.map(c => `<button class="ff-res" onclick="famSheetClose();famPickCmd('${c[0]}')"><i style="width:auto;min-width:64px;text-align:left;font-weight:800;color:#1e293b">${c[0]}</i><div>${c[2]}${c[1] ? `<small>예) ${famEsc(c[1])}</small>` : ''}</div></button>`).join('')}</div>
+            <div class="fam-box"><h4>＋ 버튼</h4><div style="font-size:13px;line-height:1.8;color:#334155">영수증 촬영·사진 업로드, 사진·PDF 요약과 번역</div></div>
+            <div class="fam-note">저장 전에는 항상 확인 카드가 뜹니다.</div>`);
+    }
+    function famPlusMenu() {
+        famSheet(`<div class="fam-h"><b>＋ 추가</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
+            <div class="fam-box">
+                <button class="ff-res" onclick="famSheetClose();document.getElementById('fam-cam-input').click()"><i>📷</i><div>영수증 촬영<small>찍으면 바로 읽어서 가계부 카드로</small></div></button>
+                <button class="ff-res" onclick="famSheetClose();document.getElementById('fam-receipt-input').click()"><i>🧾</i><div>영수증·결제내역 사진<small>앨범에서 여러 장 · 카드 앱 캡처도 됩니다</small></div></button>
+                <button class="ff-res" onclick="famSheetClose();famDocPick()"><i>📄</i><div>사진·파일 요약 / 번역<small>사진, PDF, 텍스트 파일</small></div></button>
+            </div>`);
+    }
+    function famReceiptMenu() {
+        famSheet(`<div class="fam-h"><b>📷 영수증</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
+            <div class="fam-box">
+                <button class="ff-res" onclick="famSheetClose();document.getElementById('fam-cam-input').click()"><i>📷</i><div>촬영<small>찍으면 바로 읽습니다</small></div></button>
+                <button class="ff-res" onclick="famSheetClose();document.getElementById('fam-receipt-input').click()"><i>🖼️</i><div>사진 선택<small>여러 장 · 결제내역 캡처 가능</small></div></button>
+            </div>`);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 📄 사진·파일 요약 / 번역
+    // ═══════════════════════════════════════════════════════════
+    const famDocs = {};
+    function famDocPick() { document.getElementById('fam-doc-input').click(); }
+    function famReadB64(file) { return new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = () => no(new Error('파일을 읽지 못했습니다')); r.readAsDataURL(file); }); }
+    async function famDocFile(input) {
+        const f = input.files && input.files[0]; input.value = ''; if (!f) return;
+        const name = f.name || '파일', isImg = /^image\//.test(f.type), isPdf = f.type === 'application/pdf' || /\.pdf$/i.test(name);
+        const isTxt = /^text\//.test(f.type) || /\.(txt|md|csv|json|html|xml|log)$/i.test(name);
+        if (!isImg && !isPdf && !isTxt) { famFeedAdd('⚠️ 사진, PDF, 텍스트 파일만 됩니다. Word·엑셀은 PDF로 저장해서 올려주세요.'); return; }
+        if (f.size > 25 * 1024 * 1024) { famFeedAdd('⚠️ 25MB 이하 파일만 됩니다.'); return; }
+        const id = 'doc' + Date.now();
+        try {
+            if (isImg) famDocs[id] = { name, image: { mime: 'image/jpeg', data: await famImgToB64(f, 2000) } };
+            else if (isPdf) famDocs[id] = { name, image: { mime: 'application/pdf', data: await famReadB64(f), name } };
+            else { const t = await f.text(); famDocs[id] = { name, text: t.length > 60000 ? t.slice(0, 60000) + '\n…(이후 생략)' : t }; }
+        } catch (e) { famFeedAdd('⚠️ ' + famEsc(e.message)); return; }
+        const icon = isImg ? '🖼️' : isPdf ? '📕' : '📄', kb = f.size > 1048576 ? (f.size / 1048576).toFixed(1) + 'MB' : Math.max(1, Math.round(f.size / 1024)) + 'KB';
+        famFeedAdd(`<h5>${icon} ${famEsc(name)} <small style="color:#94a3b8;font-weight:500">${kb}</small></h5>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+                <button class="fam-btn pri" onclick="famDocRun('${id}','sum',this)">요약</button>
+                <button class="fam-btn" onclick="famDocRun('${id}','ko',this)">한국어로 번역</button>
+                <button class="fam-btn" onclick="famDocRun('${id}','en',this)">영어로</button>
+                <button class="fam-btn" onclick="famDocRun('${id}','zh',this)">중국어로</button>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:8px"><input id="${id}-q" class="fam-sel" style="flex:1" placeholder="이 파일에 대해 질문하기" onkeydown="if(event.key==='Enter'){event.preventDefault();famDocRun('${id}','q',this)}"><button class="fam-btn" onclick="famDocRun('${id}','q',this)">묻기</button></div>`);
+    }
+    async function famDocRun(id, mode, btn) {
+        const d = famDocs[id]; if (!d) { famToast('파일을 다시 올려주세요'); return; }
+        const LANG = { ko: '한국어', en: '영어', zh: '중국어(간체)' };
+        let task;
+        if (mode === 'sum') task = '이 자료를 한국어로 요약하라. 맨 위에 한 줄 결론, 그다음 핵심 3~6개를 bullet로. 숫자·날짜·고유명사는 원문 그대로 정확히. 표가 있으면 핵심 수치만 정리.';
+        else if (mode === 'q') { const q = (document.getElementById(id + '-q').value || '').trim(); if (!q) { famToast('질문을 입력하세요'); return; } document.getElementById(id + '-q').value = ''; task = '이 자료를 근거로 질문에 한국어로 답하라. 자료에 없는 내용은 없다고 말하라.\n질문: ' + q; famMe(q); }
+        else task = `이 자료의 글을 ${LANG[mode]}로 번역하라. 원문의 문단·목록 구조를 유지하고, 번역문만 출력하라. 사진이면 보이는 글자를 모두 옮긴다.`;
+        const label = mode === 'sum' ? '요약' : mode === 'q' ? '답변' : LANG[mode] + ' 번역';
+        const c = famFeedAdd(`<span class="fam-spin"></span>${famEsc(d.name)} ${label} 중…`);
+        try {
+            const r = await famCallAI('너는 가족이 쓰는 앱의 문서 도우미다. 자료에 있는 내용만 사용하고 추측하지 않는다.',
+                d.text != null ? `[파일: ${d.name}]\n${d.text}\n\n${task}` : task, { image: d.image, maxTokens: mode === 'sum' || mode === 'q' ? 2000 : 6000 });
+            const out = (r.text || '').trim() || '(응답 없음)', oid = id + '-o' + Date.now();
+            c.innerHTML = `<h5>${mode === 'sum' ? '📝' : mode === 'q' ? '💬' : '🌐'} ${famEsc(d.name)} · ${label}</h5><div class="fam-ai" id="${oid}">${famMd(out)}</div>
+                <div class="fam-btns" style="justify-content:flex-start"><button class="fam-btn" style="padding:5px 10px;font-size:12px" onclick="famCopy('${oid}')">복사</button><button class="fam-btn" style="padding:5px 10px;font-size:12px" onclick="famDocToChat('${oid}')">가족 채팅으로 보내기</button></div>
+                <div class="fam-note">${famEsc(FAM_NAMES[famProv()])}</div>`;
+            c.dataset.raw = out;
+        } catch (e) { c.innerHTML = '⚠️ ' + famEsc(e.message); }
+    }
+    function famCopy(oid) { const c = document.getElementById(oid).closest('.ff-card'); const t = c.dataset.raw || document.getElementById(oid).innerText; (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => famToast('복사했습니다'), () => famToast('복사하지 못했습니다')); }
+    function famDocToChat(oid) { const c = document.getElementById(oid).closest('.ff-card'); const t = c.dataset.raw || document.getElementById(oid).innerText; famChatSend(t.length > 3000 ? t.slice(0, 3000) + '…' : t); }
 
     // ═══════════════════════════════════════════════════════════
     // 🛒 쇼핑 · 장보기 목록
@@ -8387,7 +8530,7 @@ JSON만 출력: {"items":[{"date":"YYYY-MM-DD 또는 빈 문자열","store":"가
         document.addEventListener('click', e => { const b = document.getElementById('fam-mention'); if (b && b.style.display === 'block' && !e.target.closest('#fam-mention') && e.target.id !== 'chat-input') b.style.display = 'none'; });
         const _rmd = window.renderMainDashboard;
         if (typeof _rmd === 'function') window.renderMainDashboard = function () { const r = _rmd.apply(this, arguments); famHomeToday(); return r; };
-        famFeedHello();
+        famFeedWatch(); famFeedHello();
         const boot = () => { famShopListen(); fxListen(); famHomeReportWatch(); setTimeout(fxRun, 6000); setInterval(fxRun, 30 * 60e3); famShopGrid(); };
         if (typeof db !== 'undefined') setTimeout(boot, 1500);
     })();
