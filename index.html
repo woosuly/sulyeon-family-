@@ -1441,7 +1441,7 @@
                         <div class="ff-tools"><button onclick="famHistOpen()">🕘 지난 대화</button><button id="ff-new" onclick="famFeedNew()">↺ 새 대화</button></div>
                         <div class="fam-feed-body" id="fam-feed-body"></div>
                         <span id="chat-unread-badge" style="display:none"></span>
-                        <div class="footer-info">Family Shared v67.0 &nbsp;·&nbsp; Jung Wooseol 2026</div>
+                        <div class="footer-info">Family Shared v68.0 &nbsp;·&nbsp; Jung Wooseol 2026</div>
                         <div style="height:150px"></div>
                         </div><!-- /main-scroll -->
             </div><!-- /main-wrap -->
@@ -2424,12 +2424,12 @@
                     <button onclick="showSection('main-section')" class="btn-home">🏠 Home</button>
                 </div>
                 <div class="fam-box">
-                    <h4 style="display:flex;align-items:center">💰 저축 목표<button class="fam-btn" style="margin-left:auto;padding:4px 10px;font-size:11px" onclick="svGoalForm()">＋ 목표</button></h4>
+                    <h4 style="display:flex;align-items:center">💰 저축<button class="fam-btn" style="margin-left:auto;padding:4px 10px;font-size:11px" onclick="svGoalForm()">＋ 저축</button></h4>
                     <div id="sv-goals"></div>
                 </div>
                 <div class="fam-box">
                     <h4 style="display:flex;align-items:center">🔁 정기 이체<button class="fam-btn" style="margin-left:auto;padding:4px 10px;font-size:11px" onclick="fxForm()">＋ 추가</button></h4>
-                    <div class="fam-note" style="margin:0 0 8px">매월 지정일이 되면 자동으로 기록됩니다. 지출은 가계부에, 저축은 목표에 쌓입니다. 같은 달에 두 번 기록되지 않습니다.</div>
+                    <div class="fam-note" style="margin:0 0 8px">매월 지정일이 되면 자동으로 기록됩니다. 지출은 가계부에, 저축은 해당 저축에 쌓입니다. 같은 달에 두 번 기록되지 않습니다.</div>
                     <div id="sv-fixed"></div>
                 </div>
             </div>
@@ -8871,19 +8871,19 @@ JSON만 출력: {"items":[{"date":"YYYY-MM-DD 또는 빈 문자열","store":"가
             const saved = svSaved(x.id), tgt = Number(x.target) || 0, pct = tgt ? Math.min(100, Math.round(saved / tgt * 100)) : 0, ml = svMonthsLeft(x.deadline), need = tgt > saved && ml ? Math.ceil((tgt - saved) / ml / 1000) * 1000 : 0;
             const auto = fxList.filter(f => f.kind === 'saving' && f.goalId === x.id && f.active !== false).reduce((a, f) => a + (Number(f.amt) || 0), 0);
             return `<div class="sv-goal" onclick="svGoalView('${x.id}')">
-                <div style="display:flex;align-items:baseline;gap:6px"><b style="font-size:14.5px;color:#1e293b;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${famEsc(x.name)}</b><span style="margin-left:auto;font-weight:800;color:${pct >= 100 ? '#059669' : 'var(--month-header)'}">${pct}%</span></div>
+                <div style="display:flex;align-items:baseline;gap:6px"><b style="font-size:14.5px;color:#1e293b;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${famEsc(x.name)}</b><span style="margin-left:auto;font-weight:800;color:${pct >= 100 ? '#059669' : 'var(--month-header)'}">${tgt ? pct + '%' : svW(saved)}</span></div>
                 ${x.account ? `<div style="font-size:11px;color:#94a3b8;margin-top:1px">🏦 ${famEsc(x.account)}</div>` : ''}
-                <div class="sv-bar"><i style="width:${pct}%;${pct >= 100 ? 'background:#10b981' : ''}"></i></div>
-                <div style="display:flex;font-size:12px;color:#475569"><span>${svW(saved)}${tgt ? ' / ' + svW(tgt) : ''}</span><span style="margin-left:auto;color:#94a3b8">${pct >= 100 && tgt ? '🎉 달성' : x.deadline ? `${famEsc(x.deadline)}까지${need ? ` · 매달 ${svW(need)}` : ''}` : ''}</span></div>
+                ${tgt ? `<div class="sv-bar"><i style="width:${pct}%;${pct >= 100 ? 'background:#10b981' : ''}"></i></div>` : '<div style="height:6px"></div>'}
+                <div style="display:flex;font-size:12px;color:#475569"><span>${tgt ? svW(saved) + ' / ' + svW(tgt) : '누적 ' + svW(saved) + ' · 목표 금액 없음'}</span><span style="margin-left:auto;color:#94a3b8">${pct >= 100 && tgt ? '🎉 달성' : x.deadline ? `${famEsc(x.deadline)}까지${need ? ` · 매달 ${svW(need)}` : ''}` : ''}</span></div>
                 ${auto ? `<div style="font-size:11px;color:#94a3b8;margin-top:2px">🔁 정기 저축 매달 ${svW(auto)}${need && auto < need ? ` · <span style="color:#d97706">${svW(need - auto)} 부족</span>` : ''}</div>` : ''}
                 <div style="margin-top:8px;display:flex;gap:6px" onclick="event.stopPropagation()"><button class="fam-btn pri" style="padding:5px 12px;font-size:12px" onclick="svLogForm('${x.id}',1)">＋ 입금</button><button class="fam-btn" style="padding:5px 12px;font-size:12px" onclick="svLogForm('${x.id}',-1)">－ 출금</button></div>
             </div>`;
-        }).join('') : '<div class="fam-note" style="text-align:center;padding:10px 0">목표를 만들어 계좌나 목적별로 모아 보세요. 예) 여행 자금 · 비상금 · 자동차</div>';
+        }).join('') : '<div class="fam-note" style="text-align:center;padding:10px 0">계좌나 목적별로 저축을 만들어 모아 보세요. 목표 금액은 없어도 됩니다. 예) 청약 · 비상금 · 여행 자금</div>';
         const rows = fxList.slice().sort((a, b) => (+a.day || 0) - (+b.day || 0));
         fx.innerHTML = rows.length ? rows.map(f => {
             const isS = f.kind === 'saving', goal = isS ? svGoals.find(x => x.id === f.goalId) : null;
             return `<div class="fam-row"><input type="checkbox" ${f.active !== false ? 'checked' : ''} onchange="fxSet('${f.id}',{active:this.checked})" style="width:18px;height:18px;accent-color:var(--month-header)">
-                <span style="flex:1;min-width:0;cursor:pointer" onclick="fxForm('${f.id}')"><b>${famEsc(f.name)}</b> <small class="sv-tag ${isS ? 's' : ''}">${isS ? '저축' : '지출'}</small><br><small style="color:#94a3b8">매월 ${+f.day}일 · ${isS ? '→ ' + famEsc(goal ? goal.name : '(목표 없음)') : famEsc(f.category) + ' · ' + famEsc(f.member) + ' · ' + famEsc(f.pay)}</small></span>
+                <span style="flex:1;min-width:0;cursor:pointer" onclick="fxForm('${f.id}')"><b>${famEsc(f.name)}</b> <small class="sv-tag ${isS ? 's' : ''}">${isS ? '저축' : '지출'}</small><br><small style="color:#94a3b8">매월 ${+f.day}일 · ${isS ? '→ ' + famEsc(goal ? goal.name : '(쌓을 곳 없음)') : famEsc(f.category) + ' · ' + famEsc(f.member) + ' · ' + famEsc(f.pay)}</small></span>
                 <b style="white-space:nowrap">${svW(f.amt)}</b></div>`;
         }).join('') + (() => { const on = rows.filter(f => f.active !== false), e = on.filter(f => f.kind !== 'saving').reduce((a, f) => a + (+f.amt || 0), 0), v = on.filter(f => f.kind === 'saving').reduce((a, f) => a + (+f.amt || 0), 0); return `<div class="fam-note" style="text-align:right">매월 지출 ${svW(e)} · 저축 ${svW(v)}</div>`; })()
             : '<div class="fam-note">등록된 정기 이체가 없습니다. 관리비·통신비·적금 등을 넣어 두세요.</div>';
@@ -8891,11 +8891,11 @@ JSON만 출력: {"items":[{"date":"YYYY-MM-DD 또는 빈 문자열","store":"가
     // ── 목표 ──
     function svGoalForm(id) {
         const x = id ? svGoals.find(g => g.id === id) : {};
-        famSheet(`<div class="fam-h"><b>${id ? '✏️ 목표 수정' : '💰 새 저축 목표'}</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
+        famSheet(`<div class="fam-h"><b>${id ? '✏️ 저축 수정' : '💰 새 저축'}</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
             <div class="ff-form">
-                <div class="full"><label>목표 이름</label><input id="svg-name" value="${famEsc(x.name || '')}" placeholder="예: 제주 여행 자금"></div>
+                <div class="full"><label>이름</label><input id="svg-name" value="${famEsc(x.name || '')}" placeholder="예: 주택청약 / 제주 여행 자금"></div>
                 <div class="full"><label>계좌·보관처 (선택)</label><input id="svg-acc" value="${famEsc(x.account || '')}" placeholder="예: 카카오뱅크 세이프박스"></div>
-                <div><label>목표 금액 (만원)</label><input id="svg-tgt" type="number" inputmode="numeric" value="${x.target ? x.target / 10000 : ''}" placeholder="300"></div>
+                <div><label>목표 금액 (만원, 선택)</label><input id="svg-tgt" type="number" inputmode="numeric" value="${x.target ? x.target / 10000 : ''}" placeholder="300"></div>
                 <div><label>목표 시점 (선택)</label><input id="svg-dl" type="month" value="${famEsc((x.deadline || '').slice(0, 7))}"></div>
                 ${id ? '' : '<div class="full"><label>이미 모은 금액 (만원, 선택)</label><input id="svg-init" type="number" inputmode="numeric" placeholder="0"></div>'}
             </div>
@@ -8903,7 +8903,7 @@ JSON만 출력: {"items":[{"date":"YYYY-MM-DD 또는 빈 문자열","store":"가
     }
     async function svGoalSave(id) {
         const v = k => (document.getElementById('svg-' + k) || {}).value || '', name = v('name').trim();
-        if (!name) { famToast('목표 이름을 입력하세요'); return; }
+        if (!name) { famToast('이름을 입력하세요'); return; }
         const doc = { name, account: v('acc').trim(), target: Math.round((+v('tgt') || 0) * 10000), deadline: v('dl') };
         try {
             if (id) await db.collection('savingsGoals').doc(id).update(doc);
@@ -8915,9 +8915,9 @@ JSON만 출력: {"items":[{"date":"YYYY-MM-DD 또는 빈 문자열","store":"가
             famSheetClose(); famToast('저장했습니다');
         } catch (e) { famToast('저장 실패: ' + e.message); }
     }
-    function svGoalArchive(id) { if (confirm('이 목표를 보관할까요? 목록에서 숨겨지고 기록은 남습니다.')) db.collection('savingsGoals').doc(id).update({ archived: true }).then(famSheetClose).catch(e => famToast(e.message)); }
+    function svGoalArchive(id) { if (confirm('이 저축을 보관할까요? 목록에서 숨겨지고 기록은 남습니다.')) db.collection('savingsGoals').doc(id).update({ archived: true }).then(famSheetClose).catch(e => famToast(e.message)); }
     async function svGoalDel(id) {
-        if (!confirm('목표와 입출금 기록을 모두 삭제할까요?')) return;
+        if (!confirm('이 저축과 입출금 기록을 모두 삭제할까요?')) return;
         try { const b = db.batch(); svLogs.filter(l => l.goalId === id).forEach(l => b.delete(db.collection('savingsLogs').doc(l.id))); b.delete(db.collection('savingsGoals').doc(id)); await b.commit(); famSheetClose(); } catch (e) { famToast(e.message); }
     }
     function svGoalView(id) {
@@ -8926,7 +8926,7 @@ JSON만 출력: {"items":[{"date":"YYYY-MM-DD 또는 빈 문자열","store":"가
         famSheet(`<div class="fam-h"><b>💰 ${famEsc(x.name)}</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
             <div style="font-size:13px;color:#475569;margin:-4px 0 10px">${svW(svSaved(id))}${x.target ? ' / ' + svW(x.target) : ''}${x.account ? ' · ' + famEsc(x.account) : ''}</div>
             <div class="fam-box">${logs.length ? logs.map(l => `<div class="fam-row"><span style="flex:1"><b style="color:${l.amt < 0 ? '#dc2626' : '#059669'}">${l.amt < 0 ? '' : '+'}${svW(l.amt)}</b> <small style="color:#94a3b8">${famEsc(l.date)} · ${famEsc(l.memo || '')}${l.by ? ' · ' + famEsc(l.by) : ''}</small></span><button class="fam-x" style="width:24px;height:24px;font-size:10px" onclick="svLogDel('${l.id}','${id}')">✕</button></div>`).join('') : '<div class="fam-note">입출금 기록이 없습니다.</div>'}</div>
-            <div class="fam-btns"><button class="fam-btn" onclick="svGoalForm('${id}')">목표 수정</button><button class="fam-btn pri" onclick="svLogForm('${id}',1)">＋ 입금</button></div>`);
+            <div class="fam-btns"><button class="fam-btn" onclick="svGoalForm('${id}')">수정</button><button class="fam-btn pri" onclick="svLogForm('${id}',1)">＋ 입금</button></div>`);
     }
     function svLogForm(gid, sign) {
         const x = svGoals.find(g => g.id === gid); if (!x) return;
@@ -8956,11 +8956,11 @@ JSON만 출력: {"items":[{"date":"YYYY-MM-DD 또는 빈 문자열","store":"가
             <div class="ff-form">
                 <div class="full"><label>종류</label><select id="fx-kind" onchange="document.querySelectorAll('.fx-e').forEach(e=>e.style.display=this.value==='saving'?'none':'');document.querySelectorAll('.fx-s').forEach(e=>e.style.display=this.value==='saving'?'':'none')">
                     <option value="expense" ${f.kind !== 'saving' ? 'selected' : ''}>지출 — 가계부에 기록 (관리비·통신비·보험)</option>
-                    <option value="saving" ${f.kind === 'saving' ? 'selected' : ''}>저축 — 목표에 적립 (적금·자동이체)</option></select></div>
+                    <option value="saving" ${f.kind === 'saving' ? 'selected' : ''}>저축 — 저축에 적립 (적금·청약·자동이체)</option></select></div>
                 <div class="full"><label>이름</label><input id="fx-name" value="${famEsc(f.name || '')}" placeholder="예: 아파트 관리비 / 여행 적금"></div>
                 <div><label>금액 (원)</label><input id="fx-amt" type="number" inputmode="numeric" value="${f.amt || ''}"></div>
                 <div><label>매월 며칠</label><input id="fx-day" type="number" min="1" max="31" value="${+f.day || 25}"></div>
-                <div class="full fx-s" style="${f.kind === 'saving' ? '' : 'display:none'}"><label>적립할 목표</label><select id="fx-goal">${goals.length ? goals.map(g => `<option value="${g.id}" ${g.id === f.goalId ? 'selected' : ''}>${famEsc(g.name)}${g.account ? ' · ' + famEsc(g.account) : ''}</option>`).join('') : '<option value="">먼저 저축 목표를 만들어 주세요</option>'}</select></div>
+                <div class="full fx-s" style="${f.kind === 'saving' ? '' : 'display:none'}"><label>쌓을 곳</label><select id="fx-goal"><option value="__new" ${!f.goalId ? 'selected' : ''}>＋ 새로 만들기 (위 이름으로)</option>${goals.map(g => `<option value="${g.id}" ${g.id === f.goalId ? 'selected' : ''}>${famEsc(g.name)}${g.account ? ' · ' + famEsc(g.account) : ''}</option>`).join('')}</select></div>
                 <div class="fx-e" style="${f.kind === 'saving' ? 'display:none' : ''}"><label>분류</label><select id="fx-cat">${EXP_CATS.map(c => `<option ${c === f.category ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
                 <div class="fx-e" style="${f.kind === 'saving' ? 'display:none' : ''}"><label>구성원</label>${famMemberSel('fx-mem', f.member || '공통')}</div>
                 <div class="fx-e" style="${f.kind === 'saving' ? 'display:none' : ''}"><label>결제</label><select id="fx-pay"><option ${f.pay !== '현금' ? 'selected' : ''}>카드</option><option ${f.pay === '현금' ? 'selected' : ''}>현금</option></select></div>
@@ -8970,9 +8970,14 @@ JSON만 출력: {"items":[{"date":"YYYY-MM-DD 또는 빈 문자열","store":"가
     async function fxAdd(editId) {
         const g = k => (document.getElementById('fx-' + k) || {}).value?.trim() || '', amt = Number(g('amt')) || 0, kind = g('kind') || 'expense';
         if (!g('name') || !amt) { famToast('이름과 금액을 입력하세요'); return; }
-        if (kind === 'saving' && !g('goal')) { famToast('적립할 목표를 먼저 만들어 주세요'); return; }
         const id = editId || 'fixed_' + Date.now();
-        const doc = { id, kind, name: g('name'), amt, day: Math.min(31, Math.max(1, +g('day') || 1)), category: g('cat') || '생활비', member: g('mem') || '공통', pay: g('pay') || '카드', goalId: kind === 'saving' ? g('goal') : '', active: editId ? (fxList.find(x => x.id === editId) || {}).active !== false : true };
+        let goalId = g('goal');
+        if (kind === 'saving' && (!goalId || goalId === '__new')) {
+            goalId = 'goal_' + Date.now();
+            try { await db.collection('savingsGoals').doc(goalId).set({ id: goalId, name: g('name'), account: '', target: 0, deadline: '', createdAt: Date.now(), by: famUser() }); }
+            catch (e) { famToast('저축을 만들지 못했습니다: ' + e.message); return; }
+        }
+        const doc = { id, kind, name: g('name'), amt, day: Math.min(31, Math.max(1, +g('day') || 1)), category: g('cat') || '생활비', member: g('mem') || '공통', pay: g('pay') || '카드', goalId: kind === 'saving' ? goalId : '', active: editId ? (fxList.find(x => x.id === editId) || {}).active !== false : true };
         try { await db.collection('fixedExpenses').doc(id).set(doc); famSheetClose(); famToast(editId ? '저장했습니다' : '추가했습니다'); }
         catch (e) { famToast('저장 실패: ' + e.message); }
     }
