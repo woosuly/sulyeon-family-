@@ -2,7 +2,15 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=3.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=3.0, user-scalable=yes, interactive-widget=resizes-content">
+    <script>try{var _m=localStorage.getItem('famThemeMode')||'light';if(_m==='dark'||(_m==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.setAttribute('data-theme','dark');}catch(e){}</script>
+    <style>
+        html[data-theme="dark"]{filter:invert(1) hue-rotate(180deg) brightness(.9);background:#fff}
+        html[data-theme="dark"] img,html[data-theme="dark"] video,html[data-theme="dark"] iframe,html[data-theme="dark"] [style*="url("]{filter:invert(1) hue-rotate(180deg)}
+        html[data-theme="dark"] header,html[data-theme="dark"] .info-banner,html[data-theme="dark"] .ff-me,html[data-theme="dark"] .fam-btn.pri,html[data-theme="dark"] .home-cmd-btn.go,html[data-theme="dark"] .fam-seg button.on,html[data-theme="dark"] .hw-card.now,html[data-theme="dark"] .sch-tab.active,html[data-theme="dark"] .chat-user-chip.active,html[data-theme="dark"] .sch-chip.active,html[data-theme="dark"] .travel-tab.active,html[data-theme="dark"] .asset-period-tab.active,html[data-theme="dark"] .asset-member-tab.active,html[data-theme="dark"] .news-head,html[data-theme="dark"] [style*="background:var(--month-header)"]{filter:invert(1) hue-rotate(180deg)}
+        html[data-theme="dark"] header img,html[data-theme="dark"] .info-banner img{filter:none}
+        html[data-theme="dark"] .fam-ov,html[data-theme="dark"] .sch-detail-modal{background:rgba(255,255,255,.55)}
+    </style>
     <title>설연 Family</title>
     <meta name="theme-color" content="#3a6a96">
     <meta name="mobile-web-app-capable" content="yes">
@@ -242,7 +250,7 @@
         /* 가계부 캘린더 grid */
         #asset-cal-grid {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
+            grid-template-columns: repeat(7, minmax(0,1fr));
             background: #f1f5f9;
             gap: 1px;
             min-width: 320px;
@@ -250,8 +258,8 @@
         }
 
         .cal-day-header { padding: clamp(8px,1vw,12px) 0; text-align: center; font-weight: 700; background: #f8fafc; font-size: clamp(10px,1.1vw,12px); color: #64748b; }
-        .cal-cell { background: white; min-height: clamp(60px, 8vw, 110px); padding: clamp(5px,0.8vw,9px); cursor: pointer; display: flex; flex-direction: column; }
-        @media (min-width: 768px) { .cal-cell { min-height: 130px; } }
+        .cal-cell { background: white; height: clamp(64px, 8vw, 110px); padding: clamp(5px,0.8vw,9px); cursor: pointer; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+        @media (min-width: 768px) { .cal-cell { height: 130px; } }
 
         .date-num { font-weight: 800; font-size: clamp(11px, 1.3vw, 14px); }
         .holiday-label  { color: #ef4444; font-size: 9px; font-weight: 800; margin-top: 2px; display: block; }
@@ -1433,7 +1441,7 @@
                         <div class="ff-tools"><button onclick="famHistOpen()">🕘 지난 대화</button><button id="ff-new" onclick="famFeedNew()">↺ 새 대화</button></div>
                         <div class="fam-feed-body" id="fam-feed-body"></div>
                         <span id="chat-unread-badge" style="display:none"></span>
-                        <div class="footer-info">Family Shared v61.0 &nbsp;·&nbsp; Jung Wooseol 2026</div>
+                        <div class="footer-info">Family Shared v65.0 &nbsp;·&nbsp; Jung Wooseol 2026</div>
                         <div style="height:150px"></div>
                         </div><!-- /main-scroll -->
             </div><!-- /main-wrap -->
@@ -1441,7 +1449,7 @@
                 <div id="home-sugg" class="home-sugg"></div>
                 <div class="home-cmd-in">
                     <button class="home-cmd-btn" title="사진·파일" onclick="famPlusMenu()" style="font-size:22px;font-weight:300">＋</button>
-                    <input id="home-cmd-input" placeholder="무엇이든 입력하세요 · / 로 명령" autocomplete="off" enterkeyhint="send" oninput="famCmdInput(this);famMicSwap()" onkeydown="famCmdKey(event)">
+                    <textarea id="home-cmd-input" rows="1" placeholder="무엇이든 입력하세요" autocomplete="off" autocorrect="off" enterkeyhint="send" oninput="famCmdInput(this);famMicSwap()" onkeydown="famCmdKey(event)" onfocus="famCmdFocus()"></textarea>
                     <button class="home-cmd-btn" title="도움말" onclick="famHelp()" style="background:none;width:30px;font-size:15px;color:#94a3b8">❔</button>
                     <button class="home-cmd-btn go" id="home-cmd-go" onclick="famGoBtn()">➤</button>
                 </div>
@@ -2514,10 +2522,16 @@
                             <label class="repeat-chip-label"><input type="radio" name="sch-repeat-unit" value="month"> 매월</label>
                             <label class="repeat-chip-label"><input type="radio" name="sch-repeat-unit" value="year"> 매년</label>
                         </div>
-                        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
-                            <label style="font-size:11px;font-weight:700;color:#64748b;width:100%;margin-bottom:2px;">음력 / 양력</label>
+                        <div id="sch-cal-row" style="display:none; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
+                            <label style="font-size:11px;font-weight:700;color:#64748b;width:100%;margin-bottom:2px;">생일·기념일 기준</label>
                             <label class="repeat-chip-label"><input type="radio" name="sch-repeat-cal" value="solar" checked> 양력</label>
                             <label class="repeat-chip-label"><input type="radio" name="sch-repeat-cal" value="lunar"> 음력</label>
+                            <div id="sch-lunar-pick" style="display:none;width:100%;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:#475569">
+                                <span style="white-space:nowrap;font-weight:700">음력</span>
+                                <select id="sch-lunar-m" class="fam-mini-sel" style="width:auto;flex:none" onchange="famLunarPick()"></select>
+                                <select id="sch-lunar-d" class="fam-mini-sel" style="width:auto;flex:none" onchange="famLunarPick()"></select>
+                                <span id="sch-lunar-info" style="color:#94a3b8;font-size:11px;width:100%"></span>
+                            </div>
                         </div>
                         <div style="display:flex; align-items:center; gap:8px;">
                             <label style="font-size:11px;font-weight:700;color:#64748b; white-space:nowrap;">반복 종료일</label>
@@ -4406,64 +4420,119 @@ function initRealtimeSync() {
         ];
         // 간소화된 정확 음력: 기준점 룩업으로 계산
         // 실용적 기준: 1970-01-01 = 음력 1969-11-24
-        function getLunarDate(year, month, day) {
-            // 1970년 1월 1일을 음력 기준으로 삼아 정확 계산
-            // 각 음력 달의 정확한 시작일(양력) 데이터 (2020~2030)
-            const lunarMonthStarts = {
-                // [음력년, 음력월] → 양력 날짜 (YYYYMMDD)
-                // 2024
-                '2024-1':20240210,'2024-2':20240311,'2024-3':20240410,
-                '2024-4':20240509,'2024-5':20240608,'2024-6':20240708,
-                '2024-7':20240807,'2024-8':20240904,'2024-9':20241003,
-                '2024-10':20241102,'2024-11':20241202,'2024-12':20250101,
-                // 2025
-                '2025-1':20250129,'2025-2':20250228,'2025-3':20250330,
-                '2025-4':20250429,'2025-5':20250528,'2025-6':20250625,
-                '2025-7':20250725,'2025-8':20250823,'2025-9':20250921,
-                '2025-10':20251021,'2025-11':20251120,'2025-12':20251220,
-                // 2026
-                '2026-1':20260119,'2026-2':20260218,'2026-3':20260320,
-                '2026-4':20260419,'2026-5':20260518,'2026-6':20260617,
-                '2026-7':20260716,'2026-8':20260815,'2026-9':20260913,
-                '2026-10':20261013,'2026-11':20261112,'2026-12':20261211,
-            };
-            const toNum = (y,m,d) => y*10000+m*100+d;
-            const solar = toNum(year, month+1, day);
-
-            // 해당 양력 날짜가 속한 음력월 찾기
-            let foundLYear = null, foundLMonth = null, foundStart = null;
-            const years = [...new Set(Object.keys(lunarMonthStarts).map(k=>parseInt(k)))].sort();
-            for (const ly of years) {
-                for (let lm = 1; lm <= 12; lm++) {
-                    const key = `${ly}-${lm}`;
-                    const nextKey = lm < 12 ? `${ly}-${lm+1}` : `${ly+1}-1`;
-                    const start = lunarMonthStarts[key];
-                    const next  = lunarMonthStarts[nextKey];
-                    if (!start) continue;
-                    if (solar >= start && (!next || solar < next)) {
-                        foundLYear = ly; foundLMonth = lm; foundStart = start;
-                    }
-                }
+        // 한국 음력 테이블 (1930~2060): [음력 1월 1일의 1970-01-01 기준 일수, 윤달(0=없음), 큰달 비트]
+        const FAM_LUNAR = [[-14581,6,3366],[-14198,0,1319],[-13844,0,2647],[-13489,5,4790],[-13105,0,2778],[-12750,0,1748],[-12396,3,3753],[-12012,0,1865],[-11658,7,5779],[-11274,0,2707],[-10920,0,1323],[-10566,6,2651],[-10182,0,2413],[-9827,0,2922],[-9472,4,6996],[-9088,0,2980],[-8734,0,2889],[-8380,2,6803],[-7996,0,2709],[-7642,7,5419],[-7258,0,1325],[-6904,0,2733],[-6549,5,5482],[-6165,0,3506],[-5810,0,3492],[-5456,3,7497],[-5072,0,3402],[-4718,8,6805],[-4334,0,2710],[-3980,0,1366],[-3626,6,2741],[-3242,0,2773],[-2887,0,1746],[-2533,4,3749],[-2149,0,3749],[-1794,0,3658],[-1440,3,3222],[-1057,0,2715],[-702,7,5462],[-318,0,1386],[36,0,2905],[391,5,5970],[775,0,1874],[1129,0,1829],[1483,4,5707],[1867,0,2635],[2221,8,4779],[2605,0,685],[2959,0,1387],[3314,6,2921],[3698,0,3497],[4053,0,3474],[4407,4,6949],[4791,0,3365],[5145,10,6733],[5529,0,2646],[5883,0,694],[6237,6,5549],[6622,0,1748],[6976,0,3497],[7331,5,7570],[7715,0,3730],[8069,0,3366],[8423,3,2646],[8806,0,2647],[9161,8,4790],[9545,0,2906],[9900,0,1748],[10254,5,3785],[10638,0,1865],[10992,0,1683],[11346,4,5415],[11730,0,1323],[12084,0,2651],[12439,2,5466],[12823,0,874],[13177,7,6997],[13562,0,2980],[13916,0,2889],[14270,5,6803],[14654,0,2709],[15008,0,1325],[15362,3,2653],[15746,0,2733],[16101,9,5546],[16485,0,1490],[16839,0,3493],[17194,5,7497],[17578,0,3402],[17932,0,2709],[18286,4,5421],[18670,0,1366],[19024,0,2741],[19379,2,5546],[19763,0,1746],[20117,6,3749],[20501,0,3749],[20856,0,3658],[21210,5,3222],[21593,0,3227],[21948,0,1370],[22302,3,2773],[22686,0,2921],[23041,11,5970],[23425,0,1874],[23779,0,2853],[24133,6,5707],[24517,0,2635],[24871,0,1195],[25225,5,1371],[25609,0,1389],[25964,0,2921],[26319,2,6994],[26703,0,3474],[27057,7,7461],[27441,0,3365],[27795,0,2637],[28149,5,5293],[28533,0,694],[28887,0,1461],[29242,3,3497],[29626,0,3529],[29981,8,7570],[30365,0,3730],[30719,0,3366],[31073,6,2646],[31456,0,2647],[31811,0,1238],[32165,4,1717],[32549,0,1749],[32904,0,3785]];
+        const famEpoch = (y, m, d) => Math.round(Date.UTC(y, m, d) / 864e5);
+        function famLunar(y, m, d) {
+            const e = famEpoch(y, m, d);
+            let i = FAM_LUNAR.length - 1; while (i > 0 && FAM_LUNAR[i][0] > e) i--;
+            if (i < 0 || e < FAM_LUNAR[0][0] || i === FAM_LUNAR.length - 1 && e >= FAM_LUNAR[i][0] + 390) return null;
+            const [st, leap, bits] = FAM_LUNAR[i], n = leap ? 13 : 12;
+            let off = e - st;
+            for (let k = 0; k < n; k++) {
+                const len = (bits >> k) & 1 ? 30 : 29;
+                if (off < len) { const isLeap = leap && k === leap; const mon = leap && k >= leap ? k : k + 1; return { year: 1930 + i, month: mon, day: off + 1, leap: !!isLeap }; }
+                off -= len;
             }
-            if (!foundLYear) {
-                // 범위 밖: 근사 계산으로 폴백
-                const base = new Date(2026, 0, 19); // 2026-01-19 = 음력 2026-01-01
-                const cur  = new Date(year, month, day);
-                const diff = Math.round((cur - base) / 86400000);
-                let lm = 1, ld = 1 + diff;
-                const ml = [30,29,30,29,30,29,30,29,30,29,30,29];
-                while (ld > ml[(lm-1)%12]) { ld -= ml[(lm-1)%12]; lm++; }
-                return { month: ((lm-1)%12)+1, day: Math.max(1,ld) };
-            }
-            // 시작일로부터 며칠째인지
-            const sy = Math.floor(foundStart/10000);
-            const sm = Math.floor((foundStart%10000)/100)-1;
-            const sd = foundStart%100;
-            const startDate = new Date(sy, sm, sd);
-            const curDate   = new Date(year, month, day);
-            const ld = Math.round((curDate - startDate)/86400000) + 1;
-            return { month: foundLMonth, day: ld };
+            return null;
         }
+        // 음력 → 양력 (없는 30일은 29일로, 윤달 생일은 평달로)
+        function famLunarToSolar(ly, lm, ld, leap) {
+            const r = FAM_LUNAR[ly - 1930]; if (!r) return null;
+            const [st, lp, bits] = r, n = lp ? 13 : 12; let e = st;
+            for (let k = 0; k < n; k++) {
+                const isLeap = lp && k === lp, mon = lp && k >= lp ? k : k + 1, len = (bits >> k) & 1 ? 30 : 29;
+                if (mon === lm && (!!leap === !!isLeap || (leap && !lp))) { const dd = new Date((e + Math.min(ld, len) - 1) * 864e5); return new Date(dd.getUTCFullYear(), dd.getUTCMonth(), dd.getUTCDate()); }
+                e += len;
+            }
+            return null;
+        }
+        function getLunarDate(year, month, day) {
+            const l = famLunar(year, month, day);
+            return l ? { month: (l.leap ? '윤' : '') + l.month, day: l.day, leap: l.leap, year: l.year } : { month: '', day: '' };
+        }
+        const famDs = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+        // ── 연도별 공휴일 (관공서의 공휴일에 관한 규정 기준, 대체공휴일 포함) ──
+        // 선거일·임시공휴일은 정부 발표 시 여기에 추가
+        const FAM_EXTRA_HOLI = {
+            '2023-10-02': '임시공휴일', '2024-04-10': '국회의원선거', '2024-10-01': '임시공휴일',
+            '2025-01-27': '임시공휴일', '2025-06-03': '대통령선거', '2026-06-03': '지방선거', '2028-04-12': '국회의원선거'
+        };
+        const famHoliCache = {};
+        // 정부 발표(우주항공청 월력요항) 공휴일 — 임시공휴일·선거일 포함, 앱을 열 때 하루 1번 자동 갱신
+        const FAM_HOLI_URL = 'https://cdn.jsdelivr.net/npm/@hyunbinseo/holidays-kr@5/dist/index.js';
+        let famHoliOnline = (() => { try { return JSON.parse(localStorage.getItem('famHoliOnline') || '{}'); } catch (e) { return {}; } })();
+        const famHoliName = n => String(n).replace(/^1월 1일$/, '신정').replace('3ㆍ1절', '삼일절').replace(/^대체공휴일.*$/, '대체공휴일')
+            .replace(/^설날 (전날|다음 날)$/, '설날 연휴').replace(/^추석 (전날|다음 날)$/, '추석 연휴').replace('기독탄신일', '크리스마스')
+            .replace('부처님 오신 날', '부처님오신날').replace(/^임시공휴일\((.+)\)$/, '$1').replace('전국동시지방선거', '지방선거');
+        async function famHoliSync(force) {
+            const today = famDs(new Date()); if (!force && famHoliOnline._at === today) return;
+            try {
+                const mod = await import(FAM_HOLI_URL), y = new Date().getFullYear(), out = { _at: today };
+                for (const yy of [y - 1, y, y + 1, y + 2]) { try { out[yy] = await mod.getHolidayPreset(String(yy)); } catch (e) {} }
+                if (Object.keys(out).length < 2) return;
+                const changed = JSON.stringify({ ...out, _at: 0 }) !== JSON.stringify({ ...famHoliOnline, _at: 0 });
+                famHoliOnline = out; try { localStorage.setItem('famHoliOnline', JSON.stringify(out)); } catch (e) {}
+                if (changed) {
+                    Object.keys(famHoliCache).forEach(k => delete famHoliCache[k]); Object.keys(famSpecCache).forEach(k => delete famSpecCache[k]);
+                    try { if (document.getElementById('schedule-section')?.classList.contains('active')) renderSch(); } catch (e) {}
+                    try { if (document.getElementById('asset-cal-section')?.classList.contains('active')) renderAssetCal(); } catch (e) {}
+                }
+            } catch (e) { console.warn('[공휴일] 온라인 갱신 실패, 계산값 사용', e); }
+        }
+        setTimeout(() => famHoliSync(), 3000);
+        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') famHoliSync(); });
+        function famHolidaysOf(y) {
+            if (famHoliCache[y]) return famHoliCache[y];
+            if (famHoliOnline[y]) {
+                const o = {}; Object.entries(famHoliOnline[y]).forEach(([k, arr]) => { o[k] = [...new Set((Array.isArray(arr) ? arr : [arr]).map(famHoliName))].join('·'); });
+                return (famHoliCache[y] = o);
+            }
+            const H = {}, add = (d, n) => { if (!d) return; const k = famDs(d); (H[k] = H[k] || []).push(n); };
+            const D = (m, d) => new Date(y, m - 1, d);
+            const weekendSub = [], kidsSub = [], groups = [];
+            add(D(1, 1), '신정');
+            add(D(3, 1), '삼일절'); weekendSub.push(D(3, 1));
+            if (y >= 2026) { add(D(5, 1), '노동절'); weekendSub.push(D(5, 1)); }
+            add(D(5, 5), '어린이날'); if (y >= 2015) kidsSub.push(D(5, 5));
+            add(D(6, 6), '현충일');
+            if (y >= 2026 || y < 2008) { add(D(7, 17), '제헌절'); if (y >= 2026) weekendSub.push(D(7, 17)); }
+            add(D(8, 15), '광복절'); if (y >= 2021) weekendSub.push(D(8, 15));
+            add(D(10, 3), '개천절'); if (y >= 2021) weekendSub.push(D(10, 3));
+            add(D(10, 9), '한글날'); if (y >= 2021) weekendSub.push(D(10, 9));
+            add(D(12, 25), '크리스마스'); if (y >= 2023) weekendSub.push(D(12, 25));
+            const bud = famLunarToSolar(y, 4, 8); add(bud, '부처님오신날'); if (y >= 2023 && bud) weekendSub.push(bud);
+            const seol = famLunarToSolar(y, 1, 1);
+            if (seol) { const g = [-1, 0, 1].map(k => new Date(seol.getFullYear(), seol.getMonth(), seol.getDate() + k)); add(g[0], '설날 연휴'); add(g[1], '설날'); add(g[2], '설날 연휴'); groups.push(g); }
+            const chu = famLunarToSolar(y, 8, 15);
+            if (chu) { const g = [-1, 0, 1].map(k => new Date(chu.getFullYear(), chu.getMonth(), chu.getDate() + k)); add(g[0], '추석 연휴'); add(g[1], '추석'); add(g[2], '추석 연휴'); groups.push(g); }
+            Object.entries(FAM_EXTRA_HOLI).forEach(([k, n]) => { if (+k.slice(0, 4) === y) (H[k] = H[k] || []).push(n); });
+            // 대체공휴일
+            const isOff = d => { const k = famDs(d); return d.getDay() === 0 || d.getDay() === 6 || !!H[k]; };
+            const subAfter = from => { const d = new Date(from); do { d.setDate(d.getDate() + 1); } while (isOff(d)); (H[famDs(d)] = H[famDs(d)] || []).push('대체공휴일'); };
+            if (y >= 2014) groups.forEach(g => { let cnt = 0; g.forEach(d => { const names = H[famDs(d)] || []; if (d.getDay() === 0 || names.filter(n => !/설날|추석/.test(n)).length) cnt++; }); for (let i = 0; i < cnt; i++) subAfter(g[2]); });
+            kidsSub.forEach(d => { const names = H[famDs(d)] || []; if (d.getDay() === 0 || d.getDay() === 6 || names.length > 1) subAfter(d); });
+            weekendSub.forEach(d => { if (d.getDay() === 0 || d.getDay() === 6) subAfter(d); });
+            const out = {}; Object.keys(H).forEach(k => out[k] = [...new Set(H[k])].join('·'));
+            return (famHoliCache[y] = out);
+        }
+        // 기념일·절기 (쉬는 날 아님)
+        const famSpecCache = {};
+        function famSpecialsOf(y) {
+            if (famSpecCache[y]) return famSpecCache[y];
+            const S = {}, add = (d, n) => { if (d) S[famDs(d)] = S[famDs(d)] ? S[famDs(d)] + '·' + n : n; }, D = (m, d) => new Date(y, m - 1, d);
+            add(D(4, 5), '식목일'); add(D(4, 19), '4·19혁명'); add(D(5, 8), '어버이날'); add(D(5, 15), '스승의날'); add(D(5, 18), '5·18민주화운동');
+            add(D(6, 25), '6·25전쟁일'); add(D(10, 1), '국군의날');
+            if (y < 2026) add(D(5, 1), '근로자의날');
+            if (y >= 2008 && y < 2026) add(D(7, 17), '제헌절');
+            add(famLunarToSolar(y, 1, 15), '정월대보름'); add(famLunarToSolar(y, 5, 5), '단오'); add(famLunarToSolar(y, 7, 7), '칠석');
+            const yy = y % 100; add(D(12, Math.floor(yy * 0.2422 + 21.94) - Math.floor((yy - 1) / 4)), '동지');
+            const H = famHolidaysOf(y); Object.keys(S).forEach(k => { if (H[k]) delete S[k]; });
+            return (famSpecCache[y] = S);
+        }
+        const famHoli = ds => famHolidaysOf(+ds.slice(0, 4))[ds] || '';
+        const famSpec = ds => famSpecialsOf(+ds.slice(0, 4))[ds] || '';
 
         // ISO 주차 계산
         function getWeekNumber(date) {
@@ -4514,10 +4583,10 @@ function initRealtimeSync() {
             // 그리드 스타일: W#(28px) + 일~토 7열
             grid.style.cssText = `
                 display:grid;
-                grid-template-columns:28px repeat(7,1fr);
+                grid-template-columns:${window.innerWidth < 420 ? 20 : 28}px repeat(7,minmax(0,1fr));
                 background:#e2e8f0;
                 gap:1px;
-                min-width:480px;
+                min-width:0; width:100%;
                 border-radius:14px;
                 overflow:hidden;
             `;
@@ -4571,7 +4640,7 @@ function initRealtimeSync() {
                     const mKey  = `${String(dm+1).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
                     const isCur = dm === m;
                     const dayW  = date.getDay();
-                    const isRed = dayW === 0 || !!holidays[mKey];
+                    const isRed = dayW === 0 || !!famHoli(ds);
                     const isSat = dayW === 6;
                     const isToday = ds === todayStr;
 
@@ -4579,7 +4648,7 @@ function initRealtimeSync() {
                     const bgBase = isToday ? '#dbeafe' : isCur ? '#ffffff' : '#f8fafc';
                     cell.style.cssText = `
                         background:${bgBase};
-                        min-height:clamp(60px,8vw,108px);
+                        height:clamp(78px,9vw,112px); min-width:0;
                         padding:5px 5px 3px;
                         cursor:pointer;
                         display:flex; flex-direction:column;
@@ -4591,7 +4660,7 @@ function initRealtimeSync() {
 
                     /* ── 날짜 숫자 줄 (주차 중복 제거 - W# 열에만 표시) ── */
                     const row = document.createElement('div');
-                    row.style.cssText = 'display:flex;align-items:baseline;gap:3px;flex-wrap:wrap;line-height:1.2;';
+                    row.style.cssText = 'display:flex;align-items:baseline;gap:3px;flex-wrap:nowrap;line-height:1.2;overflow:hidden;white-space:nowrap;flex-shrink:0;';
 
                     const dNum = document.createElement('span');
                     dNum.style.cssText = `
@@ -4606,7 +4675,7 @@ function initRealtimeSync() {
                     if (dayW === 0 && isCur) {
                         const lun = getLunarDate(dy, dm, dd);
                         const ls = document.createElement('span');
-                        ls.style.cssText = 'font-size:9px;color:#c0ccda;';
+                        ls.style.cssText = 'font-size:9px;color:#c0ccda;overflow:hidden;text-overflow:ellipsis;';
                         ls.textContent = `(${lun.month}/${lun.day})`;
                         row.appendChild(ls);
                     }
@@ -4634,7 +4703,7 @@ function initRealtimeSync() {
                             }
                             if (ev.repeat) {
                                 const rep = document.createElement('span');
-                                rep.textContent = '🔁';
+                                rep.textContent = ev.repeat.cal === 'lunar' ? '🌙' : '🔁';
                                 rep.style.cssText = 'font-size:8px;flex-shrink:0;opacity:.7;';
                                 bar.appendChild(rep);
                             }
@@ -4647,8 +4716,8 @@ function initRealtimeSync() {
                         });
                         if (dayEvs.length > 2) {
                             const more = document.createElement('div');
-                            more.style.cssText = 'font-size:9px;color:#94a3b8;margin-top:2px;cursor:pointer;';
-                            more.textContent = `+${dayEvs.length - 2}개 더보기`;
+                            more.style.cssText = 'font-size:9px;color:#94a3b8;margin-top:2px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;';
+                            more.textContent = window.innerWidth < 520 ? `+${dayEvs.length - 2}` : `+${dayEvs.length - 2}개 더보기`;
                             more.onclick = e => { e.stopPropagation(); openDayDetail(ds); };
                             cell.appendChild(more);
                         }
@@ -4659,16 +4728,16 @@ function initRealtimeSync() {
                     spacer.style.flex = '1';
                     cell.appendChild(spacer);
 
-                    if (isCur && (holidays[mKey] || specialDays[mKey])) {
+                    if (isCur && (famHoli(ds) || famSpec(ds))) {
                         const label = document.createElement('div');
-                        const isHoli = !!holidays[mKey];
+                        const isHoli = !!famHoli(ds);
                         label.style.cssText = `
                             font-size:8px; font-weight:${isHoli?'700':'500'};
                             color:${isHoli?'#ef4444':'#94a3b8'};
-                            line-height:1.3; margin-top:2px;
+                            line-height:1.3; margin-top:2px; flex-shrink:0;
                             white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
                         `;
-                        label.textContent = holidays[mKey] || specialDays[mKey];
+                        label.textContent = famHoli(ds) || famSpec(ds); label.title = label.textContent;
                         cell.appendChild(label);
                     }
 
@@ -4690,12 +4759,12 @@ function initRealtimeSync() {
             const evs     = schData.filter(s => s.date === ds && schShow(s));
             const date    = new Date(ds);
             const mKey    = ds.slice(5,10);
-            const holiName = holidays[mKey] || specialDays[mKey] || '';
+            const holiName = famHoli(ds) || famSpec(ds) || ''; const _lun = getLunarDate(+ds.slice(0, 4), +ds.slice(5, 7) - 1, +ds.slice(8, 10));
 
             document.getElementById('sch-detail-title').textContent =
                 `${ds.replace(/-/g,'.')} (${DAY_LABEL[date.getDay()]})`;
             document.getElementById('sch-detail-weekday').textContent =
-                holiName ? `🔴 ${holiName}` : '';
+                (holiName ? `${famHoli(ds) ? '🔴' : '•'} ${holiName} · ` : '') + (_lun.month ? `음력 ${_lun.month}.${_lun.day}` : '');
 
             const list = document.getElementById('sch-detail-list');
             list.innerHTML = '';
@@ -4948,11 +5017,11 @@ function initRealtimeSync() {
                     } else {
                         // 신규 등록
                         const newDoc = { id, date: activeDateStr, ...updatedFields,
-                            repeat: isRepeatChk ? { unit: repeatUnit, cal: repeatCal, groupId: id } : null };
+                            repeat: isRepeatChk ? { unit: repeatUnit, cal: repeatUnit === 'year' ? repeatCal : 'solar', groupId: id } : null };
                         batch.set(db.collection('schedules').doc(id), newDoc);
 
                         if (isRepeatChk) {
-                            getRepeatDates(activeDateStr, repeatUnit, repeatCal, repeatEnd).forEach((ds, i) => {
+                            getRepeatDates(activeDateStr, repeatUnit, repeatUnit === 'year' ? repeatCal : 'solar', repeatEnd).forEach((ds, i) => {
                                 const rid = `${id}_r${i}`;
                                 batch.set(db.collection('schedules').doc(rid), {
                                     ...newDoc, id: rid, date: ds,
@@ -4993,13 +5062,45 @@ function initRealtimeSync() {
             const chk = document.getElementById('sch-repeat-chk');
             const box = document.getElementById('sch-repeat-box');
             box.style.display = chk.checked ? 'block' : 'none';
+            famRepeatUI();
         }
+        // 매년 반복일 때만 양력/음력 선택, 음력이면 음력 월·일 선택
+        function famRepeatUI() {
+            const unit = document.querySelector('input[name="sch-repeat-unit"]:checked')?.value, cal = document.querySelector('input[name="sch-repeat-cal"]:checked')?.value;
+            const row = document.getElementById('sch-cal-row'), pick = document.getElementById('sch-lunar-pick'); if (!row) return;
+            row.style.display = unit === 'year' ? 'flex' : 'none';
+            if (unit !== 'year') { const sol = document.querySelector('input[name="sch-repeat-cal"][value="solar"]'); if (sol) sol.checked = true; }
+            const lunarOn = unit === 'year' && cal === 'lunar'; pick.style.display = lunarOn ? 'flex' : 'none';
+            const note = document.querySelector('#sch-repeat-box div[style*="font-size:10px"]'); if (note) note.textContent = unit === 'year' ? '※ 종료일 미설정 시 30년간 반복됩니다.' : '※ 종료일 미설정 시 2년간 반복됩니다.';
+            if (lunarOn && activeDateStr) {
+                const l = getLunarDate(+activeDateStr.slice(0, 4), +activeDateStr.slice(5, 7) - 1, +activeDateStr.slice(8, 10));
+                const ms = document.getElementById('sch-lunar-m'), dd = document.getElementById('sch-lunar-d');
+                ms.innerHTML = Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}">${i + 1}월</option>`).join('');
+                dd.innerHTML = Array.from({ length: 30 }, (_, i) => `<option value="${i + 1}">${i + 1}일</option>`).join('');
+                ms.value = String(parseInt(String(l.month).replace('윤', '')) || 1); dd.value = String(l.day || 1);
+                famLunarInfo();
+            }
+        }
+        function famLunarInfo() { const el = document.getElementById('sch-lunar-info'); if (el) el.textContent = `올해 양력 ${activeDateStr} · 매년 음력 날짜로 반복`; }
+        function famLunarPick() {
+            const lm = +document.getElementById('sch-lunar-m').value, ld = +document.getElementById('sch-lunar-d').value, now = new Date();
+            const base = +activeDateStr.slice(0, 4) || now.getFullYear();
+            const sol = famLunarToSolar(base, lm, ld) || famLunarToSolar(now.getFullYear(), lm, ld);
+            if (sol) { activeDateStr = famDs(sol); const t = document.getElementById('modal-title'); if (t) t.innerText = t.innerText.replace(/\d{4}-\d{2}-\d{2}/, activeDateStr); }
+            famLunarInfo();
+        }
+        document.addEventListener('change', e => { if (e.target && (e.target.name === 'sch-repeat-unit' || e.target.name === 'sch-repeat-cal')) famRepeatUI(); });
 
         function getRepeatDates(startDs, unit, calType, endDs) {
             const dates = [];
             const start = new Date(startDs);
             // 종료일 미설정 시 2년
-            const end = endDs ? new Date(endDs) : new Date(start.getFullYear() + 2, start.getMonth(), start.getDate());
+            const end = endDs ? new Date(endDs) : new Date(start.getFullYear() + (unit === 'year' ? 30 : 2), start.getMonth(), start.getDate());
+            if (unit === 'year' && calType === 'lunar') {
+                const sy = +startDs.slice(0, 4), l = famLunar(sy, +startDs.slice(5, 7) - 1, +startDs.slice(8, 10)); if (!l) return dates;
+                for (let k = 1; k <= 60; k++) { const d = famLunarToSolar(l.year + k, l.month, l.day); if (!d) break; const ds = famDs(d); if (ds > famDs(end) && !endDs) break; if (endDs && ds > endDs) break; dates.push(ds); }
+                return dates;
+            }
 
             // 음력 반복: 매년 음력 같은 날짜 계산 (간이)
             // 양력 반복: 날짜 직접 계산
@@ -5116,7 +5217,7 @@ function initRealtimeSync() {
                 // 날짜 숫자
                 const dn = document.createElement('strong');
                 dn.style.fontSize = '11px';
-                dn.style.color = isToday ? 'var(--month-header)' : dow === 0 ? '#ef4444' : dow === 6 ? '#3b82f6' : '';
+                dn.style.color = isToday ? 'var(--month-header)' : (dow === 0 || famHoli(ds)) ? '#ef4444' : dow === 6 ? '#3b82f6' : ''; if (famHoli(ds)) dn.title = famHoli(ds);
                 dn.textContent = d;
                 cell.appendChild(dn);
 
@@ -6757,7 +6858,7 @@ function initRealtimeSync() {
                     const isToday = i === 0;
                     const color = d.getDay()===0?'#ef4444':d.getDay()===6?'#3b82f6':'#374151';
                     const emoji = getWeatherEmoji(codes[i], 1);
-                    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid #f8fafc;">
+                    return `<div onclick="famHourlyOpen(${i})" style="display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid #f8fafc;cursor:pointer;">
                         <div style="min-width:44px;font-size:12px;font-weight:${isToday?800:600};color:${color};">
                             ${isToday?'오늘':ds.slice(5).replace('-','/')}<br>
                             <span style="font-size:10px;font-weight:500;">(${dw})</span>
@@ -6766,6 +6867,7 @@ function initRealtimeSync() {
                         <div style="flex:1;">
                             <div style="font-size:12px;color:#374151;font-weight:700;">${Math.round(maxT[i]||0)}° <span style="color:#94a3b8;font-weight:400;">/ ${Math.round(minT[i]||0)}°</span></div>
                         </div>
+                        <span style="color:#cbd5e1;font-size:14px;">›</span>
                     </div>`;
                 }).join('');
             } catch(e) {
@@ -7169,7 +7271,7 @@ function initRealtimeSync() {
             <div style="font-size:40px;margin-bottom:10px;">🔑</div>
             <div style="font-size:16px;font-weight:900;color:#1e293b;margin-bottom:6px;">설연 Family 인증</div>
             <div style="font-size:12px;color:#94a3b8;margin-bottom:16px;">가족 암호를 입력해주세요</div>
-            <input id="family-pw-input" type="password" inputmode="numeric" maxlength="10"
+            <input id="family-pw-input" type="text" autocomplete="off" style="-webkit-text-security:disc" inputmode="numeric" maxlength="10"
                 placeholder="암호 입력"
                 style="width:100%;border:2px solid #e2e8f0;border-radius:14px;padding:14px;font-size:20px;text-align:center;letter-spacing:8px;box-sizing:border-box;outline:none;font-family:monospace;"
                 onkeydown="if(event.key==='Enter')submitFamilyAuth()">
@@ -7187,7 +7289,7 @@ function initRealtimeSync() {
     <div id="family-setpw-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10001;align-items:center;justify-content:center;">
         <div style="background:white;border-radius:20px;width:min(320px,85vw);padding:24px 22px;text-align:center;">
             <div style="font-size:16px;font-weight:900;color:#1e293b;margin-bottom:12px;">🔧 암호 변경</div>
-            <input id="family-setpw-input" type="password" inputmode="numeric" maxlength="10"
+            <input id="family-setpw-input" type="text" autocomplete="off" style="-webkit-text-security:disc" inputmode="numeric" maxlength="10"
                 placeholder="새 암호 입력 (4자리 이상)"
                 style="width:100%;border:2px solid #e2e8f0;border-radius:14px;padding:12px;font-size:18px;text-align:center;letter-spacing:6px;box-sizing:border-box;outline:none;font-family:monospace;">
             <div style="display:flex;gap:8px;margin-top:12px;">
@@ -7230,7 +7332,7 @@ function initRealtimeSync() {
                     </div>
                 </div>
                 <div style="display:flex;gap:6px;">
-                    <input type="password" id="key-gemini" placeholder="AIza..." autocomplete="off"
+                    <input type="text" style="-webkit-text-security:disc" id="key-gemini" placeholder="AIza..." autocomplete="off"
                         style="flex:1;border:1.5px solid #e2e8f0;border-radius:8px;padding:8px 10px;font-size:12px;outline:none;font-family:monospace;background:#fafafa;">
                     <span id="key-gemini-status" style="font-size:16px;align-self:center;width:20px;text-align:center;"></span>
                 </div>
@@ -7246,7 +7348,7 @@ function initRealtimeSync() {
                     </div>
                 </div>
                 <div style="display:flex;gap:6px;">
-                    <input type="password" id="key-claude" placeholder="sk-ant-..." autocomplete="off"
+                    <input type="text" style="-webkit-text-security:disc" id="key-claude" placeholder="sk-ant-..." autocomplete="off"
                         style="flex:1;border:1.5px solid #e2e8f0;border-radius:8px;padding:8px 10px;font-size:12px;outline:none;font-family:monospace;background:#fafafa;">
                     <span id="key-claude-status" style="font-size:16px;align-self:center;width:20px;text-align:center;"></span>
                 </div>
@@ -7262,7 +7364,7 @@ function initRealtimeSync() {
                     </div>
                 </div>
                 <div style="display:flex;gap:6px;">
-                    <input type="password" id="key-gpt" placeholder="sk-..." autocomplete="off"
+                    <input type="text" style="-webkit-text-security:disc" id="key-gpt" placeholder="sk-..." autocomplete="off"
                         style="flex:1;border:1.5px solid #e2e8f0;border-radius:8px;padding:8px 10px;font-size:12px;outline:none;font-family:monospace;background:#fafafa;">
                     <span id="key-gpt-status" style="font-size:16px;align-self:center;width:20px;text-align:center;"></span>
                 </div>
@@ -7503,12 +7605,21 @@ function initRealtimeSync() {
     let famShowKey = false, famCustomModel = false;
     function famOpenSettings() { famCustomModel = false; famRenderSettings(); document.getElementById('fam-settings').style.display = 'flex'; history.pushState({ famSettings: 1 }, '', ''); }
     function famCloseSettings() { document.getElementById('fam-settings').style.display = 'none'; }
+    function famThemeMode() { try { return localStorage.getItem('famThemeMode') || 'light'; } catch (e) { return 'light'; } }
+    function famApplyTheme() {
+        const m = famThemeMode(), dark = m === 'dark' || (m === 'auto' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+        if (dark) document.documentElement.setAttribute('data-theme', 'dark'); else document.documentElement.removeAttribute('data-theme');
+    }
+    function famSetThemeMode(m) { try { localStorage.setItem('famThemeMode', m); } catch (e) {} famApplyTheme(); famRenderSettings(); }
+    try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', famApplyTheme); } catch (e) {}
     function famRenderSettings() {
         const p = famProv(), key = famKeys()[p] || '', list = famModelList(p), cur = famModel(p), custom = famCustomModel || !list.includes(cur);
         const fetched = !!famLS('famAI_list_' + p);
         document.getElementById('fam-settings-body').innerHTML = `
             <div class="fam-h"><b>⚙️ 설정</b><button class="fam-x" onclick="famCloseSettings()">✕</button></div>
             <div class="fam-box"><h4>🎨 화면</h4>
+                <span class="fam-lbl" style="margin-top:0">화면 모드</span>
+                <div class="fam-seg" style="margin-bottom:10px">${[['light', '☀️ 주간'], ['dark', '🌙 야간'], ['auto', '📱 자동']].map(([k, n]) => `<button class="${famThemeMode() === k ? 'on' : ''}" onclick="famSetThemeMode('${k}')">${n}</button>`).join('')}</div>
                 <button class="fam-btn" style="width:100%" onclick="famCloseSettings();openThemeColorModal();">앱 테마 색상 변경</button>
             </div>
             <div class="fam-box"><h4>🤖 AI 연결</h4>
@@ -7516,9 +7627,9 @@ function initRealtimeSync() {
                 <span class="fam-lbl" style="margin-top:0">사용할 AI</span>
                 <div class="fam-seg">${['claude', 'gpt', 'gemini'].map(k => `<button class="${k === p ? 'on' : ''}" onclick="famSetProv('${k}')">${FAM_NAMES[k]}</button>`).join('')}</div>
                 <span class="fam-lbl">${FAM_NAMES[p]} API 키</span>
-                <input id="fam-key" class="fam-in" type="${famShowKey ? 'text' : 'password'}" value="${famEsc(key)}" placeholder="${FAM_NAMES[p]} API 키 붙여넣기" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" oninput="famKeyInput(this.value)">
+                <input id="fam-key" class="fam-in" type="text" style="${famShowKey ? '' : '-webkit-text-security:disc'}" value="${famEsc(key)}" placeholder="${FAM_NAMES[p]} API 키 붙여넣기" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" oninput="famKeyInput(this.value)">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
-                    <label class="fam-chk" style="border:none;padding:0;background:none"><input type="checkbox" ${famShowKey ? 'checked' : ''} onchange="famShowKey=this.checked;document.getElementById('fam-key').type=this.checked?'text':'password'"> 키 보이기</label>
+                    <label class="fam-chk" style="border:none;padding:0;background:none"><input type="checkbox" ${famShowKey ? 'checked' : ''} onchange="famShowKey=this.checked;document.getElementById('fam-key').style.webkitTextSecurity=this.checked?'none':'disc'"> 키 보이기</label>
                     <span id="fam-key-st" style="font-size:11px;color:#64748b">${key ? '입력됨 · 끝자리 ' + famEsc(key.slice(-4)) : '미입력'}</span>
                 </div>
                 <span class="fam-lbl">${FAM_NAMES[p]} 모델</span>
@@ -7784,11 +7895,22 @@ headline은 오늘의 흐름을 한 문장으로.
 
     <!-- ═══════════ v54: 홈 어시스턴트 · 쇼핑 · 고정지출 · 리포트 · 채팅 AI ═══════════ -->
     <style>
+        .hw-strip{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:4px 2px 10px;scrollbar-width:none}
+        .hw-strip::-webkit-scrollbar{display:none}
+        .hw-card{flex:none;width:92px;scroll-snap-align:start;background:#f8fafc;border:1px solid #eef2f7;border-radius:16px;padding:10px 6px;text-align:center}
+        .hw-card.now{background:var(--month-header);border-color:var(--month-header);color:#fff}
+        .hw-card.now .hw-s,.hw-card.now .hw-t{color:rgba(255,255,255,.85)}
+        .hw-t{font-size:11.5px;font-weight:700;color:#64748b}
+        .hw-e{font-size:28px;margin:4px 0}
+        .hw-c{font-size:20px;font-weight:800}
+        .hw-w{font-size:14px;font-weight:800;margin-top:6px}
+        .hw-w small{font-size:10px;font-weight:600;margin-left:1px}
+        .hw-s{font-size:10.5px;color:#64748b;margin-top:2px}
         .fam-mini-sel{border:1.5px solid #e2e8f0;border-radius:20px;padding:7px 12px;font-size:12px;font-weight:700;color:#334155;background:#fff;outline:none;font-family:inherit}
         .fam-grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
         .home-cmd{position:fixed;left:0;right:0;bottom:0;z-index:900;padding:8px 12px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(to top,var(--month-bg) 70%,transparent)}
         .home-cmd-in{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #dbe3ee;border-radius:26px;padding:6px 6px 6px 8px;box-shadow:0 6px 24px rgba(15,23,42,.12)}
-        .home-cmd-in input{flex:1;border:none;outline:none;font-size:15px;padding:8px 4px;background:none;font-family:inherit;color:#1e293b;min-width:0}
+        .home-cmd-in input,.home-cmd-in textarea{flex:1;border:none;outline:none;font-size:15px;padding:8px 4px;background:none;font-family:inherit;color:#1e293b;min-width:0;resize:none;height:38px;line-height:22px;overflow:hidden;box-sizing:border-box}
         .home-cmd-btn{flex:none;width:38px;height:38px;border-radius:50%;border:none;cursor:pointer;font-size:17px;background:#f1f5f9}
         .home-cmd-btn.go{background:var(--month-header);color:#fff}
         .home-cmd-btn.go.rec{background:#dc2626;animation:famPulse 1.2s infinite}
@@ -7949,6 +8071,54 @@ headline은 오늘의 흐름을 한 문장으로.
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') famVerCheck(); });
 
     // ═══════════════════════════════════════════════════════════
+    // 🌤️ 시간대별 날씨 (좌우 스와이프)
+    // ═══════════════════════════════════════════════════════════
+    let famHW = null, famHDay = 0;
+    async function famHourlyOpen(day) {
+        famHDay = day || 0;
+        famSheet('<div class="fam-h"><b>🌤️ 시간대별 날씨</b><button class="fam-x" onclick="famSheetClose()">✕</button></div><div style="text-align:center;color:#94a3b8;padding:24px">불러오는 중…</div>');
+        try {
+            if (!famHW || Date.now() - famHW.at > 30 * 60e3 || famHW.lat !== userLat || famHW.lon !== userLon) {
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${userLat}&longitude=${userLon}&hourly=temperature_2m,apparent_temperature,weathercode,precipitation_probability,windspeed_10m,winddirection_10m,windgusts_10m,is_day&windspeed_unit=ms&timezone=auto&forecast_days=7`;
+                const j = await (await fetch(url)).json(); if (!j.hourly) throw new Error();
+                famHW = { at: Date.now(), lat: userLat, lon: userLon, h: j.hourly };
+            }
+            famHourlyRender();
+        } catch (e) { famSheet('<div class="fam-h"><b>🌤️ 시간대별 날씨</b><button class="fam-x" onclick="famSheetClose()">✕</button></div><div style="text-align:center;color:#ef4444;padding:24px">날씨 정보를 불러올 수 없습니다.</div>'); }
+    }
+    function famHourlyRender() {
+        const h = famHW.h, days = [...new Set(h.time.map(t => t.slice(0, 10)))], ds = days[famHDay] || days[0];
+        const dn = '일월화수목금토', d = new Date(ds + 'T00:00:00'), label = famHDay === 0 ? '오늘' : famHDay === 1 ? '내일' : `${d.getMonth() + 1}/${d.getDate()}`;
+        const dirs = ['북', '북동', '동', '남동', '남', '남서', '서', '북서'];
+        const nowKey = (() => { const n = h.time.find(t => t.slice(0, 10) === ds); return n; })();
+        const curH = famHDay === 0 ? new Date().getHours() : -1;
+        const idx = h.time.map((t, i) => [t, i]).filter(([t]) => t.slice(0, 10) === ds).map(([, i]) => i);
+        const card = i => {
+            const hr = +h.time[i].slice(11, 13), now = hr === curH, ws = h.windspeed_10m[i], wd = h.winddirection_10m[i];
+            const wsTxt = ws < 4 ? '약함' : ws < 9 ? '보통' : ws < 14 ? '강함' : '매우 강함';
+            return `<div class="hw-card${now ? ' now' : ''}"${now ? ' id="hw-now"' : ''}>
+                <div class="hw-t">${now ? '지금' : (hr < 12 ? '오전 ' : '오후 ') + ((hr % 12) || 12) + '시'}</div>
+                <div class="hw-e">${getWeatherEmoji(h.weathercode[i], h.is_day[i])}</div>
+                <div class="hw-c">${Math.round(h.temperature_2m[i])}°</div>
+                <div class="hw-s">체감 ${Math.round(h.apparent_temperature[i])}°</div>
+                <div class="hw-s">💧 ${h.precipitation_probability[i] ?? 0}%</div>
+                <div class="hw-w"><span style="display:inline-block;transform:rotate(${(wd + 180) % 360}deg)">↑</span> ${ws.toFixed(1)}<small>m/s</small></div>
+                <div class="hw-s">${dirs[Math.round(wd / 45) % 8]}풍 · ${wsTxt}</div>
+                ${h.windgusts_10m[i] >= 10 ? `<div class="hw-s" style="color:#dc2626">돌풍 ${Math.round(h.windgusts_10m[i])}m/s</div>` : ''}
+            </div>`;
+        };
+        famSheet(`<div class="fam-h"><b>🌤️ ${label} (${dn[d.getDay()]}) 시간대별</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin:-2px 0 8px;font-size:12px;color:#64748b">
+                <button class="fam-btn" style="padding:5px 12px" ${famHDay <= 0 ? 'disabled' : ''} onclick="famHDay--;famHourlyRender()">‹ 전날</button>
+                <span>${famEsc(typeof userCityName !== 'undefined' ? userCityName : '')} · 좌우로 넘겨 보세요</span>
+                <button class="fam-btn" style="padding:5px 12px" ${famHDay >= days.length - 1 ? 'disabled' : ''} onclick="famHDay++;famHourlyRender()">다음날 ›</button>
+            </div>
+            <div class="hw-strip" id="hw-strip">${idx.map(card).join('')}</div>
+            <div class="fam-note">바람 화살표는 바람이 불어가는 방향입니다. 4m/s 미만 약함 · 9 미만 보통 · 14 미만 강함</div>`);
+        setTimeout(() => { const st = document.getElementById('hw-strip'), nw = document.getElementById('hw-now'); if (st) st.scrollLeft = nw ? nw.offsetLeft - 8 : (famHDay === 0 ? 0 : (st.children[7] ? st.children[7].offsetLeft - 8 : 0)); }, 30);
+    }
+
+    // ═══════════════════════════════════════════════════════════
     // 한국어 해석기 (날짜·시간·구성원·금액·분류)
     // ═══════════════════════════════════════════════════════════
     function famParseDate(t, base) {
@@ -8062,6 +8232,9 @@ headline은 오늘의 흐름을 한 문장으로.
             e.preventDefault(); const bs = box.querySelectorAll('button'); famSuggIdx = (famSuggIdx + (e.key === 'ArrowDown' ? 1 : bs.length - 1)) % bs.length; bs.forEach((b, i) => b.classList.toggle('on', i === famSuggIdx));
         }
     }
+    function famCmdFocus() { setTimeout(() => { const sc = document.getElementById('home-scroll'); if (sc) sc.scrollTop = sc.scrollHeight; }, 350); }
+    // 키보드가 올라와 화면이 줄어들면 최근 대화가 보이게
+    window.addEventListener('resize', () => { if (document.activeElement && document.activeElement.id === 'home-cmd-input') famCmdFocus(); });
     function famSubmit() { const el = document.getElementById('home-cmd-input'); const v = el.value.trim(); if (!v) return; el.value = ''; document.getElementById('home-sugg').style.display = 'none'; famMicSwap(); famRun(v); }
     // ── 🎤 음성 입력 (크롬 내장) : 입력창이 비면 ➤ 자리에 🎤 ──
     const FamSR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -8077,7 +8250,7 @@ headline은 오늘의 흐름을 한 문장으로.
         const r = new FamSR(); famRec = r; r.lang = 'ko-KR'; r.interimResults = true; r.continuous = false;
         r.onresult = e => { let t = ''; for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript; el.value = t; };
         r.onerror = e => { if (e.error === 'not-allowed') famToast('마이크 권한을 허용해 주세요'); else if (e.error !== 'no-speech' && e.error !== 'aborted') famToast('음성 인식 오류: ' + e.error); };
-        r.onend = () => { famRec = null; el.placeholder = '무엇이든 입력하세요 · / 로 명령'; famMicSwap(); if (el.value.trim()) el.focus(); };
+        r.onend = () => { famRec = null; el.placeholder = '무엇이든 입력하세요'; famMicSwap(); if (el.value.trim()) el.focus(); };
         el.placeholder = '듣고 있어요…'; famMicSwap();
         try { r.start(); } catch (e) { famRec = null; famMicSwap(); famToast('음성 입력을 시작하지 못했습니다'); }
     }
