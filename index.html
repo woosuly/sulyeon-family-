@@ -1336,10 +1336,10 @@
             <div class="drawer-item" id="di-travel"            onclick="drawerGo('travel-section')">✈️ <span>여행 &amp; 여가</span></div>
             <div class="drawer-item" id="di-chat"              onclick="drawerGo('chat-section')">🫧 <span>채팅</span><span id="drw-badge" style="display:none;background:#ef4444;color:white;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:800;margin-left:auto;"></span></div>
             <div style="height:1px;background:#e2e8f0;margin:6px 4px;"></div>
-            <div class="drawer-item drawer-item-accent" id="di-trans" onclick="drawerGo('translator-section')">🌐 <span>AI 번역기</span></div>
+            <div class="drawer-item drawer-item-accent" id="di-news" onclick="drawerGo('news-section')">📰 <span>NEWS</span></div>
         </nav>
         <div style="padding:10px 12px;border-top:1px solid #e2e8f0;display:flex;gap:8px;flex-shrink:0;">
-            <button onclick="openThemeColorModal();closeDrawer();" style="flex:1;padding:9px;border-radius:10px;background:#f1f5f9;border:none;font-size:11px;font-weight:700;color:#64748b;cursor:pointer;">🎨 테마</button>
+            <button onclick="famOpenSettings();closeDrawer();" style="flex:1;padding:9px;border-radius:10px;background:#f1f5f9;border:none;font-size:11px;font-weight:700;color:#64748b;cursor:pointer;">⚙️ 설정</button>
             <button onclick="familyAuthToggle();closeDrawer();" style="flex:1;padding:9px;border-radius:10px;background:#f1f5f9;border:none;font-size:11px;font-weight:700;color:#64748b;cursor:pointer;" id="drw-auth">🔑 인증</button>
         </div>
     </div>
@@ -1376,7 +1376,7 @@
         </div>
         <!-- 오른쪽: 테마버튼만 유지 (로그인 아이콘 제거) -->
         <div style="display:flex;align-items:center;gap:8px;">
-            <button id="theme-color-btn" onclick="openThemeColorModal()" title="테마 색상 변경">🎨</button>
+            <button id="theme-color-btn" onclick="famOpenSettings()" title="설정">⚙️</button>
             <div id="header-profile" style="display:none;">
                 <span id="header-profile-avatar"></span>
                 <span id="header-profile-name"></span>
@@ -1499,6 +1499,10 @@
                         <!-- 좌우 스와이프 퀵링크 아이콘 바 -->
                         <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0 -14px;padding:4px 14px 6px;touch-action:pan-x;">
                             <div id="quicklink-row" style="display:flex;gap:12px;width:max-content;">
+                                <button onclick="drawerGo('news-section')" class="ql-icon-btn">
+                                    <div class="ql-icon-circle" style="background:linear-gradient(135deg,#1e3a5f,#3a6a96);color:white;font-size:11px;font-weight:900;letter-spacing:.5px;">NEWS</div>
+                                    <span style="font-weight:800;">News</span>
+                                </button>
                                 <button onclick="drawerGo('schedule-section')" class="ql-icon-btn">
                                     <div class="ql-icon-circle" style="background:#e0f2fe;">📅</div>
                                     <span>일정</span>
@@ -1520,13 +1524,9 @@
                                     <span>채팅</span>
                                     <span id="chat-unread-badge" class="chat-badge" style="position:absolute;top:0;right:0;"></span>
                                 </button>
-                                <button onclick="drawerGo('translator-section')" class="ql-icon-btn">
-                                    <div class="ql-icon-circle" style="background:linear-gradient(135deg,#1e40af,#3b82f6);color:white;">🌐</div>
-                                    <span style="color:#1d4ed8;font-weight:800;">AI번역</span>
-                                </button>
                             </div>
                         </div>
-                        <div class="footer-info">Family Shared v51.0 &nbsp;·&nbsp; Jung Wooseol 2026</div>
+                        <div class="footer-info">Family Shared v53.0 &nbsp;·&nbsp; Jung Wooseol 2026</div>
                         </div><!-- /main-scroll -->
             </div><!-- /main-wrap -->
         </section>
@@ -1550,6 +1550,9 @@
                     <button class="sch-nav-btn" onclick="schNavigate(1)">▶</button>
                     <button class="sch-today-btn" onclick="schGoToday()">오늘</button>
                 </div>
+
+                <!-- 구성원 체크 필터 -->
+                <div id="sch-filter-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px;"></div>
 
                 <!-- 캘린더 -->
                 <div class="cal-scroll-area">
@@ -1576,6 +1579,8 @@
                     <div style="margin-top:14px; padding-top:12px; border-top:1px solid #f1f5f9;">
                         <button class="btn-action btn-primary" style="width:100%; height:44px; font-size:14px;"
                             onclick="openSchModal(null, schDetailDate)">＋ 이 날 일정 추가</button>
+                        <button class="btn-action" style="width:100%; height:42px; font-size:13px; margin-top:8px; background:#f0fdf4; color:#166534; border:1.5px solid #bbf7d0;"
+                            onclick="schAddPlan(schDetailDate)">✈️ 이 날부터 여행·여가 계획</button>
                     </div>
                 </div>
             </div>
@@ -1652,6 +1657,10 @@
                     <div id="asset-detail-list"></div>
                 </div>
 
+                <!-- 집계·AI 분석 버튼 -->
+                <button class="btn-action" style="width:100%;height:48px;font-size:14px;margin-bottom:8px;background:white;border:1.5px solid var(--month-header);color:var(--month-header);font-weight:800;border-radius:12px;cursor:pointer;" onclick="showSection('asset-analysis-section')">
+                    📊 구성원·항목별 집계 · AI 트렌드 분석
+                </button>
                 <!-- 일별 가계부 캘린더 버튼 -->
                 <button class="btn-action btn-primary" style="width:100%;height:48px;font-size:14px;" onclick="showSection('asset-cal-section')">
                     📆 일별 가계부 보기
@@ -1747,12 +1756,14 @@
 
                     <!-- 필터 토글 버튼 -->
                     <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
-                        <button class="plan-filter-btn" id="fbtn-sort"   onclick="togglePlanFilter('sort')">📅 정렬 ▾</button>
+                        <button class="plan-filter-btn" id="fbtn-sort"   onclick="togglePlanFilter('sort')" style="display:none;">📅 정렬 ▾</button>
                         <button class="plan-filter-btn" id="fbtn-period" onclick="togglePlanFilter('period')">🗓 기간 ▾</button>
-                        <button class="plan-filter-btn" id="fbtn-member" onclick="togglePlanFilter('member')">👥 구성원 ▾</button>
+                        <button class="plan-filter-btn" id="fbtn-member" onclick="togglePlanFilter('member')" style="display:none;">👥 구성원 ▾</button>
                         <button class="plan-filter-btn" id="fbtn-area"   onclick="togglePlanFilter('area')">🌐 지역 ▾</button>
-                        <button class="plan-filter-btn" id="fbtn-type"   onclick="togglePlanFilter('type')">🗂 유형 ▾</button>
+                        <button class="plan-filter-btn" id="fbtn-type"   onclick="togglePlanFilter('type')" style="display:none;">🗂 유형 ▾</button>
                     </div>
+                    <!-- 구성원·유형 체크 -->
+                    <div id="plan-chips" style="margin-bottom:8px;"></div>
 
                     <!-- 드롭다운 패널 -->
                     <!-- 기간 필터: 년/월/주 선택 -->
@@ -2361,6 +2372,35 @@
                         <button class="btn-action btn-primary" style="width:100%;height:44px;" onclick="closeAssetDayModal();openAssetEntryModal(null, assetDayDate)">＋ 항목 추가</button>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- 📰 NEWS 브리프 -->
+        <section id="news-section" class="page-section">
+            <div class="card" style="padding:clamp(12px,2vw,20px);">
+                <div class="sch-header">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:20px;">📰</span>
+                        <h3 style="margin:0;font-size:clamp(15px,2vw,18px);font-weight:800;">NEWS</h3>
+                    </div>
+                    <button onclick="showSection('main-section')" class="btn-home">🏠 Home</button>
+                </div>
+                <div id="news-meta"></div>
+                <div id="news-body"></div>
+            </div>
+        </section>
+
+        <!-- 📊 가계부 집계·분석 -->
+        <section id="asset-analysis-section" class="page-section">
+            <div class="card" style="padding:clamp(12px,2vw,20px);">
+                <div class="sch-header">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:20px;">📊</span>
+                        <h3 style="margin:0;font-size:clamp(15px,2vw,18px);font-weight:800;">집계 · AI 분석</h3>
+                    </div>
+                    <button onclick="showSection('asset-section')" class="btn-home">◀ Back</button>
+                </div>
+                <div id="ana-root"></div>
             </div>
         </section>
     </main>
@@ -4028,18 +4068,10 @@
             geminiHistory.push({ role: 'user', content: q });
 
             try {
-                const res = await fetch('https://api.anthropic.com/v1/messages', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: 'claude-sonnet-4-20250514',
-                        max_tokens: 1000,
-                        system: '당신은 설연 Family 앱의 AI 비서 "재미나이"입니다. 친근하고 유쾌하게, 간결하게 답해주세요. 한국어로 답하세요.',
-                        messages: geminiHistory
-                    })
-                });
-                const data = await res.json();
-                const answer = data.content?.map(b => b.text || '').join('') || '응답을 받지 못했어요.';
+                // ⚙️ 설정의 AI(Claude/GPT/Gemini)로 응답 — 최근 대화 10개를 함께 전달
+                const convo = geminiHistory.slice(-10).map(m => (m.role === 'user' ? '사용자: ' : '재미나이: ') + m.content).join('\n');
+                const r = await famCallAI('당신은 설연 Family 앱의 AI 비서 "재미나이"입니다. 친근하고 간결하게, 한국어로 답하세요.', convo + '\n재미나이:', { maxTokens: 1000 });
+                const answer = (r.text || '').trim() || '응답을 받지 못했어요.';
                 geminiHistory.push({ role: 'assistant', content: answer });
                 typingDiv.remove();
                 const aiDiv = document.createElement('div');
@@ -4050,7 +4082,7 @@
                 typingDiv.remove();
                 const errDiv = document.createElement('div');
                 errDiv.className = 'gemini-ai-bubble';
-                errDiv.textContent = '⚠️ 연결 실패. 잠시 후 다시 시도해주세요.';
+                errDiv.textContent = '⚠️ ' + (e.message || '연결 실패. 잠시 후 다시 시도해주세요.');
                 msgEl.appendChild(errDiv);
             }
             msgEl.scrollTop = msgEl.scrollHeight;
@@ -4426,7 +4458,26 @@ function initRealtimeSync() {
         }
 
         // ── 월간 캘린더 렌더 ─────────────────────────────────────────────
+        // ── 일정 구성원 체크 필터 ──────────────────────────────────────
+        const SCH_F = (function(){ try { return JSON.parse(localStorage.getItem('schFilter')||'null'); } catch(e){ return null; } })() || { '정우설':true, '한미연':true, '공통':true, '여행':true };
+        function schKey(ev){ return (ev.member==='정우설'||ev.member==='한미연') ? ev.member : '공통'; }
+        function schShow(ev){ if (ev.planId && SCH_F['여행']===false) return false; return SCH_F[schKey(ev)]!==false; }
+        function schToggle(k,on){ SCH_F[k]=on; try{ localStorage.setItem('schFilter',JSON.stringify(SCH_F)); }catch(e){} renderSch(); if (typeof renderMainDashboard==='function') renderMainDashboard(); }
+        function schRenderChips(){
+            const el=document.getElementById('sch-filter-chips'); if(!el) return;
+            el.innerHTML=[['정우설','👨','정우설'],['한미연','👩','한미연'],['공통','👨‍👩‍👧','공통'],['여행','✈️','여행·여가']].map(([k,ic,n])=>
+                `<label class="sch-fchip ${SCH_F[k]===false?'off':''}"><input type="checkbox" ${SCH_F[k]===false?'':'checked'} onchange="schToggle('${k}',this.checked)"> ${ic} ${n}</label>`).join('');
+        }
+        function schAddPlan(ds){
+            closeSchDetail();
+            openPlanModal(null);
+            const s=document.getElementById('plan-start-date'), e=document.getElementById('plan-end-date');
+            if(s) s.value=ds; if(e && !e.value) e.value=ds;
+            if(typeof generateDayInputs==='function') generateDayInputs();
+        }
+
         function renderSch() {
+            schRenderChips();
             const grid = document.getElementById('sch-grid');
             if (!grid) return;
             grid.innerHTML = '';
@@ -4542,7 +4593,7 @@ function initRealtimeSync() {
 
                     /* ── 이벤트 바 (현재 달만) ── */
                     if (isCur) {
-                        const dayEvs = schData.filter(s => s.date === ds);
+                        const dayEvs = schData.filter(s => s.date === ds && schShow(s));
                         dayEvs.slice(0, 2).forEach(ev => {
                             const isImpt = ev.priority === '중요';
                             const bar = document.createElement('div');
@@ -4615,7 +4666,7 @@ function initRealtimeSync() {
             schDetailDate = ds;
             closeSchAction();
 
-            const evs     = schData.filter(s => s.date === ds);
+            const evs     = schData.filter(s => s.date === ds && schShow(s));
             const date    = new Date(ds);
             const mKey    = ds.slice(5,10);
             const holiName = holidays[mKey] || specialDays[mKey] || '';
@@ -5394,70 +5445,76 @@ function initRealtimeSync() {
             return `D+${Math.abs(diff)}`;
         }
 
+        // ── 여행 목록: 구성원·유형 체크 + 다가오는/지난 기록(최신순) ──
+        const PLAN_TYPES = [['여행','✈️'],['캠핑','⛺'],['골프','⛳'],['스크린골프','🏌️'],['등산','🏔️'],['기타','📌']];
+        const PLAN_F = (function(){ try { return JSON.parse(localStorage.getItem('planFilter')||'null'); } catch(e){ return null; } })() || { m:{'정우설':true,'한미연':true,'공통':true}, t:{} };
+        function planToggle(g,k,on){ PLAN_F[g][k]=on; try{ localStorage.setItem('planFilter',JSON.stringify(PLAN_F)); }catch(e){} renderPlans(); }
+        function planChips(){
+            const el=document.getElementById('plan-chips'); if(!el) return;
+            const ch=(g,k,label)=>`<label class="sch-fchip ${PLAN_F[g][k]===false?'off':''}"><input type="checkbox" ${PLAN_F[g][k]===false?'':'checked'} onchange="planToggle('${g}','${k}',this.checked)"> ${label}</label>`;
+            el.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;">${[['정우설','👨'],['한미연','👩'],['공통','👨‍👩‍👧']].map(([k,ic])=>ch('m',k,ic+' '+k)).join('')}</div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">${PLAN_TYPES.map(([k,ic])=>ch('t',k,ic+' '+(k==='스크린골프'?'스크린':k))).join('')}</div>`;
+        }
+        function planCard(p){
+            const card = document.createElement('div');
+            card.className = 'travel-card';
+            card.onclick = () => openTravelDetail(p);
+            const mbg  = getMemberBg(p.member), mcol = getMemberColor(p.member), icon = getTypeIcon(p.subType);
+            const dday = p.start ? getDday(p.start) : '';
+            const nights = p.start && p.end ? Math.ceil((new Date(p.end)-new Date(p.start))/86400000) : 0;
+            const duration = nights > 0 ? `${nights}박 ${nights+1}일` : '당일';
+            card.innerHTML = `
+                <div class="travel-card-header">
+                    <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
+                        <span style="font-size:18px;">${icon}</span>
+                        <span style="font-weight:800;font-size:15px;color:#1e293b;">${p.loc||'미정'}</span>
+                        <span class="travel-card-badge" style="background:${mbg};color:${mcol};">${p.member||''}</span>
+                        <span class="travel-card-badge" style="background:#f1f5f9;color:#64748b;">${p.subType||''}</span>
+                    </div>
+                    <span class="travel-dday">${dday}</span>
+                </div>
+                <div style="font-size:12px;color:#64748b;margin-bottom:5px;">📅 ${p.start||''} ~ ${p.end||''} &nbsp;·&nbsp; ${duration}</div>
+                ${p.supplies ? `<div style="font-size:11px;color:#94a3b8;">🎒 ${p.supplies}</div>` : ''}`;
+            return card;
+        }
         function renderPlans() {
             const c = document.getElementById('plan-list-container');
+            if (!c) return;
+            planChips();
             c.innerHTML = '';
             let data = [...(planData || [])];
-
-            // 셀렉트 박스에서 필터/정렬 값 읽기
-            const sort       = planFilters.sort;
-            const fMember    = planFilters.member;
-            const fArea      = planFilters.area;
-            const fType      = planFilters.type;
-
-            if (fMember !== 'all') data = data.filter(p => p.member === fMember);
-            if (fArea   !== 'all') data = data.filter(p => p.mType  === fArea);
-            if (fType   !== 'all') data = data.filter(p => p.subType === fType);
-            // 기간 필터
+            const mk = p => (p.member==='정우설'||p.member==='한미연') ? p.member : '공통';
+            const tk = p => PLAN_TYPES.some(([k])=>k===p.subType) ? p.subType : '기타';
+            data = data.filter(p => PLAN_F.m[mk(p)]!==false && PLAN_F.t[tk(p)]!==false);
+            if (planFilters.area !== 'all') data = data.filter(p => p.mType === planFilters.area);
             const fPeriod = planFilters.period;
             if (fPeriod !== 'all') {
-                if (fPeriod.startsWith('Y')) {
-                    const yr = fPeriod.slice(1);
-                    data = data.filter(p => (p.start||'').startsWith(yr));
-                } else if (fPeriod.startsWith('M')) {
-                    const ym = fPeriod.slice(1); // YYYY-MM
-                    data = data.filter(p => (p.start||'').startsWith(ym));
-                } else if (fPeriod.startsWith('W')) {
-                    const [ws, we] = fPeriod.slice(1).split('~');
-                    data = data.filter(p => p.start >= ws && p.start <= we);
-                }
+                if (fPeriod.startsWith('Y'))      data = data.filter(p => (p.start||'').startsWith(fPeriod.slice(1)));
+                else if (fPeriod.startsWith('M')) data = data.filter(p => (p.start||'').startsWith(fPeriod.slice(1)));
+                else if (fPeriod.startsWith('W')) { const [ws, we] = fPeriod.slice(1).split('~'); data = data.filter(p => p.start >= ws && p.start <= we); }
             }
-
-            // 정렬
-            data.sort((a,b) => {
-                const cmp = (a.start||'').localeCompare(b.start||'');
-                return sort === 'asc' ? cmp : -cmp;
-            });
-
             if (!data.length) {
                 c.innerHTML = `<div style="text-align:center;color:#cbd5e1;padding:30px 0;font-size:13px;">해당하는 계획이 없습니다.</div>`;
                 return;
             }
-            data.forEach(p => {
-                const card = document.createElement('div');
-                card.className = 'travel-card';
-                card.onclick = () => openTravelDetail(p);
-                const mbg  = getMemberBg(p.member);
-                const mcol = getMemberColor(p.member);
-                const icon = getTypeIcon(p.subType);
-                const dday = p.start ? getDday(p.start) : '';
-                const nights = p.start && p.end ? Math.ceil((new Date(p.end)-new Date(p.start))/86400000) : 0;
-                const duration = nights > 0 ? `${nights}박 ${nights+1}일` : '당일';
-                card.innerHTML = `
-                    <div class="travel-card-header">
-                        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
-                            <span style="font-size:18px;">${icon}</span>
-                            <span style="font-weight:800;font-size:15px;color:#1e293b;">${p.loc||'미정'}</span>
-                            <span class="travel-card-badge" style="background:${mbg};color:${mcol};">${p.member||''}</span>
-                            <span class="travel-card-badge" style="background:#f1f5f9;color:#64748b;">${p.subType||''}</span>
-                        </div>
-                        <span class="travel-dday">${dday}</span>
-                    </div>
-                    <div style="font-size:12px;color:#64748b;margin-bottom:5px;">📅 ${p.start||''} ~ ${p.end||''} &nbsp;·&nbsp; ${duration}</div>
-                    ${p.supplies ? `<div style="font-size:11px;color:#94a3b8;">🎒 ${p.supplies}</div>` : ''}
-                `;
-                c.appendChild(card);
-            });
+            const t = new Date(), todayStr = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+            const upcoming = data.filter(p => (p.end||p.start||'') >= todayStr).sort((a,b)=>(a.start||'').localeCompare(b.start||''));
+            const past     = data.filter(p => (p.end||p.start||'') <  todayStr).sort((a,b)=>(b.start||'').localeCompare(a.start||''));
+            const head = (txt) => { const h=document.createElement('div'); h.style.cssText='font-size:11px;font-weight:800;color:#64748b;letter-spacing:.5px;margin:6px 2px 8px;'; h.textContent=txt; return h; };
+            if (upcoming.length) { c.appendChild(head(`다가오는 계획 ${upcoming.length}`)); upcoming.forEach(p => c.appendChild(planCard(p))); }
+            if (past.length) {
+                c.appendChild(head(`지난 기록 ${past.length} · 최신순`));
+                const years = [...new Set(past.map(p => (p.start||'').slice(0,4) || '기타'))];
+                years.forEach((y, i) => {
+                    const items = past.filter(p => ((p.start||'').slice(0,4) || '기타') === y);
+                    const d = document.createElement('details');
+                    d.open = i === 0;
+                    d.style.cssText = 'margin-bottom:8px;';
+                    d.innerHTML = `<summary style="cursor:pointer;font-size:13px;font-weight:800;color:#1e293b;padding:8px 4px;">${y}년 · ${items.length}건</summary>`;
+                    items.forEach(p => d.appendChild(planCard(p)));
+                    c.appendChild(d);
+                });
+            }
         }
 
         // ── 여행 상세 모달 ──────────────────────────────────────────────
@@ -6549,7 +6606,7 @@ function initRealtimeSync() {
             const memberLabel = m => m==='정우설'?'정우설':m==='한미연'?'한미연':'공통';
 
             // ── 오늘 일정
-            const todayEvs = schData.filter(s => s.date === todayStr);
+            const todayEvs = schData.filter(s => s.date === todayStr && schShow(s));
             const tl = document.getElementById('main-today-list');
             if (tl) tl.innerHTML = todayEvs.length
                 ? todayEvs.slice(0,4).map(ev => `
@@ -6562,7 +6619,7 @@ function initRealtimeSync() {
 
             // ── 이번달 중요 일정 (오늘 이후만)
             const ym2 = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
-            const wEvs = schData.filter(s => s.priority==='중요' && s.date>=todayStr && s.date.startsWith(ym2));
+            const wEvs = schData.filter(s => s.priority==='중요' && s.date>=todayStr && s.date.startsWith(ym2) && schShow(s));
             const wl = document.getElementById('main-week-list');
             if (wl) wl.innerHTML = wEvs.length
                 ? wEvs.sort((a,b)=>a.date.localeCompare(b.date)).slice(0,5).map(ev => `
@@ -7100,7 +7157,7 @@ function initRealtimeSync() {
             <button onclick="document.getElementById('family-auth-modal').style.display='none';"
                 style="width:100%;padding:8px;border:none;background:none;color:#94a3b8;font-size:12px;cursor:pointer;margin-top:6px;">취소</button>
             <div style="margin-top:10px;">
-                <button onclick="openSetPasswordModal()" style="font-size:11px;color:#3b82f6;background:none;border:none;cursor:pointer;">암호 변경</button> · <button onclick="timSetKey()" style="font-size:11px;color:#f59e0b;background:none;border:none;cursor:pointer;">🔑 번역 API 키 설정</button>
+                <button onclick="openSetPasswordModal()" style="font-size:11px;color:#3b82f6;background:none;border:none;cursor:pointer;">암호 변경</button> · <button onclick="document.getElementById('family-auth-modal').style.display='none';famOpenSettings()" style="font-size:11px;color:#f59e0b;background:none;border:none;cursor:pointer;">⚙️ AI 설정</button>
             </div>
         </div>
     </div>
@@ -7290,6 +7347,406 @@ function initRealtimeSync() {
                 style="margin-top:16px;width:100%;padding:12px;border-radius:14px;background:#f1f5f9;border:none;font-size:14px;font-weight:700;color:#64748b;cursor:pointer;">닫기</button>
         </div>
     </div>
+
+
+    <!-- ═══════════ 추가 기능: 설정 · NEWS 브리프 · 가계부 집계/분석 (v52) ═══════════ -->
+    <style>
+        .fam-ov{display:none;position:fixed;inset:0;z-index:9300;background:rgba(0,0,0,.5);align-items:flex-end;justify-content:center}
+        .fam-sheet{background:#fff;border-radius:22px 22px 0 0;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;padding:20px 18px calc(24px + env(safe-area-inset-bottom));animation:timModalIn .2s ease-out}
+        @media(min-width:640px){.fam-ov{align-items:center}.fam-sheet{border-radius:22px}}
+        .fam-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+        .fam-h b{font-size:16px;font-weight:900;color:#1e293b}
+        .fam-x{width:30px;height:30px;border-radius:50%;background:#f1f5f9;border:none;font-size:14px;cursor:pointer}
+        .fam-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:14px;margin-bottom:12px}
+        .fam-box h4{margin:0 0 10px;font-size:13px;font-weight:800;color:#1e293b}
+        .fam-lbl{display:block;font-size:11px;font-weight:700;color:#64748b;margin:10px 0 5px}
+        .fam-in,.fam-sel{width:100%;box-sizing:border-box;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:14px;background:#fff;outline:none;font-family:inherit;color:#1e293b}
+        .fam-in:focus,.fam-sel:focus{border-color:var(--month-header)}
+        .fam-seg{display:flex;gap:6px}
+        .fam-seg button{flex:1;padding:10px 0;border-radius:10px;border:1.5px solid #e2e8f0;background:#fff;font-size:13px;font-weight:800;color:#64748b;cursor:pointer}
+        .fam-seg button.on{background:var(--month-header);border-color:var(--month-header);color:#fff}
+        .fam-btn{padding:10px 14px;border-radius:10px;border:1.5px solid #e2e8f0;background:#fff;font-size:13px;font-weight:700;color:#334155;cursor:pointer}
+        .fam-btn.pri{background:var(--month-header);border-color:var(--month-header);color:#fff}
+        .fam-btn:disabled{opacity:.45}
+        .fam-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+        .fam-note{font-size:11px;color:#94a3b8;margin-top:6px;line-height:1.5}
+        .fam-chk{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:20px;border:1.5px solid #e2e8f0;background:#fff;font-size:12px;font-weight:700;color:#475569;cursor:pointer;user-select:none}
+        .fam-chk input{width:15px;height:15px;margin:0;accent-color:var(--month-header)}
+        .fam-chk.off{opacity:.5}
+        .fam-chks{display:flex;flex-wrap:wrap;gap:6px}
+        .fam-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+        .fam-sum div{border-radius:12px;padding:10px 12px}
+        .fam-sum span{display:block;font-size:10px;font-weight:700}
+        .fam-sum b{display:block;font-size:14px;font-weight:900;margin-top:2px;word-break:break-all}
+        .fam-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f1f5f9;font-size:13px}
+        .fam-row:last-child{border-bottom:0}
+        .fam-bar{height:6px;border-radius:6px;background:#eef2f7;overflow:hidden;flex:1;min-width:50px}
+        .fam-bar i{display:block;height:100%;border-radius:6px}
+        .fam-ai{font-size:13.5px;line-height:1.7;color:#1e293b;white-space:normal}
+        .sch-fchip{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:20px;border:1.5px solid #e2e8f0;background:#fff;font-size:12px;font-weight:700;color:#475569;cursor:pointer;user-select:none}
+        .sch-fchip input{width:14px;height:14px;margin:0;accent-color:var(--month-header)}
+        .sch-fchip.off{opacity:.45}
+        .news-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:14px 14px 10px;margin-bottom:12px}
+        .news-card h4{margin:0 0 6px;font-size:15px;font-weight:900;color:#1e293b;display:flex;align-items:center;gap:6px}
+        .news-card p{margin:0 0 8px;font-size:13.5px;line-height:1.65;color:#334155}
+        .news-item{display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-top:1px dashed #e2e8f0;text-decoration:none;color:#1e293b}
+        .news-item b{font-size:13px;font-weight:700;line-height:1.45;flex:1}
+        .news-item span{font-size:11px;color:#94a3b8;flex:none;margin-top:2px}
+        .news-item.nolink b{color:#64748b;font-weight:600}
+        .news-head{border-radius:16px;padding:14px 16px;margin-bottom:12px;background:var(--month-header);color:#fff}
+        .news-head small{display:block;font-size:11px;opacity:.8;margin-bottom:4px;letter-spacing:.5px}
+        .news-head div{font-size:15px;font-weight:800;line-height:1.5}
+        .fam-spin{display:inline-block;width:14px;height:14px;border:2px solid #cbd5e1;border-top-color:var(--month-header);border-radius:50%;animation:famspin .8s linear infinite;vertical-align:middle;margin-right:6px}
+        @keyframes famspin{to{transform:rotate(360deg)}}
+    </style>
+
+    <!-- 설정 모달 -->
+    <div id="fam-settings" class="fam-ov" onclick="if(event.target===this)famCloseSettings()">
+        <div class="fam-sheet" id="fam-settings-body"></div>
+    </div>
+
+    <script>
+    // ═══════════════════════════════════════════════════════════
+    // 공통: AI 설정 · 호출
+    // ═══════════════════════════════════════════════════════════
+    const FAM_MODEL_DEFAULTS = {
+        claude: ['claude-sonnet-5-5','claude-opus-5-5','claude-haiku-5-5','claude-fable-5-1'],
+        gpt:    ['gpt-5.4-mini','gpt-6-astra','gpt-5.4-nano'],
+        gemini: ['gemini-3.6-flash','gemini-3.8-flash','gemini-4-argon','gemini-3.5-flash-lite']
+    };
+    const FAM_NAMES = { claude:'Claude', gpt:'GPT', gemini:'Gemini' };
+    const famEsc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    function famLS(k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; } }
+    function famKeys() { return (typeof timGetKeys === 'function') ? timGetKeys() : { gemini: famLS('timKey_gemini') || '', claude: famLS('timKey_claude') || '', gpt: famLS('timKey_gpt') || '' }; }
+    function famProv() { const p = famLS('famAI_provider'); if (p) return p; const k = famKeys(); return k.claude ? 'claude' : k.gemini ? 'gemini' : k.gpt ? 'gpt' : 'claude'; }
+    function famModelList(p) { try { const l = JSON.parse(famLS('famAI_list_' + p) || 'null'); if (l && l.length) return l; } catch (e) {} return FAM_MODEL_DEFAULTS[p]; }
+    function famModel(p) { return famLS('famAI_model_' + p) || famModelList(p)[0]; }
+    function famSetKey(p, v) {
+        v = (v || '').trim();
+        famLS('timKey_' + p, v || null);
+        if (p === 'gemini' && typeof _GCLOUD_KEY !== 'undefined') { try { _GCLOUD_KEY = v; } catch (e) {} }
+    }
+
+    async function famCallAI(system, user, opt) {
+        opt = opt || {};
+        const p = famProv(), key = (famKeys()[p] || '').trim(), model = famModel(p), max = opt.maxTokens || 2500;
+        if (!key) throw new Error(FAM_NAMES[p] + ' API 키가 없습니다. 오른쪽 위 ⚙️ 설정에서 입력하세요.');
+        let res, j, sources = [];
+        if (p === 'claude') {
+            const body = { model, max_tokens: max, system, messages: [{ role: 'user', content: user }] };
+            if (opt.search) body.tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 12 }];
+            res = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' }, body: JSON.stringify(body) });
+            j = await res.json(); if (!res.ok) throw new Error(j.error?.message || res.status);
+            (j.content || []).forEach(b => {
+                if (b.type === 'web_search_tool_result' && Array.isArray(b.content)) b.content.forEach(r => { if (r.url) sources.push({ url: r.url, title: r.title || r.url }); });
+                (b.citations || []).forEach(c => { if (c.url) sources.push({ url: c.url, title: c.title || c.url }); });
+            });
+            return { text: (j.content || []).filter(b => b.type === 'text').map(b => b.text).join(''), sources };
+        }
+        if (p === 'gemini') {
+            const body = { systemInstruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts: [{ text: user }] }], generationConfig: { maxOutputTokens: max } };
+            if (opt.search) body.tools = [{ google_search: {} }];
+            res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+            j = await res.json(); if (!res.ok) throw new Error(j.error?.message || res.status);
+            const c = j.candidates?.[0];
+            (c?.groundingMetadata?.groundingChunks || []).forEach(g => { if (g.web?.uri) sources.push({ url: g.web.uri, title: g.web.title || g.web.uri }); });
+            return { text: (c?.content?.parts || []).map(x => x.text || '').join(''), sources };
+        }
+        // GPT
+        if (opt.search) {
+            res = await fetch('https://api.openai.com/v1/responses', { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + key }, body: JSON.stringify({ model, input: [{ role: 'system', content: system }, { role: 'user', content: user }], tools: [{ type: 'web_search' }] }) });
+            j = await res.json(); if (!res.ok) throw new Error(j.error?.message || res.status);
+            let text = j.output_text || '';
+            (j.output || []).forEach(o => (o.content || []).forEach(c => { if (!j.output_text && c.text) text += c.text; (c.annotations || []).forEach(a => { if (a.url) sources.push({ url: a.url, title: a.title || a.url }); }); }));
+            return { text, sources };
+        }
+        res = await fetch('https://api.openai.com/v1/chat/completions', { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + key }, body: JSON.stringify({ model, messages: [{ role: 'system', content: system }, { role: 'user', content: user }] }) });
+        j = await res.json(); if (!res.ok) throw new Error(j.error?.message || res.status);
+        return { text: j.choices?.[0]?.message?.content || '', sources };
+    }
+    function famMd(s) {
+        let h = famEsc(s);
+        h = h.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/^#{1,4} (.+)$/gm, '<b>$1</b>').replace(/^[-*] /gm, '• ').replace(/\n/g, '<br>');
+        return h;
+    }
+    function famToast(t) {
+        const d = document.createElement('div');
+        d.textContent = t;
+        d.style.cssText = 'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;z-index:9999;max-width:88vw;box-shadow:0 8px 24px rgba(0,0,0,.25)';
+        document.body.appendChild(d); setTimeout(() => d.remove(), 2600);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // ⚙️ 설정 (테마 + AI)
+    // ═══════════════════════════════════════════════════════════
+    let famShowKey = false, famCustomModel = false;
+    function famOpenSettings() { famCustomModel = false; famRenderSettings(); document.getElementById('fam-settings').style.display = 'flex'; history.pushState({ famSettings: 1 }, '', ''); }
+    function famCloseSettings() { document.getElementById('fam-settings').style.display = 'none'; }
+    function famRenderSettings() {
+        const p = famProv(), key = famKeys()[p] || '', list = famModelList(p), cur = famModel(p), custom = famCustomModel || !list.includes(cur);
+        const fetched = !!famLS('famAI_list_' + p);
+        document.getElementById('fam-settings-body').innerHTML = `
+            <div class="fam-h"><b>⚙️ 설정</b><button class="fam-x" onclick="famCloseSettings()">✕</button></div>
+            <div class="fam-box"><h4>🎨 화면</h4>
+                <button class="fam-btn" style="width:100%" onclick="famCloseSettings();openThemeColorModal();">앱 테마 색상 변경</button>
+            </div>
+            <div class="fam-box"><h4>🤖 AI 연결</h4>
+                <div class="fam-note" style="margin:0 0 10px">NEWS 브리프와 가계부 AI 분석에 사용됩니다. 키는 이 기기에만 저장됩니다.</div>
+                <span class="fam-lbl" style="margin-top:0">사용할 AI</span>
+                <div class="fam-seg">${['claude', 'gpt', 'gemini'].map(k => `<button class="${k === p ? 'on' : ''}" onclick="famSetProv('${k}')">${FAM_NAMES[k]}</button>`).join('')}</div>
+                <span class="fam-lbl">${FAM_NAMES[p]} API 키</span>
+                <input id="fam-key" class="fam-in" type="${famShowKey ? 'text' : 'password'}" value="${famEsc(key)}" placeholder="${FAM_NAMES[p]} API 키 붙여넣기" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" oninput="famKeyInput(this.value)">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+                    <label class="fam-chk" style="border:none;padding:0;background:none"><input type="checkbox" ${famShowKey ? 'checked' : ''} onchange="famShowKey=this.checked;document.getElementById('fam-key').type=this.checked?'text':'password'"> 키 보이기</label>
+                    <span id="fam-key-st" style="font-size:11px;color:#64748b">${key ? '입력됨 · 끝자리 ' + famEsc(key.slice(-4)) : '미입력'}</span>
+                </div>
+                <span class="fam-lbl">${FAM_NAMES[p]} 모델</span>
+                <select class="fam-sel" onchange="famPickModel(this.value)">${list.map(m => `<option value="${famEsc(m)}" ${m === cur && !custom ? 'selected' : ''}>${famEsc(m)}</option>`).join('')}<option value="__custom" ${custom ? 'selected' : ''}>직접 입력…</option></select>
+                ${custom ? `<input class="fam-in" style="margin-top:8px" value="${famEsc(cur)}" placeholder="모델 ID" autocapitalize="off" autocorrect="off" spellcheck="false" oninput="famLS('famAI_model_${p}',this.value.trim())">` : ''}
+                <div class="fam-note">${fetched ? '이 키로 불러온 실제 사용 가능 목록입니다.' : '기본 목록입니다. 키 입력 후 "모델 목록 불러오기"로 최신 목록을 받으세요.'}</div>
+                <div class="fam-btns"><button class="fam-btn" onclick="famLoadModels()">모델 목록 불러오기</button><button class="fam-btn" onclick="famTestAI()">연결 테스트</button></div>
+            </div>`;
+    }
+    function famSetProv(p) { famLS('famAI_provider', p); famCustomModel = false; famRenderSettings(); }
+    function famKeyInput(v) { const p = famProv(); famSetKey(p, v); const st = document.getElementById('fam-key-st'); if (st) st.textContent = v.trim() ? '입력됨 · 끝자리 ' + v.trim().slice(-4) : '미입력'; }
+    function famPickModel(v) { const p = famProv(); if (v === '__custom') { famCustomModel = true; famRenderSettings(); return; } famLS('famAI_model_' + p, v); famCustomModel = false; famRenderSettings(); famToast('모델: ' + v); }
+    async function famLoadModels() {
+        const p = famProv(), key = (famKeys()[p] || '').trim(); if (!key) { famToast('키를 먼저 입력하세요'); return; }
+        famToast('모델 목록 불러오는 중…');
+        try {
+            let ids = [], r, j;
+            if (p === 'claude') { r = await fetch('https://api.anthropic.com/v1/models?limit=100', { headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' } }); j = await r.json(); if (!r.ok) throw new Error(j.error?.message || r.status); ids = (j.data || []).map(x => x.id); }
+            else if (p === 'gpt') { r = await fetch('https://api.openai.com/v1/models', { headers: { authorization: 'Bearer ' + key } }); j = await r.json(); if (!r.ok) throw new Error(j.error?.message || r.status); ids = (j.data || []).map(x => x.id).filter(id => /^(gpt|o\d|chatgpt)/.test(id) && !/(audio|realtime|tts|transcribe|image|search|embedding|instruct)/.test(id)).sort().reverse(); }
+            else { r = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200&key=' + encodeURIComponent(key)); j = await r.json(); if (!r.ok) throw new Error(j.error?.message || r.status); ids = (j.models || []).filter(m => (m.supportedGenerationMethods || []).includes('generateContent')).map(m => m.name.replace(/^models\//, '')).filter(id => /^gemini/.test(id) && !/(embedding|image|tts|audio)/.test(id)).sort().reverse(); }
+            if (!ids.length) throw new Error('사용 가능한 모델이 없습니다');
+            famLS('famAI_list_' + p, JSON.stringify(ids)); if (!ids.includes(famModel(p))) famLS('famAI_model_' + p, ids[0]);
+            famCustomModel = false; famRenderSettings(); famToast(ids.length + '개 모델을 불러왔습니다');
+        } catch (e) { famToast('불러오기 실패: ' + e.message); }
+    }
+    async function famTestAI() { famToast('연결 확인 중…'); try { const r = await famCallAI('짧게 답하라.', '"정상" 한 단어로 답해.', { maxTokens: 50 }); famToast('연결 정상 · ' + (r.text || '').slice(0, 20)); } catch (e) { famToast('실패: ' + e.message); } }
+
+    // ═══════════════════════════════════════════════════════════
+    // 📰 NEWS 브리프
+    // ═══════════════════════════════════════════════════════════
+    const NEWS_CATS = [['economy', '경제', '💹'], ['stock', '주식', '📈'], ['world', '세계', '🌍'], ['society', '사회', '🏛️'], ['ent', '연예', '🎬'], ['sports', '스포츠', '⚽']];
+    let newsDate = null, newsUnsub = null, newsBusy = false;
+    function newsTZ() { try { return (typeof userTimezone !== 'undefined' && userTimezone) || 'Asia/Seoul'; } catch (e) { return 'Asia/Seoul'; } }
+    function newsKST(offsetDays) {
+        const d = new Date(Date.now() + (offsetDays || 0) * 864e5);
+        try {
+            const f = new Intl.DateTimeFormat('en-CA', { timeZone: newsTZ(), year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' });
+            const q = {}; f.formatToParts(d).forEach(x => q[x.type] = x.value);
+            return { date: `${q.year}-${q.month}-${q.day}`, hour: +q.hour };
+        } catch (e) { const k = new Date(d.getTime() + 9 * 3600e3); return { date: k.toISOString().slice(0, 10), hour: k.getUTCHours() }; }
+    }
+    function newsLocalGet(date) { try { return JSON.parse(famLS('newsBrief_' + date) || 'null'); } catch (e) { return null; } }
+    function newsOnEnter() {
+        try { db.collection('config').doc('newsBrief').set({ timezone: newsTZ(), city: (typeof userCityName !== 'undefined' && userCityName) || '', updatedAt: Date.now() }, { merge: true }); } catch (e) {}
+        const t = newsKST(0);
+        newsDate = t.hour >= 8 ? t.date : newsKST(-1).date;
+        newsWatch();
+    }
+    function newsWatch() {
+        if (newsUnsub) { try { newsUnsub(); } catch (e) {} newsUnsub = null; }
+        const date = newsDate, local = newsLocalGet(date);
+        newsRender(local, date);
+        try {
+            newsUnsub = db.collection('newsBriefs').doc(date).onSnapshot(doc => {
+                const d = doc.exists ? doc.data() : null;
+                if (d && d.status === 'done') { famLS('newsBrief_' + date, JSON.stringify(d)); newsRender(d, date); }
+                else if (d && d.status === 'generating' && Date.now() - (d.startedAt || 0) < 4 * 60e3) newsRender(null, date, (d.by || '가족') + '님이 브리프를 만드는 중입니다…');
+                else newsMaybeAuto(date);
+            }, () => newsMaybeAuto(date));
+        } catch (e) { newsMaybeAuto(date); }
+    }
+    function newsMaybeAuto(date) {
+        if (newsLocalGet(date)) return;
+        const t = newsKST(0);
+        if (date === t.date && t.hour >= 8 && (famKeys()[famProv()] || '')) newsGenerate(false);
+        else newsRender(null, date);
+    }
+    function newsNav(d) {
+        const cur = new Date(newsDate + 'T00:00:00Z'); cur.setUTCDate(cur.getUTCDate() + d);
+        const nd = cur.toISOString().slice(0, 10); if (nd > newsKST(0).date) return;
+        newsDate = nd; newsWatch();
+    }
+    async function newsGenerate(force) {
+        if (newsBusy) return;
+        const date = newsDate, t = newsKST(0);
+        if (date !== t.date) { famToast('지난 날짜는 새로 만들 수 없습니다'); return; }
+        if (force && !confirm('오늘 브리프를 새로 만들까요? (1~2분 소요)')) return;
+        if (!(famKeys()[famProv()] || '')) { newsRender(null, date); famOpenSettings(); return; }
+        newsBusy = true;
+        const who = (typeof localStorage !== 'undefined' && localStorage.getItem('chatUser')) || '가족';
+        newsRender(null, date, 'AI가 오늘 뉴스를 검색하고 정리하는 중입니다… (1~2분)');
+        try { await db.collection('newsBriefs').doc(date).set({ status: 'generating', startedAt: Date.now(), by: who }, { merge: true }); } catch (e) {}
+        const sys = '너는 한국 독자를 위한 아침 뉴스 브리핑 편집자다. 반드시 웹 검색으로 확인한 최근 24시간 이내 실제 보도만 사용한다. 기억이나 추측으로 쓰지 않는다. 평이한 한국어로 사실 위주로 쓴다.';
+        const user = `오늘은 ${date} (${newsTZ()} 기준)이다. 아래 분야별 최신 주요 뉴스를 웹 검색해 정리하라.
+분야와 키: 경제(economy), 주식(stock: 코스피·코스닥 흐름과 전일 미국 증시 마감 포함), 세계(world), 사회(society), 연예(ent), 스포츠(sports).
+각 분야마다 summary는 핵심을 한국어 2~3문장으로, items는 주요 기사 3개로 title(한국어 기사 제목), source(언론사), url(검색 결과에서 확인한 기사 원문 주소, 확인 못하면 빈 문자열).
+headline은 오늘의 흐름을 한 문장으로.
+출력은 JSON만: {"headline":"","sections":[{"key":"economy","summary":"","items":[{"title":"","source":"","url":""}]}]}`;
+        try {
+            const r = await famCallAI(sys, user, { search: true, maxTokens: 6000 });
+            const txt = r.text || '', a = txt.indexOf('{'), b = txt.lastIndexOf('}');
+            if (a < 0 || b < a) throw new Error('응답 형식을 읽지 못했습니다');
+            const parsed = JSON.parse(txt.slice(a, b + 1));
+            const seen = new Set(), sources = (r.sources || []).filter(s => /^https?:/.test(s.url) && !seen.has(s.url) && seen.add(s.url)).slice(0, 30);
+            const sections = NEWS_CATS.map(([k]) => { const s = (parsed.sections || []).find(x => x.key === k) || {}; return { key: k, summary: s.summary || '', items: (s.items || []).slice(0, 4).map(i => ({ title: i.title || '', source: i.source || '', url: /^https?:\/\//.test(i.url || '') ? i.url : '' })) }; });
+            const doc = { status: 'done', date, headline: parsed.headline || '', sections, sources, by: who, ai: FAM_NAMES[famProv()] + ' · ' + famModel(famProv()), createdAt: Date.now() };
+            famLS('newsBrief_' + date, JSON.stringify(doc));
+            try { await db.collection('newsBriefs').doc(date).set(doc); } catch (e) {}
+            newsRender(doc, date);
+        } catch (e) {
+            try { await db.collection('newsBriefs').doc(date).set({ status: 'failed', startedAt: 0 }, { merge: true }); } catch (_) {}
+            newsRender(null, date, null, '브리프 생성 실패: ' + e.message + ' — ⚙️ 설정에서 다른 AI로 바꿔 다시 시도해 보세요.');
+        }
+        newsBusy = false;
+    }
+    function newsRender(d, date, busyMsg, errMsg) {
+        const body = document.getElementById('news-body'), meta = document.getElementById('news-meta'); if (!body) return;
+        const t = newsKST(0), isToday = date === t.date;
+        meta.innerHTML = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+            <button class="fam-btn" onclick="newsNav(-1)">◀</button>
+            <div style="flex:1;text-align:center;font-weight:800;font-size:14px;color:#1e293b;">${date}${isToday ? ' · 오늘' : ''}</div>
+            <button class="fam-btn" onclick="newsNav(1)" ${isToday ? 'disabled' : ''}>▶</button></div>`;
+        if (busyMsg) { body.innerHTML = `<div class="fam-box" style="text-align:center;padding:28px 14px;"><span class="fam-spin"></span>${famEsc(busyMsg)}</div>`; return; }
+        if (!d) {
+            const hasKey = !!(famKeys()[famProv()] || '');
+            let msg = isToday ? (t.hour >= 8 ? '오늘 브리프가 아직 없습니다.' : `오늘 브리프는 ${famEsc(newsTZ())} 기준 오전 8시에 만들어집니다.`) : '이 날짜의 브리프가 없습니다.';
+            body.innerHTML = `${errMsg ? `<div class="fam-box" style="color:#b91c1c;font-size:13px;">${famEsc(errMsg)}</div>` : ''}
+                <div class="fam-box" style="text-align:center;padding:24px 14px;font-size:13px;color:#64748b;">${msg}
+                ${isToday && t.hour >= 8 ? (hasKey ? `<div class="fam-btns" style="justify-content:center"><button class="fam-btn pri" onclick="newsGenerate(false)">지금 만들기</button></div>` : `<div class="fam-btns" style="justify-content:center"><button class="fam-btn pri" onclick="famOpenSettings()">⚙️ AI 키 설정</button></div>`) : ''}
+                ${isToday && t.hour < 8 ? `<div class="fam-btns" style="justify-content:center"><button class="fam-btn" onclick="newsNav(-1)">어제 브리프 보기</button></div>` : ''}</div>`;
+            return;
+        }
+        let ct = ''; try { ct = d.createdAt ? new Date(d.createdAt).toLocaleTimeString('ko-KR', { timeZone: newsTZ(), hour: '2-digit', minute: '2-digit', hour12: false }) : ''; } catch (e) {}
+        body.innerHTML = `${d.headline ? `<div class="news-head"><small>TODAY'S BRIEF</small><div>${famEsc(d.headline)}</div></div>` : ''}
+            ${NEWS_CATS.map(([k, n, ic]) => { const s = (d.sections || []).find(x => x.key === k); if (!s || (!s.summary && !(s.items || []).length)) return ''; return `<div class="news-card"><h4>${ic} ${n}</h4>${s.summary ? `<p>${famEsc(s.summary)}</p>` : ''}${(s.items || []).map(i => i.url ? `<a class="news-item" href="${famEsc(i.url)}" target="_blank" rel="noopener"><b>${famEsc(i.title)}</b><span>${famEsc(i.source)} ↗</span></a>` : `<div class="news-item nolink"><b>${famEsc(i.title)}</b><span>${famEsc(i.source)}</span></div>`).join('')}</div>`; }).join('')}
+            ${(d.sources || []).length ? `<details class="fam-box"><summary style="font-size:12px;font-weight:700;color:#64748b;cursor:pointer;">검색에 사용된 출처 ${d.sources.length}건</summary><div style="margin-top:8px">${d.sources.map(s => `<a href="${famEsc(s.url)}" target="_blank" rel="noopener" style="display:block;font-size:12px;padding:4px 0;color:#2563eb;word-break:break-all;">${famEsc(s.title)}</a>`).join('')}</div></details>` : ''}
+            <div class="fam-note" style="text-align:center">${ct ? ct + ' 생성' : ''}${d.by ? ' · ' + famEsc(d.by) : ''}${d.ai ? ' · ' + famEsc(d.ai) : ''} · AI 요약이라 세부 내용은 원문 기사로 확인하세요</div>
+            ${isToday ? `<div class="fam-btns" style="justify-content:center"><button class="fam-btn" onclick="newsGenerate(true)">다시 만들기</button></div>` : ''}`;
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 📊 가계부 집계 · AI 트렌드 분석
+    // ═══════════════════════════════════════════════════════════
+    const ANA_MEMBERS = [['공통', '👨‍👩‍👧'], ['정우설', '👨'], ['한미연', '👩']];
+    const ana = { period: '3m', from: '', to: '', members: { '공통': true, '정우설': true, '한미연': true }, types: { '수입': true, '지출': true }, catOff: {}, excl: {}, ai: '' };
+    let anaChart = null;
+    function anaYM(s) { const m = String(s || '').match(/(\d{4})\D?(\d{1,2})/); return m ? m[1] + '-' + String(m[2]).padStart(2, '0') : ''; }
+    function anaAll() {
+        const out = [], seen = new Set();
+        Object.keys(assetData || {}).forEach(k => (assetData[k] || []).forEach(e => { const id = e.id || (e.date + e.amt + e.memo); if (seen.has(id)) return; seen.add(id); const mem = ['공통', '정우설', '한미연'].includes(e.member) ? e.member : (e.member === '남편' ? '정우설' : e.member === '아내' ? '한미연' : '공통'); out.push({ ...e, _id: id, _m: mem, _ym: anaYM(e.date), amt: Number(e.amt) || 0, category: e.category || '기타' }); }));
+        return out;
+    }
+    function anaMonthsBack(n) { const d = new Date(Date.now() + 9 * 3600e3), a = []; for (let i = n - 1; i >= 0; i--) { const x = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - i, 1)); a.push(x.toISOString().slice(0, 7)); } return a; }
+    function anaRange() {
+        if (ana.period === 'all') return null;
+        if (ana.period === 'custom') { const f = ana.from || '0000-00', t = ana.to || '9999-99'; return [f, t]; }
+        const n = { m: 1, '3m': 3, '6m': 6, '12m': 12 }[ana.period] || 3, ms = anaMonthsBack(n); return [ms[0], ms[ms.length - 1]];
+    }
+    function anaBase() { const r = anaRange(); return anaAll().filter(e => e._ym && (!r || (e._ym >= r[0] && e._ym <= r[1])) && ana.members[e._m] && ana.types[e.type]); }
+    function anaFiltered() { return anaBase().filter(e => !ana.catOff[e.type + '|' + e.category] && !ana.excl[e._id]); }
+    const anaW = n => (Math.round(n) || 0).toLocaleString('ko-KR') + '원';
+    function anaRender() {
+        const root = document.getElementById('ana-root'); if (!root) return;
+        const base = anaBase(), rows = anaFiltered();
+        const cats = {}; base.forEach(e => { const k = e.type + '|' + e.category; cats[k] = (cats[k] || 0) + e.amt; });
+        const inc = rows.filter(e => e.type === '수입').reduce((a, e) => a + e.amt, 0), exp = rows.filter(e => e.type === '지출').reduce((a, e) => a + e.amt, 0);
+        const months = [...new Set(rows.map(e => e._ym))].sort();
+        const byCat = {}; rows.forEach(e => { const k = e.type + '|' + e.category; byCat[k] = (byCat[k] || 0) + e.amt; });
+        const byMem = {}; rows.forEach(e => { const m = byMem[e._m] || (byMem[e._m] = { 수입: 0, 지출: 0 }); m[e.type] += e.amt; });
+        const catList = Object.entries(byCat).sort((a, b) => b[1] - a[1]), maxCat = catList.length ? catList[0][1] : 1;
+        const P = [['m', '이번 달'], ['3m', '3개월'], ['6m', '6개월'], ['12m', '12개월'], ['all', '전체'], ['custom', '기간 지정']];
+        const chk = (grp, val, on, label) => `<label class="fam-chk ${on ? '' : 'off'}"><input type="checkbox" data-ana="${grp}" value="${famEsc(val)}" ${on ? 'checked' : ''}> ${label}</label>`;
+        const catChecks = t => Object.keys(cats).filter(k => k.startsWith(t + '|')).sort((a, b) => cats[b] - cats[a]).map(k => chk('cat', k, !ana.catOff[k], famEsc(k.split('|')[1]))).join('') || '<span class="fam-note" style="margin:0">해당 내역 없음</span>';
+        root.innerHTML = `
+            <div class="fam-box"><h4>기간</h4>
+                <div class="fam-chks">${P.map(([k, n]) => `<button class="fam-btn ${ana.period === k ? 'pri' : ''}" style="padding:7px 11px;font-size:12px" onclick="ana.period='${k}';anaRender()">${n}</button>`).join('')}</div>
+                ${ana.period === 'custom' ? `<div style="display:flex;gap:8px;margin-top:10px;align-items:center"><input type="month" class="fam-in" value="${ana.from}" onchange="ana.from=this.value;anaRender()"><span>~</span><input type="month" class="fam-in" value="${ana.to}" onchange="ana.to=this.value;anaRender()"></div>` : ''}
+                <span class="fam-lbl">가족 구성원</span><div class="fam-chks">${ANA_MEMBERS.map(([m, ic]) => chk('member', m, ana.members[m], ic + ' ' + m)).join('')}</div>
+                <span class="fam-lbl">수입 / 지출</span><div class="fam-chks">${chk('type', '수입', ana.types['수입'], '📥 수입')}${chk('type', '지출', ana.types['지출'], '📤 지출')}</div>
+                ${ana.types['수입'] ? `<span class="fam-lbl">수입 항목</span><div class="fam-chks">${catChecks('수입')}</div>` : ''}
+                ${ana.types['지출'] ? `<span class="fam-lbl">지출 항목</span><div class="fam-chks">${catChecks('지출')}</div>` : ''}
+                <div class="fam-btns"><button class="fam-btn" style="padding:6px 10px;font-size:12px" onclick="ana.catOff={};ana.excl={};anaRender()">항목 전체 선택</button><button class="fam-btn" style="padding:6px 10px;font-size:12px" onclick="anaAllOff()">항목 전체 해제</button></div>
+            </div>
+            <div class="fam-sum">
+                <div style="background:#f0fdf4"><span style="color:#166534">수입</span><b style="color:#166534">${anaW(inc)}</b></div>
+                <div style="background:#fef2f2"><span style="color:#991b1b">지출</span><b style="color:#991b1b">${anaW(exp)}</b></div>
+                <div style="background:#eff6ff"><span style="color:#1e40af">손익</span><b style="color:${inc - exp < 0 ? '#b91c1c' : '#1e40af'}">${anaW(inc - exp)}</b></div>
+            </div>
+            <div class="fam-note" style="margin:-4px 0 10px">${rows.length}건 · ${months.length}개월${months.length && exp ? ' · 월평균 지출 ' + anaW(exp / months.length) : ''}</div>
+            <div class="fam-box"><h4>월별 추이</h4><div style="height:210px"><canvas id="anaChart"></canvas></div></div>
+            <div class="fam-box"><h4>구성원별</h4>${Object.keys(byMem).length ? ANA_MEMBERS.filter(([m]) => byMem[m]).map(([m, ic]) => `<div class="fam-row"><span style="flex:none;width:76px">${ic} ${m}</span><span style="flex:1;color:#166534">+${anaW(byMem[m]['수입'])}</span><span style="flex:1;color:#991b1b;text-align:right">-${anaW(byMem[m]['지출'])}</span></div>`).join('') : '<div class="fam-note">선택된 내역이 없습니다</div>'}</div>
+            <div class="fam-box"><h4>항목별</h4>${catList.length ? catList.map(([k, v]) => { const [t, c] = k.split('|'); return `<div class="fam-row"><span style="flex:none;width:88px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t === '수입' ? '📥' : '📤'} ${famEsc(c)}</span><div class="fam-bar"><i style="width:${Math.max(2, v / maxCat * 100)}%;background:${t === '수입' ? '#22c55e' : 'var(--month-header)'}"></i></div><span style="flex:none;width:96px;text-align:right">${anaW(v)}</span></div>`; }).join('') : '<div class="fam-note">선택된 내역이 없습니다</div>'}</div>
+            <div class="fam-box"><h4>🤖 AI 트렌드 분석</h4>
+                <div class="fam-note" style="margin:0 0 10px">지금 선택한 조건의 월별·항목별 집계만 AI에 보내 분석합니다. 메모 내용은 보내지 않습니다.</div>
+                <button class="fam-btn pri" id="ana-ai-btn" onclick="anaAI()" ${rows.length ? '' : 'disabled'}>분석하기</button>
+                <div id="ana-ai-out" class="fam-ai" style="margin-top:12px">${ana.ai ? famMd(ana.ai) : ''}</div>
+            </div>
+            <details class="fam-box"><summary style="font-size:13px;font-weight:800;color:#1e293b;cursor:pointer;">내역 ${base.filter(e => !ana.catOff[e.type + '|' + e.category]).length}건 — 체크 해제하면 집계에서 빠집니다</summary>
+                <div style="margin-top:8px">${base.filter(e => !ana.catOff[e.type + '|' + e.category]).sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 400).map(e => `<label class="fam-row" style="cursor:pointer"><input type="checkbox" data-ana="ex" value="${famEsc(e._id)}" ${ana.excl[e._id] ? '' : 'checked'} style="width:16px;height:16px;accent-color:var(--month-header)"><span style="flex:none;width:44px;color:#94a3b8;font-size:11px">${famEsc(String(e.date).slice(5))}</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${famEsc(e.category)}${e.memo ? ' · ' + famEsc(e.memo) : ''} <span style="color:#94a3b8;font-size:11px">${famEsc(e._m)}</span></span><b style="flex:none;color:${e.type === '수입' ? '#166534' : '#991b1b'}">${e.type === '수입' ? '+' : '-'}${anaW(e.amt)}</b></label>`).join('')}</div>
+            </details>`;
+        anaDrawChart(rows, months);
+    }
+    function anaAllOff() { anaBase().forEach(e => { ana.catOff[e.type + '|' + e.category] = true; }); anaRender(); }
+    function anaDrawChart(rows, months) {
+        const cv = document.getElementById('anaChart'); if (!cv || typeof Chart === 'undefined') return;
+        if (anaChart) { try { anaChart.destroy(); } catch (e) {} anaChart = null; }
+        const r = anaRange(); let labels = months;
+        if (r && ana.period !== 'custom') labels = anaMonthsBack({ m: 1, '3m': 3, '6m': 6, '12m': 12 }[ana.period]);
+        const sum = (ym, t) => rows.filter(e => e._ym === ym && e.type === t).reduce((a, e) => a + e.amt, 0);
+        const ds = [];
+        if (ana.types['수입']) ds.push({ type: 'bar', label: '수입', data: labels.map(m => sum(m, '수입')), backgroundColor: '#86efac', borderRadius: 6 });
+        if (ana.types['지출']) ds.push({ type: 'bar', label: '지출', data: labels.map(m => sum(m, '지출')), backgroundColor: '#fca5a5', borderRadius: 6 });
+        if (ana.types['수입'] && ana.types['지출']) ds.push({ type: 'line', label: '손익', data: labels.map(m => sum(m, '수입') - sum(m, '지출')), borderColor: '#1e40af', backgroundColor: '#1e40af', tension: .3, pointRadius: 3 });
+        anaChart = new Chart(cv.getContext('2d'), { data: { labels: labels.map(m => m.slice(2).replace('-', '.')), datasets: ds }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { boxWidth: 10, font: { size: 11 } } } }, scales: { y: { ticks: { font: { size: 10 }, callback: v => Math.abs(v) >= 10000 ? Math.round(v / 10000) + '만' : v } }, x: { ticks: { font: { size: 10 } } } } } });
+    }
+    async function anaAI() {
+        const rows = anaFiltered(); if (!rows.length) return;
+        const btn = document.getElementById('ana-ai-btn'), out = document.getElementById('ana-ai-out');
+        btn.disabled = true; out.innerHTML = '<span class="fam-spin"></span>분석 중…';
+        const months = [...new Set(rows.map(e => e._ym))].sort(), lines = [];
+        months.forEach(m => {
+            const r = rows.filter(e => e._ym === m), inc = r.filter(e => e.type === '수입').reduce((a, e) => a + e.amt, 0), exp = r.filter(e => e.type === '지출').reduce((a, e) => a + e.amt, 0);
+            const cat = {}; r.forEach(e => { const k = e.type + ':' + e.category; cat[k] = (cat[k] || 0) + e.amt; });
+            const mem = {}; r.filter(e => e.type === '지출').forEach(e => { mem[e._m] = (mem[e._m] || 0) + e.amt; });
+            lines.push(`${m} | 수입 ${inc} | 지출 ${exp} | 항목 ${Object.entries(cat).map(([k, v]) => k + ' ' + v).join(', ')} | 구성원별 지출 ${Object.entries(mem).map(([k, v]) => k + ' ' + v).join(', ')}`);
+        });
+        const cond = `구성원: ${Object.keys(ana.members).filter(k => ana.members[k]).join('·')} / 구분: ${Object.keys(ana.types).filter(k => ana.types[k]).join('·')} / 제외 항목: ${Object.keys(ana.catOff).filter(k => ana.catOff[k]).join(', ') || '없음'}`;
+        try {
+            const r = await famCallAI('너는 가족 가계부를 함께 보는 재무 코치다. 주어진 숫자만 근거로 쓰고, 평이한 한국어로 짧고 구체적으로 답한다. 과장하거나 훈계하지 않는다. 금액은 만원 단위로 반올림해 쓴다.',
+                `집계 조건: ${cond}\n월별 데이터(원):\n${lines.join('\n')}\n\n다음 순서로 정리해줘.\n1) 한 줄 요약\n2) 추세: 늘어난 항목과 줄어든 항목 (숫자 근거)\n3) 눈에 띄는 변동이나 일회성 지출로 보이는 것\n4) 구성원별 특징 (해당될 때만)\n5) 다음 달 주의할 점과 현실적인 절감 제안 2~3개`, { maxTokens: 1800 });
+            ana.ai = r.text || '(응답 없음)';
+        } catch (e) { ana.ai = '분석 실패: ' + e.message; }
+        out.innerHTML = famMd(ana.ai); btn.disabled = false;
+    }
+    document.addEventListener('change', e => {
+        const t = e.target; if (!t.dataset || !t.dataset.ana) return;
+        const g = t.dataset.ana, v = t.value;
+        if (g === 'member') ana.members[v] = t.checked;
+        else if (g === 'type') ana.types[v] = t.checked;
+        else if (g === 'cat') { if (t.checked) delete ana.catOff[v]; else ana.catOff[v] = true; }
+        else if (g === 'ex') { if (t.checked) delete ana.excl[v]; else ana.excl[v] = true; }
+        if (g !== 'ex') { anaRender(); return; }
+        const open = document.querySelector('#ana-root details[open]') ? true : false; anaRender(); if (open) { const d = document.querySelector('#ana-root details:last-of-type'); if (d) d.open = true; }
+    });
+
+    // ── 화면 전환 연결 ──
+    (function () {
+        const orig = window.showSection;
+        if (typeof orig !== 'function') return;
+        window.showSection = function (id, push) {
+            orig(id, push);
+            if (id === 'news-section') { const de = document.getElementById('di-news'); if (de) de.classList.add('active'); newsOnEnter(); }
+            else if (newsUnsub) { try { newsUnsub(); } catch (e) {} newsUnsub = null; }
+            if (id === 'asset-analysis-section') { const de = document.getElementById('di-asset'); if (de) de.classList.add('active'); anaRender(); }
+        };
+    })();
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { const ns = document.getElementById('news-section'); if (ns && ns.classList.contains('active')) newsOnEnter(); } });
+    window.addEventListener('popstate', () => { const m = document.getElementById('fam-settings'); if (m && m.style.display === 'flex') m.style.display = 'none'; });
+    </script>
 
 </body>
 </html>
