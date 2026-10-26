@@ -1441,7 +1441,7 @@
                         <div class="ff-tools"><button onclick="famHistOpen()">🕘 지난 대화</button><button id="ff-new" onclick="famFeedNew()">↺ 새 대화</button></div>
                         <div class="fam-feed-body" id="fam-feed-body"></div>
                         <span id="chat-unread-badge" style="display:none"></span>
-                        <div class="footer-info">Family Shared v71.0 &nbsp;·&nbsp; Jung Wooseol 2026</div>
+                        <div class="footer-info">Family Shared v72.0 &nbsp;·&nbsp; Jung Wooseol 2026</div>
                         <div style="height:150px"></div>
                         </div><!-- /main-scroll -->
             </div><!-- /main-wrap -->
@@ -3234,7 +3234,7 @@
                 const canEdit = isMe && !isMedia && !isAI;
 
                 html += `<div class="chat-bubble-wrap ${side}${highlight}" data-id="${m.id}"${isMe ? ` onclick="chatToggleAct(this,event)"` : ''}>
-                    ${(!isMe||isAI) ? `<div class="chat-sender" style="display:flex;align-items:center;gap:5px;">${typeof famAvatarHtml==='function' ? famAvatarHtml(isAI?(m.aiName||'AI'):m.sender, 22) : ''}${isAI?escHtml(m.aiName||'AI'):escHtml(m.sender||'')}</div>` : ''}
+                    ${(!isMe||isAI) ? `<div class="chat-sender" style="display:flex;align-items:center;gap:5px;">${typeof famAvatarHtml==='function' ? famAvatarHtml(isAI?(m.aiName||'AI'):m.sender, 22, true) : ''}${isAI?escHtml(m.aiName||'AI'):escHtml(m.sender||'')}</div>` : ''}
                     <div class="${(isMedia||isAI)?'':'chat-bubble'}">${renderMsgContent(m)}</div>
                     <div class="chat-meta"><span>${timeStr}</span>${readMark}</div>
                     ${isMe ? `<div class="chat-actions">
@@ -9300,11 +9300,28 @@ ${text}`, { maxTokens: 1200 });
     // ═══════════════════════════════════════════════════════════
     let famPhotos = {};
     const FAM_AV = { '정우설': ['👨', '#dbeafe'], '한미연': ['👩', '#fce7f3'], 'Claude': ['🟠', '#fff7ed'], 'GPT': ['🟢', '#f0fdf4'], 'Gemini': ['🔵', '#eff6ff'], 'AI': ['🤖', '#f1f5f9'] };
-    function famAvatarHtml(name, size) {
+    // zoom=true 이면 탭했을 때 크게 보기
+    function famAvatarHtml(name, size, zoom) {
         size = size || 28; const url = famPhotos[name], [em, bg] = FAM_AV[name] || ['👤', '#f1f5f9'];
-        return url ? `<img src="${famEsc(url)}" class="fam-av" style="width:${size}px;height:${size}px" alt="">`
-            : `<span class="fam-av" style="width:${size}px;height:${size}px;background:${bg};font-size:${Math.round(size * .58)}px">${em}</span>`;
+        const z = zoom ? ` onclick="event.stopPropagation();famAvatarZoom('${famEsc(name)}')" style="cursor:zoom-in;` : ` style="`;
+        return url ? `<img src="${famEsc(url)}" class="fam-av"${z}width:${size}px;height:${size}px" alt="">`
+            : `<span class="fam-av"${z}width:${size}px;height:${size}px;background:${bg};font-size:${Math.round(size * .58)}px">${em}</span>`;
     }
+    // 프로필 크게 보기 (사진·캐릭터·기본 아이콘 모두)
+    function famAvatarZoom(name) {
+        famAvatarZoomClose();
+        const o = document.createElement('div'); o.id = 'fam-av-zoom';
+        o.style.cssText = 'position:fixed;inset:0;z-index:99990;background:rgba(15,23,42,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;cursor:zoom-out;animation:timModalIn .18s ease-out';
+        const size = Math.min(320, Math.round(window.innerWidth * 0.72));
+        o.innerHTML = famAvatarHtml(name, size).replace('class="fam-av"', 'class="fam-av" style="box-shadow:0 12px 40px rgba(0,0,0,.35)"').replace('" style="box-shadow:0 12px 40px rgba(0,0,0,.35)" style="', '" style="box-shadow:0 12px 40px rgba(0,0,0,.35);')
+            + `<div style="color:#fff;font-size:18px;font-weight:800">${famEsc(name)}</div>`
+            + (name === famUser() ? `<button class="fam-btn" style="padding:8px 16px;font-size:13px" onclick="event.stopPropagation();famAvatarZoomClose();famProfileSheet()">프로필 변경</button>` : '');
+        o.onclick = famAvatarZoomClose;
+        document.body.appendChild(o);
+        history.pushState({ famAvZoom: 1 }, '', '');
+    }
+    function famAvatarZoomClose() { const o = document.getElementById('fam-av-zoom'); if (o) o.remove(); }
+    window.addEventListener('popstate', famAvatarZoomClose);
     function famPhotosListen() {
         try { db.collection('config').doc('profiles').onSnapshot(d => { famPhotos = (d.exists && d.data()) || {}; famAvatarApply(); }, () => {}); } catch (e) {}
     }
@@ -9320,7 +9337,7 @@ ${text}`, { maxTokens: 1200 });
     function famProfileSheet() {
         const me = famUser(); if (!me) { if (typeof openProfileModal === 'function') openProfileModal(); return; }
         famSheet(`<div class="fam-h"><b>👤 프로필</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
-            <div style="text-align:center;padding:4px 0 14px">${famAvatarHtml(me, 96)}<div style="font-size:17px;font-weight:800;color:#1e293b;margin-top:10px">${famEsc(me)}</div></div>
+            <div style="text-align:center;padding:4px 0 14px">${famAvatarHtml(me, 96, true)}<div style="font-size:17px;font-weight:800;color:#1e293b;margin-top:10px">${famEsc(me)}</div></div>
             <div class="fam-box">
                 <button class="ff-res" onclick="famAvatarPicker()"><i>🎨</i><div>캐릭터 고르기<small>사진 대신 일러스트 · 이모지 캐릭터</small></div></button>
                 <button class="ff-res" onclick="document.getElementById('fam-avatar-input').click()"><i>📷</i><div>내 사진·이미지 올리기<small>앨범의 아무 이미지나 · 가운데를 정사각형으로 잘라 저장</small></div></button>
@@ -9427,7 +9444,7 @@ ${text}`, { maxTokens: 1200 });
         const ids = Object.keys(famTypers);
         if (!ids.length) { el.style.display = 'none'; el.innerHTML = ''; return; }
         el.innerHTML = ids.map(id => { const n = famTyperName[id] || id, ai = id === 'AI';
-            return `<div class="ct-row">${famAvatarHtml(n, 20)}<span>${famEsc(n)}${ai ? '가 답변 중' : '님이 입력 중'}</span><span class="ct-dots"><i></i><i></i><i></i></span></div>`; }).join('');
+            return `<div class="ct-row">${famAvatarHtml(n, 20, true)}<span>${famEsc(n)}${ai ? '가 답변 중' : '님이 입력 중'}</span><span class="ct-dots"><i></i><i></i><i></i></span></div>`; }).join('');
         el.style.display = 'block';
         const box = document.getElementById('chat-messages');
         if (box && box.scrollHeight - box.scrollTop - box.clientHeight < 120) box.scrollTop = box.scrollHeight;
