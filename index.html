@@ -426,7 +426,7 @@
         .chat-actions {
             display:none; gap:5px; margin-top:4px;
         }
-        .chat-bubble-wrap:hover .chat-actions { display:flex; }
+        .chat-bubble-wrap:hover .chat-actions, .chat-bubble-wrap.show-act .chat-actions { display:flex; }
         .chat-act-btn {
             font-size:10px; padding:3px 8px; border-radius:8px;
             border:1px solid #e2e8f0; background:white;
@@ -1071,7 +1071,7 @@
         .chat-actions {
             display:none; gap:5px; margin-top:4px;
         }
-        .chat-bubble-wrap:hover .chat-actions { display:flex; }
+        .chat-bubble-wrap:hover .chat-actions, .chat-bubble-wrap.show-act .chat-actions { display:flex; }
         .chat-act-btn {
             font-size:10px; padding:3px 8px; border-radius:8px;
             border:1px solid #e2e8f0; background:white;
@@ -1441,7 +1441,7 @@
                         <div class="ff-tools"><button onclick="famHistOpen()">🕘 지난 대화</button><button id="ff-new" onclick="famFeedNew()">↺ 새 대화</button></div>
                         <div class="fam-feed-body" id="fam-feed-body"></div>
                         <span id="chat-unread-badge" style="display:none"></span>
-                        <div class="footer-info">Family Shared v68.0 &nbsp;·&nbsp; Jung Wooseol 2026</div>
+                        <div class="footer-info">Family Shared v69.0 &nbsp;·&nbsp; Jung Wooseol 2026</div>
                         <div style="height:150px"></div>
                         </div><!-- /main-scroll -->
             </div><!-- /main-wrap -->
@@ -1707,7 +1707,7 @@
                         </div>
                     </div>
                     <!-- 선택 모드 액션바 -->
-                    <div id="photo-select-bar" style="display:none;background:#f8fafc;border-radius:12px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                    <div id="photo-select-bar" style="display:none;background:#f8fafc;border-radius:12px;padding:10px 14px;margin-bottom:10px;align-items:center;gap:10px;flex-wrap:wrap;">
                         <span id="photo-select-count" style="font-size:12px;color:#64748b;flex:1;">0개 선택됨</span>
                         <button class="btn-action btn-nav" style="height:34px;font-size:12px;" onclick="movePhotos()">📂 이동</button>
                         <button class="btn-action btn-danger" style="height:34px;font-size:12px;" onclick="deleteSelectedPhotos()">🗑 삭제</button>
@@ -2447,7 +2447,7 @@
                 </div>
                 <div id="shop-grid" class="shop-grid"></div>
                 <div class="fam-box">
-                    <h4 style="display:flex;align-items:center">📝 장보기 목록 <small id="shop-count" style="margin-left:8px;color:#94a3b8;font-weight:600"></small><button class="fam-btn" style="margin-left:auto;padding:4px 10px;font-size:11px" onclick="famShopClearDone()">완료 지우기</button></h4>
+                    <h4 style="display:flex;align-items:center">📝 장보기 목록 <small id="shop-count" style="margin-left:8px;color:#94a3b8;font-weight:600"></small><button class="fam-btn" style="margin-left:auto;padding:4px 10px;font-size:11px" onclick="famShopToAsset()">🧾 가계부로</button><button class="fam-btn" style="margin-left:6px;padding:4px 10px;font-size:11px" onclick="famShopClearDone()">완료 지우기</button></h4>
                     <div style="display:flex;gap:8px;margin-bottom:6px"><input id="shop-new" class="fam-sel" style="flex:1" placeholder="우유, 계란 (쉼표로 여러 개)" onkeydown="if(event.key==='Enter'){event.preventDefault();famShopAddInput()}"><button class="fam-btn pri" onclick="famShopAddInput()">추가</button></div>
                     <div id="shop-list"></div>
                 </div>
@@ -2717,6 +2717,8 @@
         firebase.initializeApp(firebaseConfig);
         const storage = firebase.storage();
         const db = firebase.firestore();
+        // 오프라인 캐시: 네트워크가 끊겨도 마지막 데이터 조회·입력 가능 (연결되면 자동 동기화)
+        try { db.enablePersistence({ synchronizeTabs: true }).catch(e => console.warn('[오프라인 캐시]', e.code)); } catch (e) {}
 
         // ── 전역 상태 ──────────────────────────────────────────────────
         let curViewDate = new Date();
@@ -3128,23 +3130,27 @@
         }
 
         /* ── 실시간 리스너 ── */
+        const CHAT_LIMIT = 400;
         function initChatListener() {
             if (chatUnsubscribe) return;
             initChatNotif();
             try {
                 let firstLoad = true;
+                // 최근 CHAT_LIMIT개만 구독 (전체를 받으면 기록이 쌓일수록 느려짐)
                 chatUnsubscribe = db.collection('messages')
                     .orderBy('createdAt', 'asc')
+                    .limitToLast(CHAT_LIMIT)
                     .onSnapshot({ includeMetadataChanges: false }, snap => {
-                        const prev = chatMessages.length;
                         chatMessages = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
                         if (firstLoad) {
                             // 첫 로드: 알림 없이 뱃지만 업데이트
                             firstLoad = false;
-                        } else if (chatMessages.length > prev) {
-                            // 새 메시지 수신 시
-                            chatMessages.slice(prev).forEach(m => {
+                        } else {
+                            // 새 메시지 수신 시 (개수 비교 대신 변경분으로 판단 — 제한 구독에서도 동작)
+                            snap.docChanges().forEach(ch => {
+                                if (ch.type !== 'added') return;
+                                const m = ch.doc.data();
                                 if (!m.sender || m.sender === chatUser || m.isAI) return;
                                 triggerChatNotif(m.text || '📎 미디어', m.sender);
                             });
@@ -3223,15 +3229,14 @@
                 const msgType = m.type || 'text';
                 const isMedia = ['image','video','location'].includes(msgType);
                 const canEdit = isMe && !isMedia && !isAI;
-                const safeText = (m.text||'').replace(/`/g, '&#96;').replace(/'/g,"&#39;");
 
-                html += `<div class="chat-bubble-wrap ${side}${highlight}" data-id="${m.id}">
+                html += `<div class="chat-bubble-wrap ${side}${highlight}" data-id="${m.id}"${isMe ? ` onclick="chatToggleAct(this,event)"` : ''}>
                     ${(!isMe||isAI) ? `<div class="chat-sender">${isAI?'&#129302; AI':escHtml(m.sender||'')}</div>` : ''}
                     <div class="${(isMedia||isAI)?'':'chat-bubble'}">${renderMsgContent(m)}</div>
                     <div class="chat-meta"><span>${timeStr}</span>${readMark}</div>
                     ${isMe ? `<div class="chat-actions">
-                        ${canEdit ? `<button class="chat-act-btn" onclick="editChatMessage('${m.id}','${safeText}')">&#9999;&#65039; 수정</button>` : ''}
-                        <button class="chat-act-btn" style="color:#ef4444;" onclick="deleteChatMessage('${m.id}')">&#128465; 삭제</button>
+                        ${canEdit ? `<button class="chat-act-btn" onclick="event.stopPropagation();editChatMessage('${m.id}')">&#9999;&#65039; 수정</button>` : ''}
+                        <button class="chat-act-btn" style="color:#ef4444;" onclick="event.stopPropagation();deleteChatMessage('${m.id}')">&#128465; 삭제</button>
                     </div>` : ''}
                 </div>`;
             });
@@ -3377,7 +3382,17 @@
         }
 
         /* ── 수정 ── */
+        // 내 메시지를 탭하면 수정/삭제 버튼 표시 (모바일은 hover가 없음)
+        function chatToggleAct(el, ev) {
+            if (ev && ev.target.closest('a,video,.chat-img-bubble,button')) return;
+            const on = !el.classList.contains('show-act');
+            document.querySelectorAll('.chat-bubble-wrap.show-act').forEach(x => x.classList.remove('show-act'));
+            if (on) el.classList.add('show-act');
+        }
+
         function editChatMessage(id, text) {
+            // 본문은 onclick 문자열 대신 데이터에서 가져옴 (줄바꿈·따옴표가 있어도 동작)
+            if (text === undefined) { const m = chatMessages.find(x => x.id === id); text = (m && m.text) || ''; }
             chatEditId = id;
             const input = document.getElementById('chat-input');
             if (input) {
@@ -4486,7 +4501,7 @@ function initRealtimeSync() {
         };
         const famHoliCache = {};
         // 정부 발표(우주항공청 월력요항) 공휴일 — 임시공휴일·선거일 포함, 앱을 열 때 하루 1번 자동 갱신
-        const FAM_HOLI_URL = 'https://cdn.jsdelivr.net/npm/@hyunbinseo/holidays-kr@5/dist/index.js';
+        const FAM_HOLI_URL = 'https://cdn.jsdelivr.net/npm/@hyunbinseo/holidays-kr@5.2027.2/dist/index.js';
         let famHoliOnline = (() => { try { return JSON.parse(localStorage.getItem('famHoliOnline') || '{}'); } catch (e) { return {}; } })();
         const famHoliName = n => String(n).replace(/^1월 1일$/, '신정').replace('3ㆍ1절', '삼일절').replace(/^대체공휴일.*$/, '대체공휴일')
             .replace(/^설날 (전날|다음 날)$/, '설날 연휴').replace(/^추석 (전날|다음 날)$/, '추석 연휴').replace('기독탄신일', '크리스마스')
@@ -4816,8 +4831,8 @@ function initRealtimeSync() {
                             <span style="font-size:10px;color:#94a3b8;">${catIcon} ${ev.category||''}</span>
                         </div>
                         ${ev.timeType === 'timed' && ev.startTime ? `<div style="font-size:11px;color:var(--month-header);font-weight:700;margin-bottom:3px;">🕐 ${ev.startTime}${ev.endTime?' ~ '+ev.endTime:''}</div>` : ev.timeType === 'allday' ? '<div style="font-size:10px;color:#94a3b8;margin-bottom:2px;">종일</div>' : ''}
-                        <div class="sch-detail-memo">${ev.memo||'(내용 없음)'}</div>
-                        ${ev.place ? `<div style="font-size:11px;color:#94a3b8;margin-top:3px;">📍 ${ev.place}</div>` : ''}
+                        <div class="sch-detail-memo">${escHtml(ev.memo||'(내용 없음)')}</div>
+                        ${ev.place ? `<div style="font-size:11px;color:#94a3b8;margin-top:3px;">📍 ${escHtml(ev.place)}</div>` : ''}
                     `;
 
                     // ••• 버튼 - ev.id로만 참조 (JSON 직렬화 없음)
@@ -4852,10 +4867,10 @@ function initRealtimeSync() {
             const memberColor = ev.member === '정우설' ? '#dbeafe' : ev.member === '한미연' ? '#fce7f3' : '#f0fdf4';
 
             document.getElementById('sch-action-title').innerHTML =
-                `${ev.priority==='중요'?'⭐ ':''}${ev.memo||'(내용 없음)'}`;
+                `${ev.priority==='중요'?'⭐ ':''}${escHtml(ev.memo||'(내용 없음)')}`;
             document.getElementById('sch-action-meta').innerHTML =
                 `<span style="background:${memberColor};padding:1px 8px;border-radius:20px;font-size:11px;font-weight:700;">${ev.member||''}</span>
-                 &nbsp;${ev.category||''} ${ev.place ? '· 📍'+ev.place : ''}`;
+                 &nbsp;${ev.category||''} ${ev.place ? '· 📍'+escHtml(ev.place) : ''}`;
 
             document.getElementById('sch-action-edit-btn').onclick = () => {
                 // closeSchAction보다 먼저 복사해둬야 null이 되지 않음
@@ -5118,38 +5133,27 @@ function initRealtimeSync() {
 
         function getRepeatDates(startDs, unit, calType, endDs) {
             const dates = [];
-            const start = new Date(startDs);
-            // 종료일 미설정 시 2년
-            const end = endDs ? new Date(endDs) : new Date(start.getFullYear() + (unit === 'year' ? 30 : 2), start.getMonth(), start.getDate());
+            // 로컬(한국) 자정 기준으로 해석 — UTC 변환(toISOString)으로 날짜가 밀리지 않게
+            const start = new Date(startDs + 'T00:00:00');
+            // 종료일 미설정 시 2년 (매년은 30년)
+            const end = endDs ? new Date(endDs + 'T00:00:00') : new Date(start.getFullYear() + (unit === 'year' ? 30 : 2), start.getMonth(), start.getDate());
             if (unit === 'year' && calType === 'lunar') {
                 const sy = +startDs.slice(0, 4), l = famLunar(sy, +startDs.slice(5, 7) - 1, +startDs.slice(8, 10)); if (!l) return dates;
                 for (let k = 1; k <= 60; k++) { const d = famLunarToSolar(l.year + k, l.month, l.day); if (!d) break; const ds = famDs(d); if (ds > famDs(end) && !endDs) break; if (endDs && ds > endDs) break; dates.push(ds); }
                 return dates;
             }
 
-            // 음력 반복: 매년 음력 같은 날짜 계산 (간이)
-            // 양력 반복: 날짜 직접 계산
-            let cur = new Date(start);
-            cur.setDate(cur.getDate() + (unit === 'week' ? 7 : unit === 'month' ? 0 : 0)); // 첫날 제외, 다음부터
-
+            // 양력 반복: 첫날 제외, 다음 회차부터
+            const sy = start.getFullYear(), sm = start.getMonth(), sd = start.getDate();
+            // 해당 월에 그 날짜가 없으면 말일로 (1/31 → 2/28, 2/29 → 2/28)
+            const clampDay = (y, m) => new Date(y, m, Math.min(sd, new Date(y, m + 1, 0).getDate()));
             if (unit === 'week') {
-                cur = new Date(start); cur.setDate(cur.getDate() + 7);
-                while (cur <= end) {
-                    dates.push(cur.toISOString().split('T')[0]);
-                    cur.setDate(cur.getDate() + 7);
-                }
+                const cur = new Date(start); cur.setDate(cur.getDate() + 7);
+                while (cur <= end) { dates.push(famDs(cur)); cur.setDate(cur.getDate() + 7); }
             } else if (unit === 'month') {
-                cur = new Date(start); cur.setMonth(cur.getMonth() + 1);
-                while (cur <= end) {
-                    dates.push(cur.toISOString().split('T')[0]);
-                    cur.setMonth(cur.getMonth() + 1);
-                }
+                for (let k = 1; ; k++) { const d = clampDay(sy, sm + k); if (d > end) break; dates.push(famDs(d)); }
             } else if (unit === 'year') {
-                cur = new Date(start); cur.setFullYear(cur.getFullYear() + 1);
-                while (cur <= end) {
-                    dates.push(cur.toISOString().split('T')[0]);
-                    cur.setFullYear(cur.getFullYear() + 1);
-                }
+                for (let k = 1; ; k++) { const d = clampDay(sy + k, sm); if (d > end) break; dates.push(famDs(d)); }
             }
             return dates;
         }
@@ -5356,19 +5360,30 @@ function initRealtimeSync() {
         // initAssetCharts → 하단 개선판 사용
 
         // ── 앨범 ──────────────────────────────────────────────────
+        // 폴더 카드 (하위폴더는 상위 폴더 안에서만 표시)
+        function albumFolderCard(f) {
+            const subs = albumData.filter(x => x.parentId === f.id).length;
+            return `<div class="banner" style="background:#fff; padding:15px;" onclick="openFolderDetail('${escHtml(f.id)}')">
+                    <div style="font-size:30px;">📁</div>
+                    <b>${escHtml(f.name)}</b>
+                    <div style="font-size:11px; color:#94a3b8; margin-top:4px;">${(f.photos||[]).length}장${subs ? ' · 폴더 ' + subs : ''}</div>
+                </div>`;
+        }
         function renderFolders() {
             const c = document.getElementById('folder-container');
-            c.innerHTML = albumData.map(f =>
-                `<div class="banner" style="background:#fff; padding:15px;" onclick="openFolderDetail('${f.id}')">
-                    <div style="font-size:30px;">📁</div>
-                    <b>${f.name}</b>
-                    <div style="font-size:11px; color:#94a3b8; margin-top:4px;">${(f.photos||[]).length}장</div>
-                </div>`
-            ).join('');
+            const ids = new Set(albumData.map(x => x.id));
+            c.innerHTML = albumData.filter(f => !f.parentId || !ids.has(f.parentId)).map(albumFolderCard).join('');
+            if (currentFolderId) renderSubFolders();
+        }
+        function renderSubFolders() {
+            const el = document.getElementById('sub-folder-list'); if (!el) return;
+            const subs = albumData.filter(x => x.parentId === currentFolderId);
+            el.innerHTML = subs.length ? `<div class="folder-grid" style="margin-top:0">${subs.map(albumFolderCard).join('')}</div>` : '';
         }
 
         function openFolderDetail(id) {
             currentFolderId = id;
+            if (photoSelectMode) { photoSelectMode = false; selectedPhotos.clear(); document.getElementById('photo-select-btn').textContent = '선택'; document.getElementById('photo-select-bar').style.display = 'none'; }
             document.getElementById('photo-main-view').classList.add('hidden');
             document.getElementById('photo-detail-view').classList.remove('hidden');
             history.pushState({ modal: 'folder-detail', folderId: id }, '', '');
@@ -5376,7 +5391,40 @@ function initRealtimeSync() {
             if (f) {
                 document.getElementById('detail-folder-title').innerText = f.name;
                 renderGallery();
+                renderSubFolders();
+                // 예전 방식(문서 안 base64)으로 저장된 사진은 Storage로 옮김
+                if ((f.photos || []).some(p => String(p).startsWith('data:'))) albumMigrate(id);
             }
+        }
+
+        // ── 앨범 사진 저장소 (Firebase Storage) ──
+        // Firestore 문서 한도(1MB) 때문에 사진 본문은 Storage에, 문서에는 URL만 저장
+        async function albumUploadDataUrl(dataUrl, folderId) {
+            const blob = await (await fetch(dataUrl)).blob();
+            const ref = storage.ref(`albums/${folderId}/${Date.now()}_${Math.random().toString(36).slice(2, 7)}.jpg`);
+            await ref.put(blob, { contentType: 'image/jpeg' });
+            return await ref.getDownloadURL();
+        }
+        function albumDelFile(url) {
+            if (/^https?:/.test(String(url || ''))) { try { storage.refFromURL(url).delete().catch(() => {}); } catch (e) {} }
+        }
+        const albumMigrating = {};
+        async function albumMigrate(id) {
+            if (albumMigrating[id]) return; albumMigrating[id] = 1;
+            try {
+                const f = albumData.find(x => x.id === id); if (!f) return;
+                const map = new Map();
+                for (const p of (f.photos || [])) {
+                    if (String(p).startsWith('data:') && !map.has(p)) map.set(p, await albumUploadDataUrl(p, id));
+                }
+                if (!map.size) return;
+                const ref = db.collection('albums').doc(id);
+                await db.runTransaction(async t => {
+                    const s = await t.get(ref); if (!s.exists) return;
+                    t.update(ref, { photos: ((s.data() || {}).photos || []).map(p => map.get(p) || p) });
+                });
+            } catch (e) { console.warn('[앨범 이전]', e); }
+            finally { delete albumMigrating[id]; }
         }
 
         function backToFolders() {
@@ -5389,37 +5437,60 @@ function initRealtimeSync() {
             const f = albumData.find(x => x.id === currentFolderId);
             const c = document.getElementById('gallery-container');
             if (f) {
-                c.innerHTML = (f.photos || []).map((s, idx) =>
-                    `<div class="gallery-item" onclick="openLightbox('${s}')">
-                        <img src="${s}" loading="lazy">
-                        <button class="photo-del-btn" onclick="event.stopPropagation(); deleteSinglePhoto(${idx})">✕</button>
-                    </div>`
-                ).join('');
+                // 선택 모드: 탭하면 선택/해제, 일반 모드: 탭하면 크게 보기
+                c.innerHTML = (f.photos || []).map((s, idx) => {
+                    const on = photoSelectMode && selectedPhotos.has(idx);
+                    return `<div class="gallery-item" data-idx="${idx}" style="${on ? 'outline:3px solid var(--month-header);outline-offset:-3px;' : ''}" onclick="albumTap(${idx})">
+                        <img src="${escHtml(s)}" loading="lazy" style="${on ? 'opacity:.6' : ''}">
+                        ${photoSelectMode
+                            ? `<span style="position:absolute;top:6px;left:6px;width:22px;height:22px;border-radius:50%;border:2px solid #fff;background:${on ? 'var(--month-header)' : 'rgba(0,0,0,.25)'};color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;">${on ? '✓' : ''}</span>`
+                            : `<button class="photo-del-btn" onclick="event.stopPropagation(); deleteSinglePhoto(${idx})">✕</button>`}
+                    </div>`;
+                }).join('');
+                const cnt = document.getElementById('photo-select-count');
+                if (cnt) cnt.textContent = `${selectedPhotos.size}개 선택됨`;
             }
+        }
+        function albumTap(idx) {
+            const f = albumData.find(x => x.id === currentFolderId); if (!f) return;
+            if (!photoSelectMode) { openLightbox(f.photos[idx]); return; }
+            if (selectedPhotos.has(idx)) selectedPhotos.delete(idx); else selectedPhotos.add(idx);
+            renderGallery();
         }
 
         async function deleteSinglePhoto(idx) {
             if (!confirm("이 사진을 삭제할까요?")) return;
             const f = albumData.find(x => x.id === currentFolderId);
             if (f) {
+                const url = f.photos[idx];
                 f.photos.splice(idx, 1);
                 await db.collection("albums").doc(currentFolderId).update({ photos: f.photos });
+                albumDelFile(url);
             }
         }
 
-        // [버그수정] 여러 파일 동시 업로드 시 덮어쓰기 방지 → 순차 처리
+        // 사진은 Storage에 올리고 문서에는 URL만 추가 (arrayUnion: 두 사람이 동시에 올려도 덮어쓰지 않음)
         async function handleGalleryUpload(input) {
             if (!input.files || !currentFolderId) return;
-            const f = albumData.find(x => x.id === currentFolderId);
-            if (!f) return;
+            const folderId = currentFolderId;
             const files = Array.from(input.files);
-            for (const file of files) {
-                const base64 = await readFileAsBase64(file);
-                const compressed = await compressImage(base64, 800);
-                f.photos.push(compressed);
-                await db.collection("albums").doc(currentFolderId).update({ photos: [...f.photos] });
-            }
             input.value = "";
+            let ok = 0;
+            for (const file of files) {
+                try {
+                    if (typeof famToast === 'function') famToast(`사진 올리는 중… (${ok + 1}/${files.length})`);
+                    const base64 = await readFileAsBase64(file);
+                    const compressed = await compressImage(base64, 1600, 0.82);
+                    const url = await albumUploadDataUrl(compressed, folderId);
+                    await db.collection("albums").doc(folderId).update({ photos: firebase.firestore.FieldValue.arrayUnion(url) });
+                    ok++;
+                } catch (e) {
+                    console.warn('[앨범 업로드]', e);
+                    alert('사진 업로드 실패: ' + (e.message || e.code || e) + '\nFirebase Storage 규칙에서 albums/ 경로 쓰기 권한을 확인하세요.');
+                    break;
+                }
+            }
+            if (ok && typeof famToast === 'function') famToast(`사진 ${ok}장을 올렸습니다`);
         }
 
         function readFileAsBase64(file) {
@@ -5431,25 +5502,39 @@ function initRealtimeSync() {
             });
         }
 
-        function openFolderModal() {
+        // openFolderModal(null) 새 폴더 · (id) 이름 수정 · (null, parentId) 하위폴더 추가
+        function openFolderModal(editId, parentId) {
             resetModal();
+            const edit = editId ? albumData.find(x => x.id === editId) : null;
+            const parent = parentId ? albumData.find(x => x.id === parentId) : null;
             document.getElementById('folder-fields').classList.remove('hidden');
-            document.getElementById('modal-title').innerText = "📁 새 폴더 만들기";
-            document.getElementById('btn-save').innerText = "만들기";
+            document.getElementById('modal-title').innerText = edit ? "✏️ 폴더 이름 수정" : parent ? `📁 ${parent.name} 안에 폴더 만들기` : "📁 새 폴더 만들기";
+            document.getElementById('btn-save').innerText = edit ? "저장" : "만들기";
+            if (edit) document.getElementById('fold-name').value = edit.name || '';
             document.getElementById('btn-save').onclick = async () => {
                 const name = document.getElementById('fold-name').value.trim();
-                if (name) {
+                if (!name) return;
+                if (edit) {
+                    await db.collection("albums").doc(edit.id).update({ name });
+                    if (currentFolderId === edit.id) document.getElementById('detail-folder-title').innerText = name;
+                } else {
                     const id = "f_" + Date.now();
-                    await db.collection("albums").doc(id).set({ id, name, photos: [] });
-                    closeModal();
+                    await db.collection("albums").doc(id).set(parent ? { id, name, photos: [], parentId: parent.id } : { id, name, photos: [] });
                 }
+                closeModal();
             };
             openModal();
         }
 
         async function deleteFolder() {
-            if (confirm("이 폴더와 사진을 모두 삭제할까요?")) {
-                await db.collection("albums").doc(currentFolderId).delete();
+            const subs = albumData.filter(x => x.parentId === currentFolderId);
+            if (confirm(subs.length ? `이 폴더와 사진을 모두 삭제할까요? 하위 폴더 ${subs.length}개는 상위 목록으로 옮겨집니다.` : "이 폴더와 사진을 모두 삭제할까요?")) {
+                const f = albumData.find(x => x.id === currentFolderId);
+                const batch = db.batch();
+                subs.forEach(s => batch.update(db.collection("albums").doc(s.id), { parentId: firebase.firestore.FieldValue.delete() }));
+                batch.delete(db.collection("albums").doc(currentFolderId));
+                await batch.commit();
+                ((f && f.photos) || []).forEach(albumDelFile);
                 backToFolders();
             }
         }
@@ -5498,12 +5583,12 @@ function initRealtimeSync() {
             // 주차 계산
             const weekSet = new Set();
             allDates.forEach(d => {
-                const dt = new Date(d);
+                const dt = new Date(d + 'T00:00:00');
                 const dow = dt.getDay()||7;
                 const mon = new Date(dt); mon.setDate(dt.getDate()-dow+1);
                 const sun = new Date(mon); sun.setDate(mon.getDate()+6);
                 const wn  = getWeekNumber(new Date(mon.getTime() + 3*86400000));
-                const key = `W${mon.getFullYear()}-W${String(wn).padStart(2,'0')}~${mon.toISOString().split('T')[0]}~${sun.toISOString().split('T')[0]}`;
+                const key = `W${mon.getFullYear()}-W${String(wn).padStart(2,'0')}~${famDs(mon)}~${famDs(sun)}`;
                 weekSet.add(key);
             });
             const weeks = [...weekSet].sort().reverse();
@@ -5614,14 +5699,14 @@ function initRealtimeSync() {
                 <div class="travel-card-header">
                     <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
                         <span style="font-size:18px;">${icon}</span>
-                        <span style="font-weight:800;font-size:15px;color:#1e293b;">${p.loc||'미정'}</span>
+                        <span style="font-weight:800;font-size:15px;color:#1e293b;">${escHtml(p.loc||'미정')}</span>
                         <span class="travel-card-badge" style="background:${mbg};color:${mcol};">${p.member||''}</span>
                         <span class="travel-card-badge" style="background:#f1f5f9;color:#64748b;">${p.subType||''}</span>
                     </div>
                     <span class="travel-dday">${dday}</span>
                 </div>
                 <div style="font-size:12px;color:#64748b;margin-bottom:5px;">📅 ${p.start||''} ~ ${p.end||''} &nbsp;·&nbsp; ${duration}</div>
-                ${p.supplies ? `<div style="font-size:11px;color:#94a3b8;">🎒 ${p.supplies}</div>` : ''}`;
+                ${p.supplies ? `<div style="font-size:11px;color:#94a3b8;">🎒 ${escHtml(p.supplies)}</div>` : ''}`;
             return card;
         }
         function renderPlans() {
@@ -5676,7 +5761,7 @@ function initRealtimeSync() {
             const duration = nights > 0 ? `${nights}박 ${nights+1}일` : '당일';
 
             document.getElementById('travel-detail-title').innerHTML =
-                `${icon} ${p.loc||'미정'} <span style="font-size:12px;font-weight:500;color:#94a3b8;">${p.subType||''}</span>`;
+                `${icon} ${escHtml(p.loc||'미정')} <span style="font-size:12px;font-weight:500;color:#94a3b8;">${p.subType||''}</span>`;
 
             let dayHtml = '';
             if (p.dayMemos && p.dayMemos.some(m => m)) {
@@ -5684,7 +5769,7 @@ function initRealtimeSync() {
                     p.dayMemos.map((m,i) => m ? `
                         <div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid #f8fafc;">
                             <span style="font-size:11px;font-weight:700;color:var(--month-accent);white-space:nowrap;min-width:48px;">Day ${i+1}</span>
-                            <span style="font-size:12px;color:#374151;">${m}</span>
+                            <span style="font-size:12px;color:#374151;">${escHtml(m)}</span>
                         </div>` : ''
                     ).join('') + `</div>`;
             }
@@ -5698,8 +5783,18 @@ function initRealtimeSync() {
                 ${(p.subType==='골프'||p.subType==='스크린골프')&&p.startTime ? `<span style="margin-left:8px;font-size:12px;color:#3b82f6;">⏰ ${p.startTime}</span>` : ''}
                 </div>
                 ${dayHtml}
-                ${p.supplies ? `<div style="margin-top:10px;font-size:12px;color:#64748b;">🎒 <b>준비물</b>: ${p.supplies}</div>` : ''}
-                ${p.memo     ? `<div style="margin-top:6px;font-size:12px;color:#64748b;">📝 <b>메모</b>: ${p.memo}</div>` : ''}
+                ${p.supplies ? `<div style="margin-top:10px;font-size:12px;color:#64748b;">🎒 <b>준비물</b>: ${escHtml(p.supplies)}</div>` : ''}
+                ${p.memo     ? `<div style="margin-top:6px;font-size:12px;color:#64748b;">📝 <b>메모</b>: ${escHtml(p.memo)}</div>` : ''}
+                ${(() => {
+                    // 여행 기간 중 가계부 지출 (여행비 / 전체)
+                    if (!p.start) return '';
+                    const ps = p.start, pe = p.end || p.start;
+                    const exp = Object.values(assetData).flat().filter(a => a.type === '지출' && a.date >= ps && a.date <= pe);
+                    if (!exp.length) return '';
+                    const tr = exp.filter(a => a.category === '여행비').reduce((t, a) => t + Number(a.amt || 0), 0);
+                    const all = exp.reduce((t, a) => t + Number(a.amt || 0), 0);
+                    return `<div style="margin-top:10px;padding:10px 12px;background:#f8fafc;border-radius:10px;font-size:12px;color:#334155;">💰 기간 중 지출 <b>${all.toLocaleString()}원</b> <span style="color:#94a3b8">(${exp.length}건)</span>${tr ? ` · 여행비 <b>${tr.toLocaleString()}원</b>` : ''}</div>`;
+                })()}
             `;
 
             document.getElementById('travel-edit-btn').onclick = () => {
@@ -5792,8 +5887,8 @@ function initRealtimeSync() {
             });
 
             for (let i = 0; i < days; i++) {
-                const d = new Date(start); d.setDate(d.getDate() + i);
-                const ds = d.toISOString().split('T')[0];
+                const d = new Date(start + 'T00:00:00'); d.setDate(d.getDate() + i);
+                const ds = famDs(d);
                 const dayMemo = dayMemos[i] || '';
                 const icon = getTypeIcon(subType);
                 batch.set(db.collection('schedules').doc(`sch_${planId}_${i}`), {
@@ -5852,7 +5947,7 @@ function initRealtimeSync() {
         }
 
         // ── 이미지 압축 ──────────────────────────────────────────────────
-        function compressImage(base64, size = 600) {
+        function compressImage(base64, size = 600, quality = 0.4) {
             return new Promise((resolve) => {
                 const img = new Image();
                 img.src = base64;
@@ -5864,7 +5959,7 @@ function initRealtimeSync() {
                     canvas.width = w; canvas.height = h;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, w, h);
-                    resolve(canvas.toDataURL('image/jpeg', 0.4));
+                    resolve(canvas.toDataURL('image/jpeg', quality));
                 };
             });
         }
@@ -5948,7 +6043,7 @@ function initRealtimeSync() {
         function familyAuthToggle(){if(isFamilyAuthed()){if(confirm('로그아웃?')){localStorage.removeItem('familyAuthed');updateAuthUI();}}else openFamilyAuthModal();}
         function timSetKey(){var k=prompt('Gemini API 키를 입력하세요:');if(k&&k.trim()){_GCLOUD_KEY=k.trim();localStorage.setItem('timApiKey',k.trim());alert('✅ 키 저장됨');}}
         function openFamilyAuthModal(){var m=document.getElementById('family-auth-modal');if(m){m.style.display='flex';document.getElementById('family-pw-input').value='';history.pushState({fa:1},'');}}
-        function submitFamilyAuth(){var pw=(document.getElementById('family-pw-input').value||'').trim(),st=localStorage.getItem('familyPassword')||'240719';if(pw===st){localStorage.setItem('familyAuthed','yes');document.getElementById('family-auth-modal').style.display='none';updateAuthUI();alert('✅ 인증 완료!');}else{alert('❌ 틀림');document.getElementById('family-pw-input').value='';}}
+        function submitFamilyAuth(){var pw=(document.getElementById('family-pw-input').value||'').trim(),st=localStorage.getItem('familyPassword');if(!st){alert('설정된 암호가 없습니다. 먼저 암호를 설정하세요.');openSetPasswordModal();return;}if(pw===st){localStorage.setItem('familyAuthed','yes');document.getElementById('family-auth-modal').style.display='none';updateAuthUI();alert('✅ 인증 완료!');}else{alert('❌ 틀림');document.getElementById('family-pw-input').value='';}}
         function openSetPasswordModal(){document.getElementById('family-setpw-modal').style.display='flex';document.getElementById('family-setpw-input').value='';}
         function saveNewPassword(){var pw=(document.getElementById('family-setpw-input').value||'').trim();if(!pw||pw.length<4){alert('4자리 이상');return;}localStorage.setItem('familyPassword',pw);document.getElementById('family-setpw-modal').style.display='none';alert('✅ 변경됨');}
         function updateAuthUI(){var btn=document.getElementById('family-auth-btn');if(btn)btn.textContent=isFamilyAuthed()?'🔓':'🔑';}
@@ -6121,6 +6216,12 @@ function initRealtimeSync() {
         // 🚀 AI 엔진별 API 호출 함수
         // ════════════════════════════════════════════════════════════════
 
+        // ── 모델: ⚙️ 설정에서 고른 모델을 그대로 사용 (구 모델 하드코딩 제거) ──
+        function _timModel(p){
+            if (typeof famModel === 'function') return famModel(p);
+            return {gemini:'gemini-3.6-flash', claude:'claude-haiku-5-5', gpt:'gpt-5.4-mini'}[p];
+        }
+
         // ── Gemini (번역·통역·OCR 기본) ──────────────────────────────────
         async function _callGemini(key, prompt, img, mime){
             mime=mime||'image/jpeg';
@@ -6130,7 +6231,7 @@ function initRealtimeSync() {
             var ctrl=new AbortController();
             var timer=setTimeout(function(){ctrl.abort();},30000);
             var r=await fetch(
-                'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+key,
+                'https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(_timModel('gemini'))+':generateContent?key='+key,
                 {method:'POST',headers:{'Content-Type':'application/json'},
                  body:JSON.stringify({contents:[{parts:parts}],generationConfig:{maxOutputTokens:(img?800:256),temperature:0.2}}),signal:ctrl.signal}
             );
@@ -6159,7 +6260,7 @@ function initRealtimeSync() {
                     'anthropic-dangerous-direct-browser-access':'true'
                 },
                 body:JSON.stringify({
-                    model:'claude-haiku-4-5-20251001',
+                    model:_timModel('claude'),
                     max_tokens:512,
                     messages:[{role:'user',content:prompt}]
                 }),
@@ -6186,7 +6287,7 @@ function initRealtimeSync() {
             var r=await fetch('https://api.openai.com/v1/chat/completions',{
                 method:'POST',
                 headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-                body:JSON.stringify({model:'gpt-4o',messages:messages,max_tokens:1000}),
+                body:JSON.stringify({model:_timModel('gpt'),messages:messages,max_completion_tokens:1000}),
                 signal:ctrl.signal
             });
             clearTimeout(timer);
@@ -6259,33 +6360,7 @@ function initRealtimeSync() {
             try{ return JSON.parse(m[0]); }catch(e){ return null; }
         }
 
-        // ── Gemini 1.5 Flash 호출 ──
-        async function timGemini(prompt,img,mime){
-            mime=mime||'image/jpeg';
-            var key=timGetKey();
-            if(!key) throw new Error('API 키 없음 — 번역기 상단에서 입력해 주세요.');
-            var parts=[];
-            if(img) parts.push({inline_data:{mime_type:mime,data:img}});
-            parts.push({text:prompt});
-            var ctrl=new AbortController();
-            var timer=setTimeout(function(){ ctrl.abort(); },30000);
-            var r=await fetch(
-                'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+key,
-                {method:'POST',headers:{'Content-Type':'application/json'},
-                 body:JSON.stringify({contents:[{parts:parts}]}),signal:ctrl.signal}
-            );
-            clearTimeout(timer);
-            if(!r.ok){
-                var ed=await r.json().catch(function(){return{};});
-                throw new Error(r.status===403?'Gemini API 활성화 필요(403)':
-                    'Gemini '+r.status+': '+((ed.error&&ed.error.message)||r.statusText));
-            }
-            var d=await r.json();
-            var t=d.candidates&&d.candidates[0]&&d.candidates[0].content&&
-                  d.candidates[0].content.parts&&d.candidates[0].content.parts[0]&&
-                  d.candidates[0].content.parts[0].text;
-            return t?t.trim():'';
-        }
+        // (중복 정의 제거: 위 timCallAI 라우터 버전의 timGemini를 사용)
 
         // ── timGT: 배치 번역 래퍼 (하위 호환) ──
         async function timGT(q,tgt,src){
@@ -6759,7 +6834,7 @@ function initRealtimeSync() {
                 ? todayEvs.slice(0,4).map(ev => `
                     <div class="dash-ev-item">
                         <div class="dash-ev-dot" style="background:${memberColor(ev.member)};"></div>
-                        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ev.memo||''}</span>
+                        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(ev.memo||'')}</span>
                         ${ev.priority==='중요'?'<span style="font-size:10px;">⭐</span>':''}
                     </div>`).join('')
                 : '<div class="dash-empty">일정 없음</div>';
@@ -6772,7 +6847,7 @@ function initRealtimeSync() {
                 ? wEvs.sort((a,b)=>a.date.localeCompare(b.date)).slice(0,5).map(ev => `
                     <div class="dash-ev-item">
                         <div class="dash-ev-dot" style="background:${memberColor(ev.member)};"></div>
-                        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ev.memo||''}</span>
+                        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(ev.memo||'')}</span>
                         <span style="font-size:9px;color:#94a3b8;flex-shrink:0;">${ev.date?.slice(5).replace('-','/')}</span>
                     </div>`).join('')
                 : '<div class="dash-empty">이번달 중요 일정 없음</div>';
@@ -6801,7 +6876,7 @@ function initRealtimeSync() {
                         return `<div class="dash-ev-item" style="flex-direction:column;align-items:flex-start;gap:3px;padding:7px 8px;">
                             <div style="display:flex;align-items:center;gap:6px;width:100%;">
                                 <span style="font-size:14px;">${typeIcon(p.subType)}</span>
-                                <span style="flex:1;font-weight:700;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.loc||'미정'}</span>
+                                <span style="flex:1;font-weight:700;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(p.loc||'미정')}</span>
                                 <span style="font-size:10px;font-weight:800;color:var(--month-accent);flex-shrink:0;">${dday(p.start)}</span>
                             </div>
                             <div style="display:flex;gap:5px;align-items:center;padding-left:20px;flex-wrap:wrap;">
@@ -7093,7 +7168,7 @@ function initRealtimeSync() {
                             <span style="font-size:10px;background:${memberBg};padding:1px 7px;border-radius:20px;font-weight:700;">${item.member||'가족'}</span>
                             <span style="font-size:10px;color:#94a3b8;">${item.category||''} · ${item.pay||''}</span>
                         </div>
-                        <div style="font-size:13px;font-weight:600;color:#1e293b;">${item.memo||'내용 없음'}</div>`;
+                        <div style="font-size:13px;font-weight:600;color:#1e293b;">${escHtml(item.memo||'내용 없음')}</div>`;
                     const right = document.createElement('div');
                     right.style.cssText = 'text-align:right;flex-shrink:0;margin-left:10px;';
                     right.innerHTML = `<div style="font-size:14px;font-weight:800;color:${item.type==='수입'?'#166534':'#991b1b'};">${item.type==='수입'?'+':'-'}${Number(item.amt).toLocaleString()}원</div>`;
@@ -7169,8 +7244,8 @@ function initRealtimeSync() {
                     const mon = new Date(today);
                     mon.setDate(today.getDate() - dayOfWeek + 1 - i*7);
                     const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
-                    const wsStr = mon.toISOString().split('T')[0];
-                    const weStr = sun.toISOString().split('T')[0];
+                    const wsStr = famDs(mon);
+                    const weStr = famDs(sun);
                     const wn = getWeekNumber(mon);
                     const label = `W${wn}`;
                     labels.push(label);
@@ -7235,12 +7310,15 @@ function initRealtimeSync() {
             if (!confirm(`${selectedPhotos.size}개 사진을 삭제할까요?`)) return;
             const f = albumData.find(x => x.id === currentFolderId);
             if (!f) return;
+            const removed = f.photos.filter((_,i) => selectedPhotos.has(i));
             f.photos = f.photos.filter((_,i) => !selectedPhotos.has(i));
             await db.collection('albums').doc(currentFolderId).update({ photos: f.photos });
+            removed.forEach(albumDelFile);
             selectedPhotos.clear();
             photoSelectMode = false;
             document.getElementById('photo-select-btn').textContent = '선택';
             document.getElementById('photo-select-bar').style.display = 'none';
+            renderGallery();
         }
 
         function movePhotos() {
@@ -7662,7 +7740,43 @@ function initRealtimeSync() {
                 ${custom ? `<input class="fam-in" style="margin-top:8px" value="${famEsc(cur)}" placeholder="모델 ID" autocapitalize="off" autocorrect="off" spellcheck="false" oninput="famLS('famAI_model_${p}',this.value.trim())">` : ''}
                 <div class="fam-note">${fetched ? '이 키로 불러온 실제 사용 가능 목록입니다.' : '기본 목록입니다. 키 입력 후 "모델 목록 불러오기"로 최신 목록을 받으세요.'}</div>
                 <div class="fam-btns"><button class="fam-btn" onclick="famLoadModels()">모델 목록 불러오기</button><button class="fam-btn" onclick="famTestAI()">연결 테스트</button></div>
+            </div>
+            <div class="fam-box"><h4>💾 데이터 백업</h4>
+                <div class="fam-note" style="margin:0 0 10px">Firestore 데이터를 파일로 내려받습니다. 월 1회 정도 받아 두세요.</div>
+                <div class="fam-btns" style="margin-top:0"><button class="fam-btn pri" onclick="famBackupJSON(this)">전체 백업 (JSON)</button><button class="fam-btn" onclick="famBackupCSV(this)">가계부 (CSV · 엑셀)</button></div>
             </div>`;
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 💾 데이터 백업
+    // ═══════════════════════════════════════════════════════════
+    const FAM_BACKUP_COLS = ['schedules', 'assets', 'plans', 'albums', 'shoppingList', 'fixedExpenses', 'savingsGoals', 'savingsLogs', 'budgetReports', 'config', 'messages'];
+    function famDownload(name, text, mime) {
+        const blob = new Blob([text], { type: mime }), url = URL.createObjectURL(blob), a = document.createElement('a');
+        a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+    }
+    async function famBackupJSON(btn) {
+        btn.disabled = true; const old = btn.textContent; btn.textContent = '받는 중…';
+        try {
+            const out = { app: '설연 Family', version: FAM_VER, exportedAt: new Date().toISOString(), by: famUser(), data: {} };
+            for (const c of FAM_BACKUP_COLS) {
+                const snap = await db.collection(c).get({ source: 'server' }).catch(() => db.collection(c).get());
+                out.data[c] = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+            }
+            const json = JSON.stringify(out, (k, v) => (v && typeof v.toDate === 'function') ? v.toDate().toISOString() : v, 1);
+            famDownload(`seolyeon-backup-${famYmd(new Date())}.json`, json, 'application/json');
+            famToast('백업 파일을 내려받았습니다 (' + Math.round(json.length / 1024) + 'KB)');
+        } catch (e) { famToast('백업 실패: ' + e.message); }
+        btn.disabled = false; btn.textContent = old;
+    }
+    function famBackupCSV() {
+        const rows = (typeof anaAll === 'function' ? anaAll() : []).sort((a, b) => String(a.date).localeCompare(String(b.date)));
+        if (!rows.length) { famToast('가계부 내역이 없습니다'); return; }
+        const q = v => { const t = String(v ?? ''); return /[",\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+        const csv = ['날짜,구분,분류,금액,구성원,결제,메모', ...rows.map(e => [e.date, e.type, e.category, e.amt, e._m, e.pay || '', e.memo || ''].map(q).join(','))].join('\r\n');
+        famDownload(`seolyeon-가계부-${famYmd(new Date())}.csv`, '\uFEFF' + csv, 'text/csv;charset=utf-8');
+        famToast(rows.length + '건을 내려받았습니다');
     }
     function famSetProv(p) { famLS('famAI_provider', p); famCustomModel = false; famRenderSettings(); }
     function famKeyInput(v) { const p = famProv(); famSetKey(p, v); const st = document.getElementById('fam-key-st'); if (st) st.textContent = v.trim() ? '입력됨 · 끝자리 ' + v.trim().slice(-4) : '미입력'; }
@@ -8720,6 +8834,43 @@ JSON만 출력: {"items":[{"date":"YYYY-MM-DD 또는 빈 문자열","store":"가
     }
 
     // ═══════════════════════════════════════════════════════════
+    // 📲 다른 앱에서 공유 받기 (카드 결제 문자 등 → 가계부)
+    //   manifest.json 의 share_target(GET, title/text/url)으로 들어온 글을 처리
+    // ═══════════════════════════════════════════════════════════
+    function famShareIn() {
+        let q; try { q = new URLSearchParams(location.search); } catch (e) { return; }
+        const text = [q.get('title'), q.get('text'), q.get('url')].filter(Boolean).join('\n').trim();
+        if (!text) return;
+        try { history.replaceState(history.state, '', location.pathname); } catch (e) {}
+        showSection('main-section');
+        if (/(승인|결제|일시불|할부|입금|출금|이체|카드)/.test(text) && (famKeys()[famProv()] || '')) famShareTx(text);
+        else famRun(text);
+    }
+    async function famShareTx(text) {
+        famMe(text.length > 200 ? text.slice(0, 200) + '…' : text);
+        const c = famFeedAdd('<span class="fam-spin"></span>결제 내용을 읽는 중…');
+        try {
+            const today = famYmd(new Date());
+            const r = await famCallAI('너는 카드·은행 결제 알림 문자를 읽어 가계부 항목을 만드는 도우미다. 글에 있는 내용만 쓰고 추측하지 않는다.',
+                `아래 글에서 거래를 뽑아라. 승인 취소된 거래와 그 원거래는 뺀다. 누적 금액·잔액·한도는 금액으로 쓰지 않는다.
+오늘은 ${today}이다. 연도가 없으면 오늘 기준 가장 가까운 과거 날짜로 쓴다.
+JSON만 출력: {"items":[{"date":"YYYY-MM-DD","store":"가맹점","amount":숫자,"type":"지출|수입","category":"지출이면 ${EXP_CATS.join('|')}, 수입이면 ${INC_CATS.join('|')} 중 하나","pay":"카드|현금"}]}
+
+${text}`, { maxTokens: 1200 });
+            const t = r.text || '', a = t.indexOf('{'), b = t.lastIndexOf('}'); if (a < 0) throw new Error('내용을 읽지 못했습니다');
+            const list = (JSON.parse(t.slice(a, b + 1)).items || []).map(x => {
+                const type = x.type === '수입' ? '수입' : '지출', cats = type === '수입' ? INC_CATS : EXP_CATS, store = famClean(String(x.store || ''));
+                const amt = Math.round(Math.abs(Number(String(x.amount ?? '').replace(/[^\d.-]/g, '')) || 0));
+                const date = /^\d{4}-\d{2}-\d{2}$/.test(x.date || '') ? x.date : today, hist = famHistCat(store, type);
+                return { amt, date, type, member: famUser() || '정우설', pay: x.pay === '현금' ? '현금' : '카드', memo: store, category: hist || (cats.includes(x.category) ? x.category : cats[cats.length - 1]), _hist: !!hist, _dup: famIsDup(date, amt, type) };
+            }).filter(x => x.amt > 0);
+            if (!list.length) throw new Error('금액을 찾지 못했습니다');
+            c.remove();
+            if (list.length === 1) famAssetCard('', list[0]); else famReceiptList(list);
+        } catch (e) { c.remove(); famRun(text); }
+    }
+
+    // ═══════════════════════════════════════════════════════════
     // ❔ 도움말 · ＋ 메뉴 (팝업)
     // ═══════════════════════════════════════════════════════════
     function famHelp() {
@@ -8825,6 +8976,15 @@ JSON만 출력: {"items":[{"date":"YYYY-MM-DD 또는 빈 문자열","store":"가
     function famShopAddInput() { const el = document.getElementById('shop-new'); const v = el.value.trim(); if (!v) return; el.value = ''; famShopAdd(v, false); }
     function famShopToggle(id, on) { db.collection('shoppingList').doc(id).update({ done: on }).catch(e => famToast(e.message)); }
     function famShopDel(id) { db.collection('shoppingList').doc(id).delete().catch(e => famToast(e.message)); }
+    // 구매 완료 항목을 묶어 가계부 기록 카드로 (금액만 입력하면 됨)
+    function famShopToAsset() {
+        const done = famShopItems.filter(i => i.done);
+        if (!done.length) { famToast('구매 완료로 체크한 항목이 없습니다'); return; }
+        const memo = '장보기: ' + done.map(i => i.text).join(', ');
+        const hist = famHistCat('장보기', '지출');
+        famAssetCard('', { amt: 0, date: famYmd(new Date()), member: famUser() || '공통', type: '지출', category: hist || '생활비', _hist: !!hist, pay: '카드', memo: memo.length > 80 ? memo.slice(0, 80) + '…' : memo });
+        famToast('홈에서 금액을 입력하고 저장하세요');
+    }
     function famShopClearDone() { const done = famShopItems.filter(i => i.done); if (!done.length) return; if (!confirm(`구매 완료 ${done.length}개를 지울까요?`)) return; const b = db.batch(); done.forEach(i => b.delete(db.collection('shoppingList').doc(i.id))); b.commit(); }
     function famShopGrid() { const el = document.getElementById('shop-grid'); if (el) el.innerHTML = SHOPS.map(([n, u, c]) => `<a class="shop-btn" href="${u}" target="_blank" rel="noopener"><i style="background:${c}">${famEsc(n.slice(0, 1))}</i>${famEsc(n)}</a>`).join(''); }
 
@@ -9157,7 +9317,7 @@ JSON만 출력: {"items":[{"date":"YYYY-MM-DD 또는 빈 문자열","store":"가
         const _rmd = window.renderMainDashboard;
         if (typeof _rmd === 'function') window.renderMainDashboard = function () { const r = _rmd.apply(this, arguments); famHomeToday(); return r; };
         famFeedWatch(); famFeedHello(); famMicSwap();
-        const boot = () => { famShopListen(); fxListen(); svListen(); budgetListen(); famHomeReportWatch(); setTimeout(fxRun, 6000); setInterval(fxRun, 30 * 60e3); famShopGrid(); };
+        const boot = () => { famShopListen(); fxListen(); svListen(); budgetListen(); famHomeReportWatch(); setTimeout(fxRun, 6000); setInterval(fxRun, 30 * 60e3); famShopGrid(); setTimeout(famShareIn, 1200); };
         if (typeof db !== 'undefined') famAuthGate(() => setTimeout(boot, 800));
     })();
     </script>
