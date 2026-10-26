@@ -1441,7 +1441,7 @@
                         <div class="ff-tools"><button onclick="famHistOpen()">🕘 지난 대화</button><button id="ff-new" onclick="famFeedNew()">↺ 새 대화</button></div>
                         <div class="fam-feed-body" id="fam-feed-body"></div>
                         <span id="chat-unread-badge" style="display:none"></span>
-                        <div class="footer-info">Family Shared v70.0 &nbsp;·&nbsp; Jung Wooseol 2026</div>
+                        <div class="footer-info">Family Shared v71.0 &nbsp;·&nbsp; Jung Wooseol 2026</div>
                         <div style="height:150px"></div>
                         </div><!-- /main-scroll -->
             </div><!-- /main-wrap -->
@@ -9322,11 +9322,37 @@ ${text}`, { maxTokens: 1200 });
         famSheet(`<div class="fam-h"><b>👤 프로필</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
             <div style="text-align:center;padding:4px 0 14px">${famAvatarHtml(me, 96)}<div style="font-size:17px;font-weight:800;color:#1e293b;margin-top:10px">${famEsc(me)}</div></div>
             <div class="fam-box">
-                <button class="ff-res" onclick="document.getElementById('fam-avatar-input').click()"><i>📷</i><div>사진 ${famPhotos[me] ? '변경' : '등록'}<small>가운데를 정사각형으로 잘라 저장합니다</small></div></button>
-                ${famPhotos[me] ? `<button class="ff-res" onclick="famAvatarRemove()"><i>🗑</i><div>사진 삭제<small>기본 아이콘으로 돌아갑니다</small></div></button>` : ''}
+                <button class="ff-res" onclick="famAvatarPicker()"><i>🎨</i><div>캐릭터 고르기<small>사진 대신 일러스트 · 이모지 캐릭터</small></div></button>
+                <button class="ff-res" onclick="document.getElementById('fam-avatar-input').click()"><i>📷</i><div>내 사진·이미지 올리기<small>앨범의 아무 이미지나 · 가운데를 정사각형으로 잘라 저장</small></div></button>
+                ${famPhotos[me] ? `<button class="ff-res" onclick="famAvatarRemove()"><i>🗑</i><div>기본 아이콘으로<small>지금 사진·캐릭터를 지웁니다</small></div></button>` : ''}
                 <button class="ff-res" onclick="famSheetClose();resetProfile()"><i>🔄</i><div>사용자 전환<small>이 폰을 다른 사람 이름으로 사용</small></div></button>
             </div>`);
     }
+    // 🎨 캐릭터 고르기 (DiceBear 무료 일러스트 아바타 — 저작권 걱정 없는 생성 캐릭터)
+    const FAM_AV_STYLES = [['notionists', '스케치'], ['lorelei', '일러스트'], ['adventurer', '애니'], ['big-smile', '스마일'], ['fun-emoji', '이모지'], ['thumbs', '심플']];
+    const FAM_AV_BG = 'b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf,c1f0c1';
+    let famAvStyle = 'notionists', famAvSeedBase = '';
+    const famAvUrl = (style, seed) => `https://api.dicebear.com/10.x/${style}/svg?seed=${encodeURIComponent(seed)}&backgroundColor=${FAM_AV_BG}&radius=50`;
+    function famAvatarPicker(style, reshuffle) {
+        if (style) famAvStyle = style;
+        if (reshuffle || !famAvSeedBase) famAvSeedBase = Math.random().toString(36).slice(2, 7);
+        const seeds = Array.from({ length: 12 }, (_, i) => famAvSeedBase + i);
+        famSheet(`<div class="fam-h"><b>🎨 캐릭터 고르기</b><button class="fam-x" onclick="famProfileSheet()">✕</button></div>
+            <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none">${FAM_AV_STYLES.map(([k, n]) => `<button class="fam-btn ${k === famAvStyle ? 'pri' : ''}" style="flex:none;padding:6px 12px;font-size:12px" onclick="famAvatarPicker('${k}')">${n}</button>`).join('')}</div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:6px 0 12px">${seeds.map(sd => `<button onclick="famAvatarSet('${famAvUrl(famAvStyle, sd)}')" style="border:none;background:none;padding:0;cursor:pointer"><img src="${famAvUrl(famAvStyle, sd)}" loading="lazy" style="width:100%;aspect-ratio:1;border-radius:50%;background:#f1f5f9" alt=""></button>`).join('')}</div>
+            <div class="fam-btns"><button class="fam-btn" onclick="famAvatarPicker(null, true)">🔀 다른 캐릭터 보기</button></div>
+            <div class="fam-note">마음에 드는 캐릭터를 누르면 바로 적용됩니다.</div>`);
+    }
+    async function famAvatarSet(url) {
+        const me = famUser(); if (!me) return;
+        try {
+            const old = famPhotos[me];
+            await db.collection('config').doc('profiles').set({ [me]: url }, { merge: true });
+            famPhotos[me] = url; if (old && typeof albumDelFile === 'function') albumDelFile(old);
+            famAvatarApply(); famProfileSheet(); famToast('프로필을 바꿨습니다');
+        } catch (e) { famToast('변경 실패: ' + e.message); }
+    }
+
     function famSquare(file, size) {
         return new Promise((ok, no) => {
             const img = new Image(), u = URL.createObjectURL(file);
@@ -9351,7 +9377,7 @@ ${text}`, { maxTokens: 1200 });
         } catch (e) { famToast('사진 변경 실패: ' + e.message); }
     }
     async function famAvatarRemove() {
-        const me = famUser(), old = famPhotos[me]; if (!old || !confirm('프로필 사진을 삭제할까요?')) return;
+        const me = famUser(), old = famPhotos[me]; if (!old || !confirm('기본 아이콘으로 바꿀까요?')) return;
         try {
             await db.collection('config').doc('profiles').set({ [me]: firebase.firestore.FieldValue.delete() }, { merge: true });
             delete famPhotos[me]; if (typeof albumDelFile === 'function') albumDelFile(old);
