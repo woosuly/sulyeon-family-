@@ -426,7 +426,7 @@
         .chat-actions {
             display:none; gap:5px; margin-top:4px;
         }
-        .chat-bubble-wrap:hover .chat-actions { display:flex; }
+        .chat-bubble-wrap:hover .chat-actions, .chat-bubble-wrap.show-act .chat-actions { display:flex; }
         .chat-act-btn {
             font-size:10px; padding:3px 8px; border-radius:8px;
             border:1px solid #e2e8f0; background:white;
@@ -1071,7 +1071,7 @@
         .chat-actions {
             display:none; gap:5px; margin-top:4px;
         }
-        .chat-bubble-wrap:hover .chat-actions { display:flex; }
+        .chat-bubble-wrap:hover .chat-actions, .chat-bubble-wrap.show-act .chat-actions { display:flex; }
         .chat-act-btn {
             font-size:10px; padding:3px 8px; border-radius:8px;
             border:1px solid #e2e8f0; background:white;
@@ -1333,7 +1333,7 @@
                 <button onclick="closeDrawer()" style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.2);border:none;color:white;font-size:14px;cursor:pointer;">✕</button>
             </div>
             <div style="display:flex;align-items:center;gap:10px;">
-                <div id="drw-avatar" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:18px;">👤</div>
+                <div id="drw-avatar" onclick="closeDrawer();famProfileSheet()" title="프로필 사진" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;overflow:hidden;">👤</div>
                 <div id="drw-name" style="font-size:13px;font-weight:800;color:white;">–</div>
             </div>
         </div>
@@ -1441,7 +1441,7 @@
                         <div class="ff-tools"><button onclick="famHistOpen()">🕘 지난 대화</button><button id="ff-new" onclick="famFeedNew()">↺ 새 대화</button></div>
                         <div class="fam-feed-body" id="fam-feed-body"></div>
                         <span id="chat-unread-badge" style="display:none"></span>
-                        <div class="footer-info">Family Shared v69.0 &nbsp;·&nbsp; Jung Wooseol 2026</div>
+                        <div class="footer-info">Family Shared v70.0 &nbsp;·&nbsp; Jung Wooseol 2026</div>
                         <div style="height:150px"></div>
                         </div><!-- /main-scroll -->
             </div><!-- /main-wrap -->
@@ -1707,7 +1707,7 @@
                         </div>
                     </div>
                     <!-- 선택 모드 액션바 -->
-                    <div id="photo-select-bar" style="display:none;background:#f8fafc;border-radius:12px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                    <div id="photo-select-bar" style="display:none;background:#f8fafc;border-radius:12px;padding:10px 14px;margin-bottom:10px;align-items:center;gap:10px;flex-wrap:wrap;">
                         <span id="photo-select-count" style="font-size:12px;color:#64748b;flex:1;">0개 선택됨</span>
                         <button class="btn-action btn-nav" style="height:34px;font-size:12px;" onclick="movePhotos()">📂 이동</button>
                         <button class="btn-action btn-danger" style="height:34px;font-size:12px;" onclick="deleteSelectedPhotos()">🗑 삭제</button>
@@ -1993,7 +1993,7 @@
                         </div>
                         <div style="display:flex;align-items:center;gap:6px;">
                             <button onclick="openChatBgModal()" style="font-size:11px;padding:5px 10px;border-radius:20px;border:1.5px solid #e2e8f0;background:white;color:#64748b;font-weight:600;cursor:pointer;">🎨 배경</button>
-                            <button onclick="resetProfile()" style="font-size:11px;padding:5px 10px;border-radius:20px;border:1.5px solid #e2e8f0;background:white;color:#64748b;font-weight:600;cursor:pointer;">👤 변경</button>
+                            <button onclick="famProfileSheet()" style="font-size:11px;padding:5px 10px;border-radius:20px;border:1.5px solid #e2e8f0;background:white;color:#64748b;font-weight:600;cursor:pointer;">👤 프로필</button>
                             <button onclick="showSection('main-section')" class="btn-home">🏠 Home</button>
                         </div>
                     </div>
@@ -2014,6 +2014,9 @@
 
                     <!-- 메시지 목록 -->
                     <div class="chat-messages" id="chat-messages"></div>
+
+                    <!-- 상대방 입력 중 표시 -->
+                    <div id="chat-typing"></div>
 
                     <!-- 미디어 첨부 프리뷰 -->
                     <div id="chat-preview" style="display:none;" class="chat-upload-preview">
@@ -2038,7 +2041,7 @@
                             <button class="chat-icon-btn" id="emoji-btn" onclick="toggleEmojiPanel()" title="이모티콘">😊</button>
                             <button class="chat-icon-btn" id="media-btn" onclick="toggleMediaPanel()" title="사진/동영상">📷</button>
                             <button class="chat-icon-btn" onclick="shareChatLocation()" title="위치 공유">📍</button>
-                            <button class="chat-icon-btn chat-icon-gemini" onclick="openGeminiWindow()" title="재미나이 AI">✨</button>
+                            <button class="chat-icon-btn chat-icon-gemini" onmousedown="event.preventDefault()" onclick="famAIButton()" title="AI 부르기 (@)">✨</button>
                         </div>
                         <!-- 미디어 선택 패널 -->
                         <div id="chat-media-panel" style="display:none;background:white;border:1px solid #e2e8f0;border-radius:14px;padding:12px;margin-bottom:6px;box-shadow:0 4px 16px rgba(0,0,0,0.1);flex-shrink:0;">
@@ -2056,7 +2059,7 @@
                         <!-- 텍스트 입력 + 전송 -->
                         <div class="chat-input-bar">
                             <div class="chat-input-wrap">
-                                <textarea id="chat-input" rows="1" placeholder="메시지를 입력하세요..."
+                                <textarea id="chat-input" rows="1" placeholder="메시지 입력 · @로 AI 부르기"
                                     oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"
                                     onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!event.ctrlKey){event.preventDefault();sendChatMessage();}"></textarea>
                                 <button class="chat-newline-btn" onclick="addChatNewline()" title="줄바꿈">↵<br></button>
@@ -2447,7 +2450,7 @@
                 </div>
                 <div id="shop-grid" class="shop-grid"></div>
                 <div class="fam-box">
-                    <h4 style="display:flex;align-items:center">📝 장보기 목록 <small id="shop-count" style="margin-left:8px;color:#94a3b8;font-weight:600"></small><button class="fam-btn" style="margin-left:auto;padding:4px 10px;font-size:11px" onclick="famShopClearDone()">완료 지우기</button></h4>
+                    <h4 style="display:flex;align-items:center">📝 장보기 목록 <small id="shop-count" style="margin-left:8px;color:#94a3b8;font-weight:600"></small><button class="fam-btn" style="margin-left:auto;padding:4px 10px;font-size:11px" onclick="famShopToAsset()">🧾 가계부로</button><button class="fam-btn" style="margin-left:6px;padding:4px 10px;font-size:11px" onclick="famShopClearDone()">완료 지우기</button></h4>
                     <div style="display:flex;gap:8px;margin-bottom:6px"><input id="shop-new" class="fam-sel" style="flex:1" placeholder="우유, 계란 (쉼표로 여러 개)" onkeydown="if(event.key==='Enter'){event.preventDefault();famShopAddInput()}"><button class="fam-btn pri" onclick="famShopAddInput()">추가</button></div>
                     <div id="shop-list"></div>
                 </div>
@@ -2717,6 +2720,8 @@
         firebase.initializeApp(firebaseConfig);
         const storage = firebase.storage();
         const db = firebase.firestore();
+        // 오프라인 캐시: 네트워크가 끊겨도 마지막 데이터 조회·입력 가능 (연결되면 자동 동기화)
+        try { db.enablePersistence({ synchronizeTabs: true }).catch(e => console.warn('[오프라인 캐시]', e.code)); } catch (e) {}
 
         // ── 전역 상태 ──────────────────────────────────────────────────
         let curViewDate = new Date();
@@ -3128,23 +3133,27 @@
         }
 
         /* ── 실시간 리스너 ── */
+        const CHAT_LIMIT = 400;
         function initChatListener() {
             if (chatUnsubscribe) return;
             initChatNotif();
             try {
                 let firstLoad = true;
+                // 최근 CHAT_LIMIT개만 구독 (전체를 받으면 기록이 쌓일수록 느려짐)
                 chatUnsubscribe = db.collection('messages')
                     .orderBy('createdAt', 'asc')
+                    .limitToLast(CHAT_LIMIT)
                     .onSnapshot({ includeMetadataChanges: false }, snap => {
-                        const prev = chatMessages.length;
                         chatMessages = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
                         if (firstLoad) {
                             // 첫 로드: 알림 없이 뱃지만 업데이트
                             firstLoad = false;
-                        } else if (chatMessages.length > prev) {
-                            // 새 메시지 수신 시
-                            chatMessages.slice(prev).forEach(m => {
+                        } else {
+                            // 새 메시지 수신 시 (개수 비교 대신 변경분으로 판단 — 제한 구독에서도 동작)
+                            snap.docChanges().forEach(ch => {
+                                if (ch.type !== 'added') return;
+                                const m = ch.doc.data();
                                 if (!m.sender || m.sender === chatUser || m.isAI) return;
                                 triggerChatNotif(m.text || '📎 미디어', m.sender);
                             });
@@ -3223,15 +3232,14 @@
                 const msgType = m.type || 'text';
                 const isMedia = ['image','video','location'].includes(msgType);
                 const canEdit = isMe && !isMedia && !isAI;
-                const safeText = (m.text||'').replace(/`/g, '&#96;').replace(/'/g,"&#39;");
 
-                html += `<div class="chat-bubble-wrap ${side}${highlight}" data-id="${m.id}">
-                    ${(!isMe||isAI) ? `<div class="chat-sender">${isAI?'&#129302; AI':escHtml(m.sender||'')}</div>` : ''}
+                html += `<div class="chat-bubble-wrap ${side}${highlight}" data-id="${m.id}"${isMe ? ` onclick="chatToggleAct(this,event)"` : ''}>
+                    ${(!isMe||isAI) ? `<div class="chat-sender" style="display:flex;align-items:center;gap:5px;">${typeof famAvatarHtml==='function' ? famAvatarHtml(isAI?(m.aiName||'AI'):m.sender, 22) : ''}${isAI?escHtml(m.aiName||'AI'):escHtml(m.sender||'')}</div>` : ''}
                     <div class="${(isMedia||isAI)?'':'chat-bubble'}">${renderMsgContent(m)}</div>
                     <div class="chat-meta"><span>${timeStr}</span>${readMark}</div>
                     ${isMe ? `<div class="chat-actions">
-                        ${canEdit ? `<button class="chat-act-btn" onclick="editChatMessage('${m.id}','${safeText}')">&#9999;&#65039; 수정</button>` : ''}
-                        <button class="chat-act-btn" style="color:#ef4444;" onclick="deleteChatMessage('${m.id}')">&#128465; 삭제</button>
+                        ${canEdit ? `<button class="chat-act-btn" onclick="event.stopPropagation();editChatMessage('${m.id}')">&#9999;&#65039; 수정</button>` : ''}
+                        <button class="chat-act-btn" style="color:#ef4444;" onclick="event.stopPropagation();deleteChatMessage('${m.id}')">&#128465; 삭제</button>
                     </div>` : ''}
                 </div>`;
             });
@@ -3377,7 +3385,17 @@
         }
 
         /* ── 수정 ── */
+        // 내 메시지를 탭하면 수정/삭제 버튼 표시 (모바일은 hover가 없음)
+        function chatToggleAct(el, ev) {
+            if (ev && ev.target.closest('a,video,.chat-img-bubble,button')) return;
+            const on = !el.classList.contains('show-act');
+            document.querySelectorAll('.chat-bubble-wrap.show-act').forEach(x => x.classList.remove('show-act'));
+            if (on) el.classList.add('show-act');
+        }
+
         function editChatMessage(id, text) {
+            // 본문은 onclick 문자열 대신 데이터에서 가져옴 (줄바꿈·따옴표가 있어도 동작)
+            if (text === undefined) { const m = chatMessages.find(x => x.id === id); text = (m && m.text) || ''; }
             chatEditId = id;
             const input = document.getElementById('chat-input');
             if (input) {
@@ -3952,7 +3970,7 @@
             toast.innerHTML = `
                 <div style="display:flex;align-items:center;gap:12px;">
                     <div style="width:48px;height:48px;border-radius:50%;background:var(--month-grad-a);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;">
-                        ${sender === '정우설' ? '👨' : '👩'}
+                        ${typeof famAvatarHtml === 'function' ? famAvatarHtml(sender, 48) : (sender === '정우설' ? '👨' : '👩')}
                     </div>
                     <div style="flex:1;min-width:0;">
                         <div style="font-size:14px;font-weight:800;color:white;margin-bottom:3px;">💬 ${escHtml(sender)}</div>
@@ -4486,7 +4504,7 @@ function initRealtimeSync() {
         };
         const famHoliCache = {};
         // 정부 발표(우주항공청 월력요항) 공휴일 — 임시공휴일·선거일 포함, 앱을 열 때 하루 1번 자동 갱신
-        const FAM_HOLI_URL = 'https://cdn.jsdelivr.net/npm/@hyunbinseo/holidays-kr@5/dist/index.js';
+        const FAM_HOLI_URL = 'https://cdn.jsdelivr.net/npm/@hyunbinseo/holidays-kr@5.2027.2/dist/index.js';
         let famHoliOnline = (() => { try { return JSON.parse(localStorage.getItem('famHoliOnline') || '{}'); } catch (e) { return {}; } })();
         const famHoliName = n => String(n).replace(/^1월 1일$/, '신정').replace('3ㆍ1절', '삼일절').replace(/^대체공휴일.*$/, '대체공휴일')
             .replace(/^설날 (전날|다음 날)$/, '설날 연휴').replace(/^추석 (전날|다음 날)$/, '추석 연휴').replace('기독탄신일', '크리스마스')
@@ -4816,8 +4834,8 @@ function initRealtimeSync() {
                             <span style="font-size:10px;color:#94a3b8;">${catIcon} ${ev.category||''}</span>
                         </div>
                         ${ev.timeType === 'timed' && ev.startTime ? `<div style="font-size:11px;color:var(--month-header);font-weight:700;margin-bottom:3px;">🕐 ${ev.startTime}${ev.endTime?' ~ '+ev.endTime:''}</div>` : ev.timeType === 'allday' ? '<div style="font-size:10px;color:#94a3b8;margin-bottom:2px;">종일</div>' : ''}
-                        <div class="sch-detail-memo">${ev.memo||'(내용 없음)'}</div>
-                        ${ev.place ? `<div style="font-size:11px;color:#94a3b8;margin-top:3px;">📍 ${ev.place}</div>` : ''}
+                        <div class="sch-detail-memo">${escHtml(ev.memo||'(내용 없음)')}</div>
+                        ${ev.place ? `<div style="font-size:11px;color:#94a3b8;margin-top:3px;">📍 ${escHtml(ev.place)}</div>` : ''}
                     `;
 
                     // ••• 버튼 - ev.id로만 참조 (JSON 직렬화 없음)
@@ -4852,10 +4870,10 @@ function initRealtimeSync() {
             const memberColor = ev.member === '정우설' ? '#dbeafe' : ev.member === '한미연' ? '#fce7f3' : '#f0fdf4';
 
             document.getElementById('sch-action-title').innerHTML =
-                `${ev.priority==='중요'?'⭐ ':''}${ev.memo||'(내용 없음)'}`;
+                `${ev.priority==='중요'?'⭐ ':''}${escHtml(ev.memo||'(내용 없음)')}`;
             document.getElementById('sch-action-meta').innerHTML =
                 `<span style="background:${memberColor};padding:1px 8px;border-radius:20px;font-size:11px;font-weight:700;">${ev.member||''}</span>
-                 &nbsp;${ev.category||''} ${ev.place ? '· 📍'+ev.place : ''}`;
+                 &nbsp;${ev.category||''} ${ev.place ? '· 📍'+escHtml(ev.place) : ''}`;
 
             document.getElementById('sch-action-edit-btn').onclick = () => {
                 // closeSchAction보다 먼저 복사해둬야 null이 되지 않음
@@ -5118,38 +5136,27 @@ function initRealtimeSync() {
 
         function getRepeatDates(startDs, unit, calType, endDs) {
             const dates = [];
-            const start = new Date(startDs);
-            // 종료일 미설정 시 2년
-            const end = endDs ? new Date(endDs) : new Date(start.getFullYear() + (unit === 'year' ? 30 : 2), start.getMonth(), start.getDate());
+            // 로컬(한국) 자정 기준으로 해석 — UTC 변환(toISOString)으로 날짜가 밀리지 않게
+            const start = new Date(startDs + 'T00:00:00');
+            // 종료일 미설정 시 2년 (매년은 30년)
+            const end = endDs ? new Date(endDs + 'T00:00:00') : new Date(start.getFullYear() + (unit === 'year' ? 30 : 2), start.getMonth(), start.getDate());
             if (unit === 'year' && calType === 'lunar') {
                 const sy = +startDs.slice(0, 4), l = famLunar(sy, +startDs.slice(5, 7) - 1, +startDs.slice(8, 10)); if (!l) return dates;
                 for (let k = 1; k <= 60; k++) { const d = famLunarToSolar(l.year + k, l.month, l.day); if (!d) break; const ds = famDs(d); if (ds > famDs(end) && !endDs) break; if (endDs && ds > endDs) break; dates.push(ds); }
                 return dates;
             }
 
-            // 음력 반복: 매년 음력 같은 날짜 계산 (간이)
-            // 양력 반복: 날짜 직접 계산
-            let cur = new Date(start);
-            cur.setDate(cur.getDate() + (unit === 'week' ? 7 : unit === 'month' ? 0 : 0)); // 첫날 제외, 다음부터
-
+            // 양력 반복: 첫날 제외, 다음 회차부터
+            const sy = start.getFullYear(), sm = start.getMonth(), sd = start.getDate();
+            // 해당 월에 그 날짜가 없으면 말일로 (1/31 → 2/28, 2/29 → 2/28)
+            const clampDay = (y, m) => new Date(y, m, Math.min(sd, new Date(y, m + 1, 0).getDate()));
             if (unit === 'week') {
-                cur = new Date(start); cur.setDate(cur.getDate() + 7);
-                while (cur <= end) {
-                    dates.push(cur.toISOString().split('T')[0]);
-                    cur.setDate(cur.getDate() + 7);
-                }
+                const cur = new Date(start); cur.setDate(cur.getDate() + 7);
+                while (cur <= end) { dates.push(famDs(cur)); cur.setDate(cur.getDate() + 7); }
             } else if (unit === 'month') {
-                cur = new Date(start); cur.setMonth(cur.getMonth() + 1);
-                while (cur <= end) {
-                    dates.push(cur.toISOString().split('T')[0]);
-                    cur.setMonth(cur.getMonth() + 1);
-                }
+                for (let k = 1; ; k++) { const d = clampDay(sy, sm + k); if (d > end) break; dates.push(famDs(d)); }
             } else if (unit === 'year') {
-                cur = new Date(start); cur.setFullYear(cur.getFullYear() + 1);
-                while (cur <= end) {
-                    dates.push(cur.toISOString().split('T')[0]);
-                    cur.setFullYear(cur.getFullYear() + 1);
-                }
+                for (let k = 1; ; k++) { const d = clampDay(sy + k, sm); if (d > end) break; dates.push(famDs(d)); }
             }
             return dates;
         }
@@ -5356,19 +5363,30 @@ function initRealtimeSync() {
         // initAssetCharts → 하단 개선판 사용
 
         // ── 앨범 ──────────────────────────────────────────────────
+        // 폴더 카드 (하위폴더는 상위 폴더 안에서만 표시)
+        function albumFolderCard(f) {
+            const subs = albumData.filter(x => x.parentId === f.id).length;
+            return `<div class="banner" style="background:#fff; padding:15px;" onclick="openFolderDetail('${escHtml(f.id)}')">
+                    <div style="font-size:30px;">📁</div>
+                    <b>${escHtml(f.name)}</b>
+                    <div style="font-size:11px; color:#94a3b8; margin-top:4px;">${(f.photos||[]).length}장${subs ? ' · 폴더 ' + subs : ''}</div>
+                </div>`;
+        }
         function renderFolders() {
             const c = document.getElementById('folder-container');
-            c.innerHTML = albumData.map(f =>
-                `<div class="banner" style="background:#fff; padding:15px;" onclick="openFolderDetail('${f.id}')">
-                    <div style="font-size:30px;">📁</div>
-                    <b>${f.name}</b>
-                    <div style="font-size:11px; color:#94a3b8; margin-top:4px;">${(f.photos||[]).length}장</div>
-                </div>`
-            ).join('');
+            const ids = new Set(albumData.map(x => x.id));
+            c.innerHTML = albumData.filter(f => !f.parentId || !ids.has(f.parentId)).map(albumFolderCard).join('');
+            if (currentFolderId) renderSubFolders();
+        }
+        function renderSubFolders() {
+            const el = document.getElementById('sub-folder-list'); if (!el) return;
+            const subs = albumData.filter(x => x.parentId === currentFolderId);
+            el.innerHTML = subs.length ? `<div class="folder-grid" style="margin-top:0">${subs.map(albumFolderCard).join('')}</div>` : '';
         }
 
         function openFolderDetail(id) {
             currentFolderId = id;
+            if (photoSelectMode) { photoSelectMode = false; selectedPhotos.clear(); document.getElementById('photo-select-btn').textContent = '선택'; document.getElementById('photo-select-bar').style.display = 'none'; }
             document.getElementById('photo-main-view').classList.add('hidden');
             document.getElementById('photo-detail-view').classList.remove('hidden');
             history.pushState({ modal: 'folder-detail', folderId: id }, '', '');
@@ -5376,7 +5394,40 @@ function initRealtimeSync() {
             if (f) {
                 document.getElementById('detail-folder-title').innerText = f.name;
                 renderGallery();
+                renderSubFolders();
+                // 예전 방식(문서 안 base64)으로 저장된 사진은 Storage로 옮김
+                if ((f.photos || []).some(p => String(p).startsWith('data:'))) albumMigrate(id);
             }
+        }
+
+        // ── 앨범 사진 저장소 (Firebase Storage) ──
+        // Firestore 문서 한도(1MB) 때문에 사진 본문은 Storage에, 문서에는 URL만 저장
+        async function albumUploadDataUrl(dataUrl, folderId) {
+            const blob = await (await fetch(dataUrl)).blob();
+            const ref = storage.ref(`albums/${folderId}/${Date.now()}_${Math.random().toString(36).slice(2, 7)}.jpg`);
+            await ref.put(blob, { contentType: 'image/jpeg' });
+            return await ref.getDownloadURL();
+        }
+        function albumDelFile(url) {
+            if (/^https?:/.test(String(url || ''))) { try { storage.refFromURL(url).delete().catch(() => {}); } catch (e) {} }
+        }
+        const albumMigrating = {};
+        async function albumMigrate(id) {
+            if (albumMigrating[id]) return; albumMigrating[id] = 1;
+            try {
+                const f = albumData.find(x => x.id === id); if (!f) return;
+                const map = new Map();
+                for (const p of (f.photos || [])) {
+                    if (String(p).startsWith('data:') && !map.has(p)) map.set(p, await albumUploadDataUrl(p, id));
+                }
+                if (!map.size) return;
+                const ref = db.collection('albums').doc(id);
+                await db.runTransaction(async t => {
+                    const s = await t.get(ref); if (!s.exists) return;
+                    t.update(ref, { photos: ((s.data() || {}).photos || []).map(p => map.get(p) || p) });
+                });
+            } catch (e) { console.warn('[앨범 이전]', e); }
+            finally { delete albumMigrating[id]; }
         }
 
         function backToFolders() {
@@ -5389,37 +5440,60 @@ function initRealtimeSync() {
             const f = albumData.find(x => x.id === currentFolderId);
             const c = document.getElementById('gallery-container');
             if (f) {
-                c.innerHTML = (f.photos || []).map((s, idx) =>
-                    `<div class="gallery-item" onclick="openLightbox('${s}')">
-                        <img src="${s}" loading="lazy">
-                        <button class="photo-del-btn" onclick="event.stopPropagation(); deleteSinglePhoto(${idx})">✕</button>
-                    </div>`
-                ).join('');
+                // 선택 모드: 탭하면 선택/해제, 일반 모드: 탭하면 크게 보기
+                c.innerHTML = (f.photos || []).map((s, idx) => {
+                    const on = photoSelectMode && selectedPhotos.has(idx);
+                    return `<div class="gallery-item" data-idx="${idx}" style="${on ? 'outline:3px solid var(--month-header);outline-offset:-3px;' : ''}" onclick="albumTap(${idx})">
+                        <img src="${escHtml(s)}" loading="lazy" style="${on ? 'opacity:.6' : ''}">
+                        ${photoSelectMode
+                            ? `<span style="position:absolute;top:6px;left:6px;width:22px;height:22px;border-radius:50%;border:2px solid #fff;background:${on ? 'var(--month-header)' : 'rgba(0,0,0,.25)'};color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;">${on ? '✓' : ''}</span>`
+                            : `<button class="photo-del-btn" onclick="event.stopPropagation(); deleteSinglePhoto(${idx})">✕</button>`}
+                    </div>`;
+                }).join('');
+                const cnt = document.getElementById('photo-select-count');
+                if (cnt) cnt.textContent = `${selectedPhotos.size}개 선택됨`;
             }
+        }
+        function albumTap(idx) {
+            const f = albumData.find(x => x.id === currentFolderId); if (!f) return;
+            if (!photoSelectMode) { openLightbox(f.photos[idx]); return; }
+            if (selectedPhotos.has(idx)) selectedPhotos.delete(idx); else selectedPhotos.add(idx);
+            renderGallery();
         }
 
         async function deleteSinglePhoto(idx) {
             if (!confirm("이 사진을 삭제할까요?")) return;
             const f = albumData.find(x => x.id === currentFolderId);
             if (f) {
+                const url = f.photos[idx];
                 f.photos.splice(idx, 1);
                 await db.collection("albums").doc(currentFolderId).update({ photos: f.photos });
+                albumDelFile(url);
             }
         }
 
-        // [버그수정] 여러 파일 동시 업로드 시 덮어쓰기 방지 → 순차 처리
+        // 사진은 Storage에 올리고 문서에는 URL만 추가 (arrayUnion: 두 사람이 동시에 올려도 덮어쓰지 않음)
         async function handleGalleryUpload(input) {
             if (!input.files || !currentFolderId) return;
-            const f = albumData.find(x => x.id === currentFolderId);
-            if (!f) return;
+            const folderId = currentFolderId;
             const files = Array.from(input.files);
-            for (const file of files) {
-                const base64 = await readFileAsBase64(file);
-                const compressed = await compressImage(base64, 800);
-                f.photos.push(compressed);
-                await db.collection("albums").doc(currentFolderId).update({ photos: [...f.photos] });
-            }
             input.value = "";
+            let ok = 0;
+            for (const file of files) {
+                try {
+                    if (typeof famToast === 'function') famToast(`사진 올리는 중… (${ok + 1}/${files.length})`);
+                    const base64 = await readFileAsBase64(file);
+                    const compressed = await compressImage(base64, 1600, 0.82);
+                    const url = await albumUploadDataUrl(compressed, folderId);
+                    await db.collection("albums").doc(folderId).update({ photos: firebase.firestore.FieldValue.arrayUnion(url) });
+                    ok++;
+                } catch (e) {
+                    console.warn('[앨범 업로드]', e);
+                    alert('사진 업로드 실패: ' + (e.message || e.code || e) + '\nFirebase Storage 규칙에서 albums/ 경로 쓰기 권한을 확인하세요.');
+                    break;
+                }
+            }
+            if (ok && typeof famToast === 'function') famToast(`사진 ${ok}장을 올렸습니다`);
         }
 
         function readFileAsBase64(file) {
@@ -5431,25 +5505,39 @@ function initRealtimeSync() {
             });
         }
 
-        function openFolderModal() {
+        // openFolderModal(null) 새 폴더 · (id) 이름 수정 · (null, parentId) 하위폴더 추가
+        function openFolderModal(editId, parentId) {
             resetModal();
+            const edit = editId ? albumData.find(x => x.id === editId) : null;
+            const parent = parentId ? albumData.find(x => x.id === parentId) : null;
             document.getElementById('folder-fields').classList.remove('hidden');
-            document.getElementById('modal-title').innerText = "📁 새 폴더 만들기";
-            document.getElementById('btn-save').innerText = "만들기";
+            document.getElementById('modal-title').innerText = edit ? "✏️ 폴더 이름 수정" : parent ? `📁 ${parent.name} 안에 폴더 만들기` : "📁 새 폴더 만들기";
+            document.getElementById('btn-save').innerText = edit ? "저장" : "만들기";
+            if (edit) document.getElementById('fold-name').value = edit.name || '';
             document.getElementById('btn-save').onclick = async () => {
                 const name = document.getElementById('fold-name').value.trim();
-                if (name) {
+                if (!name) return;
+                if (edit) {
+                    await db.collection("albums").doc(edit.id).update({ name });
+                    if (currentFolderId === edit.id) document.getElementById('detail-folder-title').innerText = name;
+                } else {
                     const id = "f_" + Date.now();
-                    await db.collection("albums").doc(id).set({ id, name, photos: [] });
-                    closeModal();
+                    await db.collection("albums").doc(id).set(parent ? { id, name, photos: [], parentId: parent.id } : { id, name, photos: [] });
                 }
+                closeModal();
             };
             openModal();
         }
 
         async function deleteFolder() {
-            if (confirm("이 폴더와 사진을 모두 삭제할까요?")) {
-                await db.collection("albums").doc(currentFolderId).delete();
+            const subs = albumData.filter(x => x.parentId === currentFolderId);
+            if (confirm(subs.length ? `이 폴더와 사진을 모두 삭제할까요? 하위 폴더 ${subs.length}개는 상위 목록으로 옮겨집니다.` : "이 폴더와 사진을 모두 삭제할까요?")) {
+                const f = albumData.find(x => x.id === currentFolderId);
+                const batch = db.batch();
+                subs.forEach(s => batch.update(db.collection("albums").doc(s.id), { parentId: firebase.firestore.FieldValue.delete() }));
+                batch.delete(db.collection("albums").doc(currentFolderId));
+                await batch.commit();
+                ((f && f.photos) || []).forEach(albumDelFile);
                 backToFolders();
             }
         }
@@ -5498,12 +5586,12 @@ function initRealtimeSync() {
             // 주차 계산
             const weekSet = new Set();
             allDates.forEach(d => {
-                const dt = new Date(d);
+                const dt = new Date(d + 'T00:00:00');
                 const dow = dt.getDay()||7;
                 const mon = new Date(dt); mon.setDate(dt.getDate()-dow+1);
                 const sun = new Date(mon); sun.setDate(mon.getDate()+6);
                 const wn  = getWeekNumber(new Date(mon.getTime() + 3*86400000));
-                const key = `W${mon.getFullYear()}-W${String(wn).padStart(2,'0')}~${mon.toISOString().split('T')[0]}~${sun.toISOString().split('T')[0]}`;
+                const key = `W${mon.getFullYear()}-W${String(wn).padStart(2,'0')}~${famDs(mon)}~${famDs(sun)}`;
                 weekSet.add(key);
             });
             const weeks = [...weekSet].sort().reverse();
@@ -5614,14 +5702,14 @@ function initRealtimeSync() {
                 <div class="travel-card-header">
                     <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
                         <span style="font-size:18px;">${icon}</span>
-                        <span style="font-weight:800;font-size:15px;color:#1e293b;">${p.loc||'미정'}</span>
+                        <span style="font-weight:800;font-size:15px;color:#1e293b;">${escHtml(p.loc||'미정')}</span>
                         <span class="travel-card-badge" style="background:${mbg};color:${mcol};">${p.member||''}</span>
                         <span class="travel-card-badge" style="background:#f1f5f9;color:#64748b;">${p.subType||''}</span>
                     </div>
                     <span class="travel-dday">${dday}</span>
                 </div>
                 <div style="font-size:12px;color:#64748b;margin-bottom:5px;">📅 ${p.start||''} ~ ${p.end||''} &nbsp;·&nbsp; ${duration}</div>
-                ${p.supplies ? `<div style="font-size:11px;color:#94a3b8;">🎒 ${p.supplies}</div>` : ''}`;
+                ${p.supplies ? `<div style="font-size:11px;color:#94a3b8;">🎒 ${escHtml(p.supplies)}</div>` : ''}`;
             return card;
         }
         function renderPlans() {
@@ -5676,7 +5764,7 @@ function initRealtimeSync() {
             const duration = nights > 0 ? `${nights}박 ${nights+1}일` : '당일';
 
             document.getElementById('travel-detail-title').innerHTML =
-                `${icon} ${p.loc||'미정'} <span style="font-size:12px;font-weight:500;color:#94a3b8;">${p.subType||''}</span>`;
+                `${icon} ${escHtml(p.loc||'미정')} <span style="font-size:12px;font-weight:500;color:#94a3b8;">${p.subType||''}</span>`;
 
             let dayHtml = '';
             if (p.dayMemos && p.dayMemos.some(m => m)) {
@@ -5684,7 +5772,7 @@ function initRealtimeSync() {
                     p.dayMemos.map((m,i) => m ? `
                         <div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid #f8fafc;">
                             <span style="font-size:11px;font-weight:700;color:var(--month-accent);white-space:nowrap;min-width:48px;">Day ${i+1}</span>
-                            <span style="font-size:12px;color:#374151;">${m}</span>
+                            <span style="font-size:12px;color:#374151;">${escHtml(m)}</span>
                         </div>` : ''
                     ).join('') + `</div>`;
             }
@@ -5698,8 +5786,18 @@ function initRealtimeSync() {
                 ${(p.subType==='골프'||p.subType==='스크린골프')&&p.startTime ? `<span style="margin-left:8px;font-size:12px;color:#3b82f6;">⏰ ${p.startTime}</span>` : ''}
                 </div>
                 ${dayHtml}
-                ${p.supplies ? `<div style="margin-top:10px;font-size:12px;color:#64748b;">🎒 <b>준비물</b>: ${p.supplies}</div>` : ''}
-                ${p.memo     ? `<div style="margin-top:6px;font-size:12px;color:#64748b;">📝 <b>메모</b>: ${p.memo}</div>` : ''}
+                ${p.supplies ? `<div style="margin-top:10px;font-size:12px;color:#64748b;">🎒 <b>준비물</b>: ${escHtml(p.supplies)}</div>` : ''}
+                ${p.memo     ? `<div style="margin-top:6px;font-size:12px;color:#64748b;">📝 <b>메모</b>: ${escHtml(p.memo)}</div>` : ''}
+                ${(() => {
+                    // 여행 기간 중 가계부 지출 (여행비 / 전체)
+                    if (!p.start) return '';
+                    const ps = p.start, pe = p.end || p.start;
+                    const exp = Object.values(assetData).flat().filter(a => a.type === '지출' && a.date >= ps && a.date <= pe);
+                    if (!exp.length) return '';
+                    const tr = exp.filter(a => a.category === '여행비').reduce((t, a) => t + Number(a.amt || 0), 0);
+                    const all = exp.reduce((t, a) => t + Number(a.amt || 0), 0);
+                    return `<div style="margin-top:10px;padding:10px 12px;background:#f8fafc;border-radius:10px;font-size:12px;color:#334155;">💰 기간 중 지출 <b>${all.toLocaleString()}원</b> <span style="color:#94a3b8">(${exp.length}건)</span>${tr ? ` · 여행비 <b>${tr.toLocaleString()}원</b>` : ''}</div>`;
+                })()}
             `;
 
             document.getElementById('travel-edit-btn').onclick = () => {
@@ -5792,8 +5890,8 @@ function initRealtimeSync() {
             });
 
             for (let i = 0; i < days; i++) {
-                const d = new Date(start); d.setDate(d.getDate() + i);
-                const ds = d.toISOString().split('T')[0];
+                const d = new Date(start + 'T00:00:00'); d.setDate(d.getDate() + i);
+                const ds = famDs(d);
                 const dayMemo = dayMemos[i] || '';
                 const icon = getTypeIcon(subType);
                 batch.set(db.collection('schedules').doc(`sch_${planId}_${i}`), {
@@ -5852,7 +5950,7 @@ function initRealtimeSync() {
         }
 
         // ── 이미지 압축 ──────────────────────────────────────────────────
-        function compressImage(base64, size = 600) {
+        function compressImage(base64, size = 600, quality = 0.4) {
             return new Promise((resolve) => {
                 const img = new Image();
                 img.src = base64;
@@ -5864,7 +5962,7 @@ function initRealtimeSync() {
                     canvas.width = w; canvas.height = h;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, w, h);
-                    resolve(canvas.toDataURL('image/jpeg', 0.4));
+                    resolve(canvas.toDataURL('image/jpeg', quality));
                 };
             });
         }
@@ -5948,7 +6046,7 @@ function initRealtimeSync() {
         function familyAuthToggle(){if(isFamilyAuthed()){if(confirm('로그아웃?')){localStorage.removeItem('familyAuthed');updateAuthUI();}}else openFamilyAuthModal();}
         function timSetKey(){var k=prompt('Gemini API 키를 입력하세요:');if(k&&k.trim()){_GCLOUD_KEY=k.trim();localStorage.setItem('timApiKey',k.trim());alert('✅ 키 저장됨');}}
         function openFamilyAuthModal(){var m=document.getElementById('family-auth-modal');if(m){m.style.display='flex';document.getElementById('family-pw-input').value='';history.pushState({fa:1},'');}}
-        function submitFamilyAuth(){var pw=(document.getElementById('family-pw-input').value||'').trim(),st=localStorage.getItem('familyPassword')||'240719';if(pw===st){localStorage.setItem('familyAuthed','yes');document.getElementById('family-auth-modal').style.display='none';updateAuthUI();alert('✅ 인증 완료!');}else{alert('❌ 틀림');document.getElementById('family-pw-input').value='';}}
+        function submitFamilyAuth(){var pw=(document.getElementById('family-pw-input').value||'').trim(),st=localStorage.getItem('familyPassword');if(!st){alert('설정된 암호가 없습니다. 먼저 암호를 설정하세요.');openSetPasswordModal();return;}if(pw===st){localStorage.setItem('familyAuthed','yes');document.getElementById('family-auth-modal').style.display='none';updateAuthUI();alert('✅ 인증 완료!');}else{alert('❌ 틀림');document.getElementById('family-pw-input').value='';}}
         function openSetPasswordModal(){document.getElementById('family-setpw-modal').style.display='flex';document.getElementById('family-setpw-input').value='';}
         function saveNewPassword(){var pw=(document.getElementById('family-setpw-input').value||'').trim();if(!pw||pw.length<4){alert('4자리 이상');return;}localStorage.setItem('familyPassword',pw);document.getElementById('family-setpw-modal').style.display='none';alert('✅ 변경됨');}
         function updateAuthUI(){var btn=document.getElementById('family-auth-btn');if(btn)btn.textContent=isFamilyAuthed()?'🔓':'🔑';}
@@ -6121,6 +6219,12 @@ function initRealtimeSync() {
         // 🚀 AI 엔진별 API 호출 함수
         // ════════════════════════════════════════════════════════════════
 
+        // ── 모델: ⚙️ 설정에서 고른 모델을 그대로 사용 (구 모델 하드코딩 제거) ──
+        function _timModel(p){
+            if (typeof famModel === 'function') return famModel(p);
+            return {gemini:'gemini-3.6-flash', claude:'claude-haiku-5-5', gpt:'gpt-5.4-mini'}[p];
+        }
+
         // ── Gemini (번역·통역·OCR 기본) ──────────────────────────────────
         async function _callGemini(key, prompt, img, mime){
             mime=mime||'image/jpeg';
@@ -6130,7 +6234,7 @@ function initRealtimeSync() {
             var ctrl=new AbortController();
             var timer=setTimeout(function(){ctrl.abort();},30000);
             var r=await fetch(
-                'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+key,
+                'https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(_timModel('gemini'))+':generateContent?key='+key,
                 {method:'POST',headers:{'Content-Type':'application/json'},
                  body:JSON.stringify({contents:[{parts:parts}],generationConfig:{maxOutputTokens:(img?800:256),temperature:0.2}}),signal:ctrl.signal}
             );
@@ -6159,7 +6263,7 @@ function initRealtimeSync() {
                     'anthropic-dangerous-direct-browser-access':'true'
                 },
                 body:JSON.stringify({
-                    model:'claude-haiku-4-5-20251001',
+                    model:_timModel('claude'),
                     max_tokens:512,
                     messages:[{role:'user',content:prompt}]
                 }),
@@ -6186,7 +6290,7 @@ function initRealtimeSync() {
             var r=await fetch('https://api.openai.com/v1/chat/completions',{
                 method:'POST',
                 headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-                body:JSON.stringify({model:'gpt-4o',messages:messages,max_tokens:1000}),
+                body:JSON.stringify({model:_timModel('gpt'),messages:messages,max_completion_tokens:1000}),
                 signal:ctrl.signal
             });
             clearTimeout(timer);
@@ -6259,33 +6363,7 @@ function initRealtimeSync() {
             try{ return JSON.parse(m[0]); }catch(e){ return null; }
         }
 
-        // ── Gemini 1.5 Flash 호출 ──
-        async function timGemini(prompt,img,mime){
-            mime=mime||'image/jpeg';
-            var key=timGetKey();
-            if(!key) throw new Error('API 키 없음 — 번역기 상단에서 입력해 주세요.');
-            var parts=[];
-            if(img) parts.push({inline_data:{mime_type:mime,data:img}});
-            parts.push({text:prompt});
-            var ctrl=new AbortController();
-            var timer=setTimeout(function(){ ctrl.abort(); },30000);
-            var r=await fetch(
-                'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+key,
-                {method:'POST',headers:{'Content-Type':'application/json'},
-                 body:JSON.stringify({contents:[{parts:parts}]}),signal:ctrl.signal}
-            );
-            clearTimeout(timer);
-            if(!r.ok){
-                var ed=await r.json().catch(function(){return{};});
-                throw new Error(r.status===403?'Gemini API 활성화 필요(403)':
-                    'Gemini '+r.status+': '+((ed.error&&ed.error.message)||r.statusText));
-            }
-            var d=await r.json();
-            var t=d.candidates&&d.candidates[0]&&d.candidates[0].content&&
-                  d.candidates[0].content.parts&&d.candidates[0].content.parts[0]&&
-                  d.candidates[0].content.parts[0].text;
-            return t?t.trim():'';
-        }
+        // (중복 정의 제거: 위 timCallAI 라우터 버전의 timGemini를 사용)
 
         // ── timGT: 배치 번역 래퍼 (하위 호환) ──
         async function timGT(q,tgt,src){
@@ -6759,7 +6837,7 @@ function initRealtimeSync() {
                 ? todayEvs.slice(0,4).map(ev => `
                     <div class="dash-ev-item">
                         <div class="dash-ev-dot" style="background:${memberColor(ev.member)};"></div>
-                        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ev.memo||''}</span>
+                        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(ev.memo||'')}</span>
                         ${ev.priority==='중요'?'<span style="font-size:10px;">⭐</span>':''}
                     </div>`).join('')
                 : '<div class="dash-empty">일정 없음</div>';
@@ -6772,7 +6850,7 @@ function initRealtimeSync() {
                 ? wEvs.sort((a,b)=>a.date.localeCompare(b.date)).slice(0,5).map(ev => `
                     <div class="dash-ev-item">
                         <div class="dash-ev-dot" style="background:${memberColor(ev.member)};"></div>
-                        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ev.memo||''}</span>
+                        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(ev.memo||'')}</span>
                         <span style="font-size:9px;color:#94a3b8;flex-shrink:0;">${ev.date?.slice(5).replace('-','/')}</span>
                     </div>`).join('')
                 : '<div class="dash-empty">이번달 중요 일정 없음</div>';
@@ -6801,7 +6879,7 @@ function initRealtimeSync() {
                         return `<div class="dash-ev-item" style="flex-direction:column;align-items:flex-start;gap:3px;padding:7px 8px;">
                             <div style="display:flex;align-items:center;gap:6px;width:100%;">
                                 <span style="font-size:14px;">${typeIcon(p.subType)}</span>
-                                <span style="flex:1;font-weight:700;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.loc||'미정'}</span>
+                                <span style="flex:1;font-weight:700;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(p.loc||'미정')}</span>
                                 <span style="font-size:10px;font-weight:800;color:var(--month-accent);flex-shrink:0;">${dday(p.start)}</span>
                             </div>
                             <div style="display:flex;gap:5px;align-items:center;padding-left:20px;flex-wrap:wrap;">
@@ -7093,7 +7171,7 @@ function initRealtimeSync() {
                             <span style="font-size:10px;background:${memberBg};padding:1px 7px;border-radius:20px;font-weight:700;">${item.member||'가족'}</span>
                             <span style="font-size:10px;color:#94a3b8;">${item.category||''} · ${item.pay||''}</span>
                         </div>
-                        <div style="font-size:13px;font-weight:600;color:#1e293b;">${item.memo||'내용 없음'}</div>`;
+                        <div style="font-size:13px;font-weight:600;color:#1e293b;">${escHtml(item.memo||'내용 없음')}</div>`;
                     const right = document.createElement('div');
                     right.style.cssText = 'text-align:right;flex-shrink:0;margin-left:10px;';
                     right.innerHTML = `<div style="font-size:14px;font-weight:800;color:${item.type==='수입'?'#166534':'#991b1b'};">${item.type==='수입'?'+':'-'}${Number(item.amt).toLocaleString()}원</div>`;
@@ -7169,8 +7247,8 @@ function initRealtimeSync() {
                     const mon = new Date(today);
                     mon.setDate(today.getDate() - dayOfWeek + 1 - i*7);
                     const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
-                    const wsStr = mon.toISOString().split('T')[0];
-                    const weStr = sun.toISOString().split('T')[0];
+                    const wsStr = famDs(mon);
+                    const weStr = famDs(sun);
                     const wn = getWeekNumber(mon);
                     const label = `W${wn}`;
                     labels.push(label);
@@ -7235,12 +7313,15 @@ function initRealtimeSync() {
             if (!confirm(`${selectedPhotos.size}개 사진을 삭제할까요?`)) return;
             const f = albumData.find(x => x.id === currentFolderId);
             if (!f) return;
+            const removed = f.photos.filter((_,i) => selectedPhotos.has(i));
             f.photos = f.photos.filter((_,i) => !selectedPhotos.has(i));
             await db.collection('albums').doc(currentFolderId).update({ photos: f.photos });
+            removed.forEach(albumDelFile);
             selectedPhotos.clear();
             photoSelectMode = false;
             document.getElementById('photo-select-btn').textContent = '선택';
             document.getElementById('photo-select-bar').style.display = 'none';
+            renderGallery();
         }
 
         function movePhotos() {
@@ -7662,7 +7743,43 @@ function initRealtimeSync() {
                 ${custom ? `<input class="fam-in" style="margin-top:8px" value="${famEsc(cur)}" placeholder="모델 ID" autocapitalize="off" autocorrect="off" spellcheck="false" oninput="famLS('famAI_model_${p}',this.value.trim())">` : ''}
                 <div class="fam-note">${fetched ? '이 키로 불러온 실제 사용 가능 목록입니다.' : '기본 목록입니다. 키 입력 후 "모델 목록 불러오기"로 최신 목록을 받으세요.'}</div>
                 <div class="fam-btns"><button class="fam-btn" onclick="famLoadModels()">모델 목록 불러오기</button><button class="fam-btn" onclick="famTestAI()">연결 테스트</button></div>
+            </div>
+            <div class="fam-box"><h4>💾 데이터 백업</h4>
+                <div class="fam-note" style="margin:0 0 10px">Firestore 데이터를 파일로 내려받습니다. 월 1회 정도 받아 두세요.</div>
+                <div class="fam-btns" style="margin-top:0"><button class="fam-btn pri" onclick="famBackupJSON(this)">전체 백업 (JSON)</button><button class="fam-btn" onclick="famBackupCSV(this)">가계부 (CSV · 엑셀)</button></div>
             </div>`;
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 💾 데이터 백업
+    // ═══════════════════════════════════════════════════════════
+    const FAM_BACKUP_COLS = ['schedules', 'assets', 'plans', 'albums', 'shoppingList', 'fixedExpenses', 'savingsGoals', 'savingsLogs', 'budgetReports', 'config', 'messages'];
+    function famDownload(name, text, mime) {
+        const blob = new Blob([text], { type: mime }), url = URL.createObjectURL(blob), a = document.createElement('a');
+        a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+    }
+    async function famBackupJSON(btn) {
+        btn.disabled = true; const old = btn.textContent; btn.textContent = '받는 중…';
+        try {
+            const out = { app: '설연 Family', version: FAM_VER, exportedAt: new Date().toISOString(), by: famUser(), data: {} };
+            for (const c of FAM_BACKUP_COLS) {
+                const snap = await db.collection(c).get({ source: 'server' }).catch(() => db.collection(c).get());
+                out.data[c] = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+            }
+            const json = JSON.stringify(out, (k, v) => (v && typeof v.toDate === 'function') ? v.toDate().toISOString() : v, 1);
+            famDownload(`seolyeon-backup-${famYmd(new Date())}.json`, json, 'application/json');
+            famToast('백업 파일을 내려받았습니다 (' + Math.round(json.length / 1024) + 'KB)');
+        } catch (e) { famToast('백업 실패: ' + e.message); }
+        btn.disabled = false; btn.textContent = old;
+    }
+    function famBackupCSV() {
+        const rows = (typeof anaAll === 'function' ? anaAll() : []).sort((a, b) => String(a.date).localeCompare(String(b.date)));
+        if (!rows.length) { famToast('가계부 내역이 없습니다'); return; }
+        const q = v => { const t = String(v ?? ''); return /[",\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+        const csv = ['날짜,구분,분류,금액,구성원,결제,메모', ...rows.map(e => [e.date, e.type, e.category, e.amt, e._m, e.pay || '', e.memo || ''].map(q).join(','))].join('\r\n');
+        famDownload(`seolyeon-가계부-${famYmd(new Date())}.csv`, '\uFEFF' + csv, 'text/csv;charset=utf-8');
+        famToast(rows.length + '건을 내려받았습니다');
     }
     function famSetProv(p) { famLS('famAI_provider', p); famCustomModel = false; famRenderSettings(); }
     function famKeyInput(v) { const p = famProv(); famSetKey(p, v); const st = document.getElementById('fam-key-st'); if (st) st.textContent = v.trim() ? '입력됨 · 끝자리 ' + v.trim().slice(-4) : '미입력'; }
@@ -8006,6 +8123,13 @@ headline은 오늘의 흐름을 한 문장으로.
         #fam-mention{position:fixed;z-index:9500;display:none;background:#fff;border:1px solid #e2e8f0;border-radius:14px;box-shadow:0 8px 24px rgba(15,23,42,.18);overflow:hidden}
         #fam-mention button{display:flex;gap:8px;align-items:center;width:100%;padding:10px 14px;border:none;background:none;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;color:#1e293b}
         #fam-mention button:hover{background:#f1f5f9}
+        .fam-av{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;object-fit:cover;flex:none;vertical-align:middle;line-height:1}
+        #drw-avatar .fam-av{width:36px!important;height:36px!important}
+        #chat-typing{display:none;flex-shrink:0;padding:2px 4px 6px}
+        .ct-row{display:flex;align-items:center;gap:6px;font-size:11.5px;color:#64748b;padding:2px 0}
+        .ct-dots{display:inline-flex;gap:3px;margin-left:2px}
+        .ct-dots i{width:5px;height:5px;border-radius:50%;background:#94a3b8;animation:aiDot 1.2s infinite ease-in-out}
+        .ct-dots i:nth-child(2){animation-delay:.2s}.ct-dots i:nth-child(3){animation-delay:.4s}
     </style>
 
     <!-- 공용 시트 · 어시스턴트 피드 · 멘션 · 영수증 입력 -->
@@ -8013,6 +8137,7 @@ headline은 오늘의 흐름을 한 문장으로.
 
     <div id="fam-mention"></div>
     <input type="file" id="fam-receipt-input" accept="image/*" multiple style="display:none" onchange="famReceiptFile(this)">
+    <input type="file" id="fam-avatar-input" accept="image/*" style="display:none" onchange="famAvatarFile(this)">
     <input type="file" id="fam-cam-input" accept="image/*" capture="environment" style="display:none" onchange="famReceiptFile(this)">
     <input type="file" id="fam-doc-input" accept="image/*,application/pdf,.pdf,.txt,.md,.csv,.json,.html,.xml,.log" style="display:none" onchange="famDocFile(this)">
 
@@ -8202,7 +8327,7 @@ headline은 오늘의 흐름을 한 문장으로.
     }
     function famGuessCat(t, type) {
         if (type === '수입') return /급여|월급/.test(t) ? '급여' : /상여|보너스|성과급/.test(t) ? '상여' : /주식|배당/.test(t) ? '주식' : '기타수입';
-        const R = [['식사', /점심|저녁|아침|식사|밥|카페|커피|배달|외식|치킨|피자|간식|술|회식|스타벅스|투썸|이디야|메가커피|빽다방|컴포즈|족발|보쌈|분식|김밥|버거|맥도날드|롯데리아|버거킹|베이커리|파리바게|뚜레쥬르|빵|식당|반점|국밥|횟집|고기|삼겹|갈비|초밥|스시|라멘|냉면|떡볶이|도시락|칼국수|짬뽕|돈까스|요기요|배민|쿠팡이츠/], ['교통비', /택시|버스|지하철|주유|기름|톨비|하이패스|주차|KTX|기차|교통|충전|차지비|칼텍스|에너지|S-OIL|오일뱅크|티머니|카카오T|코레일|SRT/i], ['의료비', /병원|약국|약값|치과|한의원|검진|의원|안과|피부과/], ['여행비', /여행|호텔|숙소|항공|비행기|펜션|리조트|야놀자|여기어때|에어비앤비/], ['여가', /영화|공연|골프|캠핑|헬스|운동|넷플릭스|구독|취미|CGV|메가박스|롯데시네마|유튜브/i], ['가족', /용돈|선물|부모님|경조사|축의금|조의금|생일/], ['생활비', /관리비|전기|가스|수도|통신|인터넷|마트|장보기|생필품|세탁|이마트|홈플러스|롯데마트|코스트코|하나로|GS25|CU|세븐일레븐|이마트24|편의점|다이소/], ['쇼핑', /쇼핑|옷|신발|가방|쿠팡|컬리|구매|주문|무신사|올리브영|11번가|G마켓|지마켓|SSG|네이버페이/]];
+        const R = [['식사', /점심|저녁|아침|식사|밥|카페|커피|배달|외식|치킨|피자|간식|술|회식/], ['교통비', /택시|버스|지하철|주유|기름|톨비|하이패스|주차|KTX|기차|교통/], ['의료비', /병원|약국|약값|치과|한의원|검진|의원/], ['여행비', /여행|호텔|숙소|항공|비행기|펜션|리조트/], ['여가', /영화|공연|골프|캠핑|헬스|운동|넷플릭스|구독|취미/], ['가족', /용돈|선물|부모님|경조사|축의금|조의금|생일/], ['생활비', /관리비|전기|가스|수도|통신|인터넷|마트|장보기|생필품|세탁/], ['쇼핑', /쇼핑|옷|신발|가방|쿠팡|컬리|구매|주문/]];
         for (const [c, re] of R) if (re.test(t)) return c;
         return '기타지출';
     }
@@ -8478,51 +8603,8 @@ headline은 오늘의 흐름을 한 문장으로.
         famFeedAdd(`<h5>🫧 가족 채팅으로 보낼까요?</h5><div class="ff-form"><div class="full"><input id="${id}" value="${famEsc(msg)}"></div></div>
             <div class="fam-btns"><button class="fam-btn pri" onclick="const v=document.getElementById('${id}').value.trim();if(v){this.closest('.ff-card').remove();famChatSend(v);}">보내기</button></div>`);
     }
-    // 💳 카드 승인 문자 붙여넣기: "삼성1089승인 정*설 59,000원 일시불 10/24 16:28 가장맛있는족발오 누적1,128,278원"
-    function famParseCardSms(text) {
-        const t = String(text).replace(/\r/g, ''), out = [], now = new Date();
-        const re = /([\d,]{3,})원[\s(]*(?:일시불|\d+\s*개월|할부)?\)?[\s\S]{0,30}?(\d{1,2})\/(\d{1,2})\s*(\d{1,2}):(\d{2})[ \t]*([^\n]*)/g;
-        let m;
-        while ((m = re.exec(t))) {
-            const before = t.slice(Math.max(0, m.index - 6), m.index);
-            if (/(누적|잔액|한도)\s*$/.test(before)) { re.lastIndex = m.index + m[1].length + 1; continue; }
-            const amt = +m[1].replace(/,/g, ''); if (!amt) continue;
-            const ctx = t.slice(Math.max(0, m.index - 40), m.index + m[0].length);
-            let y = now.getFullYear(); if (+m[2] > now.getMonth() + 1) y--;
-            const merchant = famClean(String(m[6] || '').split(/누적|잔액|\[|사용가능/)[0]);
-            const masked = (ctx.match(/([가-힣])\*([가-힣])/) || []), who = masked[0] ? (('정우설'.startsWith(masked[1]) && '정우설'.endsWith(masked[2])) ? '정우설' : ('한미연'.startsWith(masked[1]) && '한미연'.endsWith(masked[2])) ? '한미연' : '') : '';
-            const cancel = /취소/.test(ctx);
-            const hist = famHistCat(merchant, '지출'), cat = hist || famGuessCat(merchant, '지출');
-            const date = `${y}-${String(+m[2]).padStart(2, '0')}-${String(+m[3]).padStart(2, '0')}`;
-            out.push({ amt, date, type: '지출', member: who || famUser() || '정우설', pay: '카드', memo: merchant || '카드 결제', category: cat, _hist: !!hist, _dup: famIsDup(date, amt, '지출'), _cancel: cancel });
-        }
-        if (!out.length) {
-            // 날짜가 금액보다 먼저 나오는 형식 (예: KB "[KB]10/24 13:22 / 정*설님 / 스타벅스 / 12,000원 일시불")
-            const r2 = /(\d{1,2})\/(\d{1,2})\s*(\d{1,2}):(\d{2})([\s\S]{0,90}?)([\d,]{3,})원/g;
-            while ((m = r2.exec(t))) {
-                const amt = +m[6].replace(/,/g, ''); if (!amt) continue;
-                const mid = m[5].split(/\n|\s{2,}/).map(x => x.trim()).filter(x => x && !/[*]|님$|승인|일시불|할부|체크|신용|카드|\d{3,}/.test(x));
-                const merchant = famClean(mid[mid.length - 1] || '');
-                let y = now.getFullYear(); if (+m[1] > now.getMonth() + 1) y--;
-                const date = `${y}-${String(+m[1]).padStart(2, '0')}-${String(+m[2]).padStart(2, '0')}`, ctx = t.slice(Math.max(0, m.index - 30), m.index + m[0].length + 20);
-                const masked = (ctx.match(/([가-힣])\*([가-힣])/) || []), who = masked[0] ? (('정우설'.startsWith(masked[1]) && '정우설'.endsWith(masked[2])) ? '정우설' : ('한미연'.startsWith(masked[1]) && '한미연'.endsWith(masked[2])) ? '한미연' : '') : '';
-                const hist = famHistCat(merchant, '지출');
-                out.push({ amt, date, type: '지출', member: who || famUser() || '정우설', pay: '카드', memo: merchant || '카드 결제', category: hist || famGuessCat(merchant, '지출'), _hist: !!hist, _dup: famIsDup(date, amt, '지출'), _cancel: /취소/.test(ctx) });
-            }
-        }
-        return out;
-    }
     function famIntent(raw) {
         const t = raw.trim().replace(/[.!~]+$/, ''), short = t.length <= 24;
-        // 0) 카드 승인 문자 붙여넣기
-        if (/(승인|일시불|할부|체크|결제)/.test(t) && /\d{1,2}\/\d{1,2}\s*\d{1,2}:\d{2}/.test(t)) {
-            const list = famParseCardSms(t), ok = list.filter(x => !x._cancel), cn = list.length - ok.length;
-            if (list.length) {
-                if (cn) famFeedAdd(`ℹ️ 취소 문자 ${cn}건은 제외했습니다. 원래 결제가 기록돼 있으면 가계부에서 지워 주세요.`);
-                if (ok.length === 1) famAssetCard('', ok[0]); else if (ok.length > 1) famReceiptList(ok);
-                return true;
-            }
-        }
         // 1) 화면 이동: "채팅창 열어줘", "가계부 보여줘", "일정으로 가자"
         if (/(열어|열기|켜\s*줘|켜봐|가자|가줘|이동|띄워|들어가|보여\s*줘|보여줄래)/.test(t) && short && !/[?？]$/.test(t)) {
             const isData = /(일정|스케줄|약속)/.test(t) && /(오늘|내일|모레|이번\s*주|다음\s*주|담주|\d+\s*일|[월화수목금토일]요일)/.test(t);
@@ -8763,6 +8845,43 @@ JSON만 출력: {"items":[{"date":"YYYY-MM-DD 또는 빈 문자열","store":"가
     }
 
     // ═══════════════════════════════════════════════════════════
+    // 📲 다른 앱에서 공유 받기 (카드 결제 문자 등 → 가계부)
+    //   manifest.json 의 share_target(GET, title/text/url)으로 들어온 글을 처리
+    // ═══════════════════════════════════════════════════════════
+    function famShareIn() {
+        let q; try { q = new URLSearchParams(location.search); } catch (e) { return; }
+        const text = [q.get('title'), q.get('text'), q.get('url')].filter(Boolean).join('\n').trim();
+        if (!text) return;
+        try { history.replaceState(history.state, '', location.pathname); } catch (e) {}
+        showSection('main-section');
+        if (/(승인|결제|일시불|할부|입금|출금|이체|카드)/.test(text) && (famKeys()[famProv()] || '')) famShareTx(text);
+        else famRun(text);
+    }
+    async function famShareTx(text) {
+        famMe(text.length > 200 ? text.slice(0, 200) + '…' : text);
+        const c = famFeedAdd('<span class="fam-spin"></span>결제 내용을 읽는 중…');
+        try {
+            const today = famYmd(new Date());
+            const r = await famCallAI('너는 카드·은행 결제 알림 문자를 읽어 가계부 항목을 만드는 도우미다. 글에 있는 내용만 쓰고 추측하지 않는다.',
+                `아래 글에서 거래를 뽑아라. 승인 취소된 거래와 그 원거래는 뺀다. 누적 금액·잔액·한도는 금액으로 쓰지 않는다.
+오늘은 ${today}이다. 연도가 없으면 오늘 기준 가장 가까운 과거 날짜로 쓴다.
+JSON만 출력: {"items":[{"date":"YYYY-MM-DD","store":"가맹점","amount":숫자,"type":"지출|수입","category":"지출이면 ${EXP_CATS.join('|')}, 수입이면 ${INC_CATS.join('|')} 중 하나","pay":"카드|현금"}]}
+
+${text}`, { maxTokens: 1200 });
+            const t = r.text || '', a = t.indexOf('{'), b = t.lastIndexOf('}'); if (a < 0) throw new Error('내용을 읽지 못했습니다');
+            const list = (JSON.parse(t.slice(a, b + 1)).items || []).map(x => {
+                const type = x.type === '수입' ? '수입' : '지출', cats = type === '수입' ? INC_CATS : EXP_CATS, store = famClean(String(x.store || ''));
+                const amt = Math.round(Math.abs(Number(String(x.amount ?? '').replace(/[^\d.-]/g, '')) || 0));
+                const date = /^\d{4}-\d{2}-\d{2}$/.test(x.date || '') ? x.date : today, hist = famHistCat(store, type);
+                return { amt, date, type, member: famUser() || '정우설', pay: x.pay === '현금' ? '현금' : '카드', memo: store, category: hist || (cats.includes(x.category) ? x.category : cats[cats.length - 1]), _hist: !!hist, _dup: famIsDup(date, amt, type) };
+            }).filter(x => x.amt > 0);
+            if (!list.length) throw new Error('금액을 찾지 못했습니다');
+            c.remove();
+            if (list.length === 1) famAssetCard('', list[0]); else famReceiptList(list);
+        } catch (e) { c.remove(); famRun(text); }
+    }
+
+    // ═══════════════════════════════════════════════════════════
     // ❔ 도움말 · ＋ 메뉴 (팝업)
     // ═══════════════════════════════════════════════════════════
     function famHelp() {
@@ -8868,6 +8987,15 @@ JSON만 출력: {"items":[{"date":"YYYY-MM-DD 또는 빈 문자열","store":"가
     function famShopAddInput() { const el = document.getElementById('shop-new'); const v = el.value.trim(); if (!v) return; el.value = ''; famShopAdd(v, false); }
     function famShopToggle(id, on) { db.collection('shoppingList').doc(id).update({ done: on }).catch(e => famToast(e.message)); }
     function famShopDel(id) { db.collection('shoppingList').doc(id).delete().catch(e => famToast(e.message)); }
+    // 구매 완료 항목을 묶어 가계부 기록 카드로 (금액만 입력하면 됨)
+    function famShopToAsset() {
+        const done = famShopItems.filter(i => i.done);
+        if (!done.length) { famToast('구매 완료로 체크한 항목이 없습니다'); return; }
+        const memo = '장보기: ' + done.map(i => i.text).join(', ');
+        const hist = famHistCat('장보기', '지출');
+        famAssetCard('', { amt: 0, date: famYmd(new Date()), member: famUser() || '공통', type: '지출', category: hist || '생활비', _hist: !!hist, pay: '카드', memo: memo.length > 80 ? memo.slice(0, 80) + '…' : memo });
+        famToast('홈에서 금액을 입력하고 저장하세요');
+    }
     function famShopClearDone() { const done = famShopItems.filter(i => i.done); if (!done.length) return; if (!confirm(`구매 완료 ${done.length}개를 지울까요?`)) return; const b = db.batch(); done.forEach(i => b.delete(db.collection('shoppingList').doc(i.id))); b.commit(); }
     function famShopGrid() { const el = document.getElementById('shop-grid'); if (el) el.innerHTML = SHOPS.map(([n, u, c]) => `<a class="shop-btn" href="${u}" target="_blank" rel="noopener"><i style="background:${c}">${famEsc(n.slice(0, 1))}</i>${famEsc(n)}</a>`).join(''); }
 
@@ -9139,11 +9267,13 @@ JSON만 출력: {"items":[{"date":"YYYY-MM-DD 또는 빈 문자열","store":"가
         const ta = document.getElementById('chat-input'), box = document.getElementById('fam-mention'); if (!ta || !box) return;
         const m = ta.value.slice(0, ta.selectionStart || ta.value.length).match(/@([A-Za-z가-힣]*)$/);
         if (!m) { box.style.display = 'none'; return; }
-        const q = m[1].toLowerCase(), list = MENTION.filter(x => x[0].toLowerCase().startsWith(q) || q === '');
+        const q = m[1].toLowerCase(), def = famProv();
+        const list = MENTION.filter(x => x[0].toLowerCase().startsWith(q) || q === '').sort((a, b) => (b[1] === def) - (a[1] === def));
         if (!list.length) { box.style.display = 'none'; return; }
         const r = ta.getBoundingClientRect();
         box.style.left = Math.max(8, r.left) + 'px'; box.style.bottom = (window.innerHeight - r.top + 6) + 'px'; box.style.minWidth = '160px';
-        box.innerHTML = list.map(([n, k, ic]) => `<button onmousedown="event.preventDefault()" onclick="famMentionPick('${n}')">${ic} @${n}<span style="margin-left:auto;font-size:11px;color:#94a3b8;font-weight:500">${(famKeys()[k] || '') ? '' : '키 없음'}</span></button>`).join('');
+        box.innerHTML = list.map(([n, k, ic]) => `<button onmousedown="event.preventDefault()" onclick="famMentionPick('${n}')">${ic} @${n}<span style="margin-left:auto;font-size:11px;color:#94a3b8;font-weight:500">${!(famKeys()[k] || '') ? '키 없음' : k === def ? '기본' : ''}</span></button>`).join('')
+            + (q === '' ? `<button onmousedown="event.preventDefault()" onclick="document.getElementById('fam-mention').style.display='none';openGeminiWindow()" style="font-size:12px;font-weight:600;color:#64748b;border-top:1px solid #f1f5f9">↗ AI 앱 열기</button>` : '');
         box.style.display = 'block';
     }
     function famMentionPick(n) {
@@ -9151,6 +9281,132 @@ JSON만 출력: {"items":[{"date":"YYYY-MM-DD 또는 빈 문자열","store":"가
         const before = ta.value.slice(0, pos).replace(/@([A-Za-z가-힣]*)$/, '@' + n + ' '); ta.value = before + ta.value.slice(pos);
         document.getElementById('fam-mention').style.display = 'none'; ta.focus(); ta.setSelectionRange(before.length, before.length);
     }
+    // ✨ 버튼 = @ 입력과 같은 동작 (커서 위치에 @를 넣고 선택창 표시)
+    function famAIButton() {
+        const ta = document.getElementById('chat-input'); if (!ta) return;
+        const pos = ta.selectionStart ?? ta.value.length, before = ta.value.slice(0, pos);
+        if (!/@([A-Za-z가-힣]*)$/.test(before)) {
+            const ins = (before && !/\s$/.test(before) ? ' ' : '') + '@';
+            ta.value = before + ins + ta.value.slice(pos);
+            ta.setSelectionRange(pos + ins.length, pos + ins.length);
+        }
+        ta.focus(); famMentionCheck();
+        setTimeout(famMentionCheck, 350);   // 키보드가 올라온 뒤 위치 다시 계산
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 👤 프로필 사진
+    //   Storage profiles/ 에 저장, config/profiles 문서에 {이름: URL}
+    // ═══════════════════════════════════════════════════════════
+    let famPhotos = {};
+    const FAM_AV = { '정우설': ['👨', '#dbeafe'], '한미연': ['👩', '#fce7f3'], 'Claude': ['🟠', '#fff7ed'], 'GPT': ['🟢', '#f0fdf4'], 'Gemini': ['🔵', '#eff6ff'], 'AI': ['🤖', '#f1f5f9'] };
+    function famAvatarHtml(name, size) {
+        size = size || 28; const url = famPhotos[name], [em, bg] = FAM_AV[name] || ['👤', '#f1f5f9'];
+        return url ? `<img src="${famEsc(url)}" class="fam-av" style="width:${size}px;height:${size}px" alt="">`
+            : `<span class="fam-av" style="width:${size}px;height:${size}px;background:${bg};font-size:${Math.round(size * .58)}px">${em}</span>`;
+    }
+    function famPhotosListen() {
+        try { db.collection('config').doc('profiles').onSnapshot(d => { famPhotos = (d.exists && d.data()) || {}; famAvatarApply(); }, () => {}); } catch (e) {}
+    }
+    function famAvatarApply() {
+        const me = famUser(), dv = document.getElementById('drw-avatar');
+        if (dv && me) dv.innerHTML = famAvatarHtml(me, 36);
+        const pm = document.querySelectorAll('#profile-modal .profile-avatar');
+        ['정우설', '한미연'].forEach((n, i) => { if (pm[i] && famPhotos[n]) pm[i].innerHTML = famAvatarHtml(n, 44); });
+        const cs = document.getElementById('chat-section');
+        if (cs && cs.classList.contains('active') && typeof renderChatMessages === 'function') renderChatMessages();
+        famTypingRender();
+    }
+    function famProfileSheet() {
+        const me = famUser(); if (!me) { if (typeof openProfileModal === 'function') openProfileModal(); return; }
+        famSheet(`<div class="fam-h"><b>👤 프로필</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
+            <div style="text-align:center;padding:4px 0 14px">${famAvatarHtml(me, 96)}<div style="font-size:17px;font-weight:800;color:#1e293b;margin-top:10px">${famEsc(me)}</div></div>
+            <div class="fam-box">
+                <button class="ff-res" onclick="document.getElementById('fam-avatar-input').click()"><i>📷</i><div>사진 ${famPhotos[me] ? '변경' : '등록'}<small>가운데를 정사각형으로 잘라 저장합니다</small></div></button>
+                ${famPhotos[me] ? `<button class="ff-res" onclick="famAvatarRemove()"><i>🗑</i><div>사진 삭제<small>기본 아이콘으로 돌아갑니다</small></div></button>` : ''}
+                <button class="ff-res" onclick="famSheetClose();resetProfile()"><i>🔄</i><div>사용자 전환<small>이 폰을 다른 사람 이름으로 사용</small></div></button>
+            </div>`);
+    }
+    function famSquare(file, size) {
+        return new Promise((ok, no) => {
+            const img = new Image(), u = URL.createObjectURL(file);
+            img.onload = () => {
+                const s = Math.min(img.width, img.height), c = document.createElement('canvas'); c.width = c.height = size;
+                c.getContext('2d').drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size);
+                URL.revokeObjectURL(u); c.toBlob(b => b ? ok(b) : no(new Error('이미지 변환 실패')), 'image/jpeg', 0.85);
+            };
+            img.onerror = () => no(new Error('이미지를 읽지 못했습니다')); img.src = u;
+        });
+    }
+    async function famAvatarFile(input) {
+        const f = input.files && input.files[0]; input.value = ''; const me = famUser(); if (!f || !me) return;
+        try {
+            famToast('사진 올리는 중…');
+            const blob = await famSquare(f, 400), ref = storage.ref(`profiles/${me}_${Date.now()}.jpg`);
+            await ref.put(blob, { contentType: 'image/jpeg' });
+            const url = await ref.getDownloadURL(), old = famPhotos[me];
+            await db.collection('config').doc('profiles').set({ [me]: url }, { merge: true });
+            famPhotos[me] = url; if (old && typeof albumDelFile === 'function') albumDelFile(old);
+            famAvatarApply(); famProfileSheet(); famToast('프로필 사진을 바꿨습니다');
+        } catch (e) { famToast('사진 변경 실패: ' + e.message); }
+    }
+    async function famAvatarRemove() {
+        const me = famUser(), old = famPhotos[me]; if (!old || !confirm('프로필 사진을 삭제할까요?')) return;
+        try {
+            await db.collection('config').doc('profiles').set({ [me]: firebase.firestore.FieldValue.delete() }, { merge: true });
+            delete famPhotos[me]; if (typeof albumDelFile === 'function') albumDelFile(old);
+            famAvatarApply(); famProfileSheet();
+        } catch (e) { famToast('삭제 실패: ' + e.message); }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // ✍️ 입력 중 표시
+    //   typing/{이름} 문서에 입력 중일 때 2.5초마다 기록, 받는 쪽은 7초간 표시
+    //   AI가 답변을 만드는 동안은 typing/AI 에 기록 → 두 폰 모두에 표시
+    // ═══════════════════════════════════════════════════════════
+    let famTypingLast = 0, famTypingOn = false;
+    const famTypers = {}, famTyperName = {};
+    function famTypingPing() {
+        const me = famUser(), ta = document.getElementById('chat-input'); if (!me || !ta) return;
+        if (!ta.value.trim()) { famTypingStop(); return; }
+        const now = Date.now(); if (famTypingOn && now - famTypingLast < 2500) return;
+        famTypingLast = now; famTypingOn = true;
+        db.collection('typing').doc(me).set({ on: true, name: me, at: firebase.firestore.FieldValue.serverTimestamp() }).catch(() => {});
+    }
+    function famTypingStop() {
+        if (!famTypingOn) return; famTypingOn = false; const me = famUser();
+        if (me) db.collection('typing').doc(me).set({ on: false, name: me, at: firebase.firestore.FieldValue.serverTimestamp() }).catch(() => {});
+    }
+    function famTypingAI(name, on) {
+        db.collection('typing').doc('AI').set({ on, name, at: firebase.firestore.FieldValue.serverTimestamp() }).catch(() => {});
+    }
+    function famTypingListen() {
+        try {
+            db.collection('typing').onSnapshot(s => {
+                s.docChanges().forEach(ch => {
+                    const id = ch.doc.id; if (id === famUser()) return;
+                    const d = ch.doc.data({ serverTimestamps: 'estimate' }) || {}, at = d.at && d.at.toMillis ? d.at.toMillis() : 0;
+                    clearTimeout(famTypers[id]); delete famTypers[id];
+                    if (ch.type !== 'removed' && d.on && Date.now() - at < (id === 'AI' ? 90000 : 15000)) {
+                        famTyperName[id] = d.name || id;
+                        famTypers[id] = setTimeout(() => { delete famTypers[id]; famTypingRender(); }, id === 'AI' ? 90000 : 7000);
+                    }
+                });
+                famTypingRender();
+            }, () => {});
+        } catch (e) {}
+    }
+    function famTypingRender() {
+        const el = document.getElementById('chat-typing'); if (!el) return;
+        const ids = Object.keys(famTypers);
+        if (!ids.length) { el.style.display = 'none'; el.innerHTML = ''; return; }
+        el.innerHTML = ids.map(id => { const n = famTyperName[id] || id, ai = id === 'AI';
+            return `<div class="ct-row">${famAvatarHtml(n, 20)}<span>${famEsc(n)}${ai ? '가 답변 중' : '님이 입력 중'}</span><span class="ct-dots"><i></i><i></i><i></i></span></div>`; }).join('');
+        el.style.display = 'block';
+        const box = document.getElementById('chat-messages');
+        if (box && box.scrollHeight - box.scrollTop - box.clientHeight < 120) box.scrollTop = box.scrollHeight;
+    }
+
     function famMentionProvider(text) {
         if (/@(claude|클로드)/i.test(text)) return 'claude';
         if (/@(gpt|지피티|챗gpt)/i.test(text)) return 'gpt';
@@ -9160,13 +9416,14 @@ JSON만 출력: {"items":[{"date":"YYYY-MM-DD 또는 빈 문자열","store":"가
     async function famChatAI(text) {
         const p = famMentionProvider(text); if (!p) return;
         if (!(famKeys()[p] || '')) { famToast(FAM_NAMES[p] + ' API 키가 없습니다. ⚙️ 설정에서 입력하세요.'); return; }
-        famToast(FAM_NAMES[p] + '가 답변하는 중…');
+        famTypingAI(FAM_NAMES[p], true);
         const ctx = (typeof chatMessages !== 'undefined' ? chatMessages : []).filter(m => m.text).slice(-12).map(m => `${m.isAI ? (m.aiName || 'AI') : (m.sender || '')}: ${m.text}`).join('\n');
         try {
             const r = await famCallAI(`너는 부부가 쓰는 가족 채팅방에 초대된 AI "${FAM_NAMES[p]}"다. 대화 맥락을 보고 마지막 질문에 한국어로 짧고 친근하게 답한다. 최신 정보가 필요하면 웹 검색을 쓴다.`,
                 `최근 대화:\n${ctx}\n\n방금 질문: ${text.replace(/@\S+/g, '').trim()}`, { provider: p, search: true, maxTokens: 900 });
             await db.collection('messages').add({ type: 'text', text: (r.text || '').trim() || '(응답 없음)', sender: FAM_NAMES[p], isAI: true, aiName: FAM_NAMES[p], isRead: true, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
         } catch (e) { famToast(FAM_NAMES[p] + ' 오류: ' + e.message); }
+        famTypingAI(FAM_NAMES[p], false);
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -9178,6 +9435,7 @@ JSON만 출력: {"items":[{"date":"YYYY-MM-DD 또는 빈 문자열","store":"가
             window.sendChatMessage = async function () {
                 const ta = document.getElementById('chat-input'), text = (ta && ta.value || '').trim();
                 const box = document.getElementById('fam-mention'); if (box) box.style.display = 'none';
+                famTypingStop();
                 const r = await origSend.apply(this, arguments);
                 if (text && famMentionProvider(text) && !(typeof chatEditId !== 'undefined' && chatEditId)) famChatAI(text);
                 return r;
@@ -9194,13 +9452,19 @@ JSON만 출력: {"items":[{"date":"YYYY-MM-DD 또는 빈 문자열","store":"가
             if (id === 'asset-analysis-section') { if (!rpt.ym) rptWatch(rptPrevYM(1)); else rptRender(); }
             { const mb = document.getElementById('fam-mention'); if (mb) mb.style.display = 'none'; }
             if (id !== 'main-section') { famFeedClose(); const s = document.getElementById('home-sugg'); if (s) s.style.display = 'none'; }
+            if (id !== 'chat-section') famTypingStop(); else famTypingRender();
         };
-        document.addEventListener('input', e => { if (e.target && e.target.id === 'chat-input') famMentionCheck(); });
+        document.addEventListener('input', e => { if (e.target && e.target.id === 'chat-input') { famMentionCheck(); famTypingPing(); } });
+        document.addEventListener('focusout', e => { if (e.target && e.target.id === 'chat-input') famTypingStop(); });
+        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') famTypingStop(); });
+        window.addEventListener('resize', () => { const b = document.getElementById('fam-mention'); if (b && b.style.display === 'block') famMentionCheck(); });
+        // 드로어 열 때 프로필 사진 반영
+        const _od = window.openDrawer; if (typeof _od === 'function') window.openDrawer = function () { _od.apply(this, arguments); famAvatarApply(); };
         document.addEventListener('click', e => { const b = document.getElementById('fam-mention'); if (b && b.style.display === 'block' && !e.target.closest('#fam-mention') && e.target.id !== 'chat-input') b.style.display = 'none'; });
         const _rmd = window.renderMainDashboard;
         if (typeof _rmd === 'function') window.renderMainDashboard = function () { const r = _rmd.apply(this, arguments); famHomeToday(); return r; };
         famFeedWatch(); famFeedHello(); famMicSwap();
-        const boot = () => { famShopListen(); fxListen(); svListen(); budgetListen(); famHomeReportWatch(); setTimeout(fxRun, 6000); setInterval(fxRun, 30 * 60e3); famShopGrid(); };
+        const boot = () => { famShopListen(); fxListen(); svListen(); budgetListen(); famHomeReportWatch(); setTimeout(fxRun, 6000); setInterval(fxRun, 30 * 60e3); famShopGrid(); setTimeout(famShareIn, 1200); famPhotosListen(); famTypingListen(); };
         if (typeof db !== 'undefined') famAuthGate(() => setTimeout(boot, 800));
     })();
     </script>
