@@ -57,8 +57,8 @@
             <div class="drawer-item drawer-item-accent" id="di-news" onclick="drawerGo('news-section')">📰 <span>NEWS</span></div>
         </nav>
         <div style="padding:10px 12px;border-top:1px solid #e2e8f0;display:flex;gap:8px;flex-shrink:0;">
-            <button onclick="famOpenSettings();closeDrawer();" style="flex:1;padding:9px;border-radius:10px;background:#f1f5f9;border:none;font-size:11px;font-weight:700;color:#64748b;cursor:pointer;">⚙️ 설정</button>
-            <button onclick="closeDrawer();famLogout();" style="flex:1;padding:9px;border-radius:10px;background:#f1f5f9;border:none;font-size:11px;font-weight:700;color:#64748b;cursor:pointer;" id="drw-auth">🚪 로그아웃</button>
+            <button onclick="famOpenSettings();closeDrawer();" style="flex:1;padding:9px;border-radius:10px;background:#f1f5f9;border:none;font-size:11px;font-weight:700;color:#64748b;cursor:pointer;" title="설정">⚙️ <span>설정</span></button>
+            <button onclick="closeDrawer();famLogout();" style="flex:1;padding:9px;border-radius:10px;background:#f1f5f9;border:none;font-size:11px;font-weight:700;color:#64748b;cursor:pointer;" id="drw-auth" title="로그아웃">🚪 <span>로그아웃</span></button>
         </div>
     </div>
 
@@ -89,7 +89,7 @@
 
     <header>
         <div style="display:flex;align-items:center;gap:10px;">
-            <button onclick="toggleDrawer()" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.18);border:none;cursor:pointer;font-size:18px;color:white;">☰</button>
+            <button onclick="toggleDrawer()" title="메뉴" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.18);border:none;cursor:pointer;font-size:18px;color:white;">☰</button>
             <div class="logo" onclick="showSection('main-section')">설연 <span class="accent">Family</span></div>
         </div>
         <!-- 오른쪽: 테마버튼만 유지 (로그인 아이콘 제거) -->
@@ -145,14 +145,13 @@
             <div id="home-scroll" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;min-height:0;-webkit-overflow-scrolling:touch;">
                         <aside class="home-side">
                         <div id="home-today" class="home-today"></div>
-                        <div id="fam-home-banners"></div>
-                        <div id="home-side-more"></div>
+                        <div class="home-strip"><div id="home-notices"></div><div id="fam-home-banners"></div></div>
                         </aside>
                         <div class="home-main">
                         <div class="ff-tools"><button onclick="famHistOpen()">🕘 지난 대화</button><button id="ff-new" onclick="famFeedNew()">↺ 새 대화</button></div>
                         <div class="fam-feed-body" id="fam-feed-body"></div>
                         <span id="chat-unread-badge" style="display:none"></span>
-                        <div class="footer-info">Family Shared v79.0 &nbsp;·&nbsp; Jung Wooseol 2026</div>
+                        <div class="footer-info">Family Shared v84.0 &nbsp;·&nbsp; Jung Wooseol 2026</div>
                         <div style="height:150px"></div>
                         </div>
                         </div><!-- /main-scroll -->
@@ -168,85 +167,6 @@
             </div>
         </section>
 
-        <!-- 📊 요약 (기존 홈 대시보드) -->
-        <section id="dash-section" class="page-section">
-            <div style="width:100%;max-width:1100px;padding:10px 14px 20px;box-sizing:border-box">
-                <div class="sch-header" style="margin-bottom:10px">
-                    <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:20px;">📊</span><h3 style="margin:0;font-size:clamp(15px,2vw,18px);font-weight:800;">요약</h3></div>
-                    <button onclick="showSection('main-section')" class="btn-home">🏠 Home</button>
-                </div>
-                        <div class="main-dashboard">
-                        <!-- 왼쪽 -->
-                        <div class="dash-left">
-
-                    <!-- 일정 카드 (오늘 + 이번달 중요) -->
-                    <div class="dash-card dash-schedule" onclick="showSection('schedule-section')">
-                        <div class="dash-card-en">📅 Today</div>
-                        <div class="dash-card-title">오늘 일정</div>
-                        <!-- 오늘 일정 목록 (스크롤) -->
-                        <div id="main-today-list" style="overflow-y:auto;flex:1;min-height:0;"></div>
-                        <!-- 구분 -->
-                        <div style="height:1px;background:rgba(0,0,0,0.06);margin:6px 0;flex-shrink:0;"></div>
-                        <div class="dash-card-en">⭐ This Month</div>
-                        <div class="dash-card-title">이번달 중요</div>
-                        <!-- 중요 일정 목록 (스크롤) -->
-                        <div id="main-week-list" style="overflow-y:auto;flex:1;min-height:0;"></div>
-                        <div style="font-size:8px;color:#94a3b8;margin-top:4px;text-align:right;flex-shrink:0;">TAP →</div>
-                    </div>
-
-                    <!-- 여행&여가 카드 -->
-                    <div class="dash-card dash-travel" onclick="showSection('travel-section')">
-                        <div class="dash-card-en">✈️ Upcoming</div>
-                        <div class="dash-card-title">다가올 여행&여가</div>
-                        <div id="main-travel-list" style="overflow-y:auto;flex:1;min-height:0;"></div>
-                        <div style="font-size:8px;color:#94a3b8;margin-top:4px;text-align:right;flex-shrink:0;">TAP →</div>
-                    </div>
-                </div>
-
-                <!-- ── 오른쪽: 가계부 (좌측과 동일 높이로 stretch) ── -->
-                <div class="dash-right">
-                    <div class="dash-card dash-asset" onclick="showSection('asset-section')">
-                        <div class="dash-card-en">💰 Budget</div>
-                        <div class="dash-card-title" style="margin-bottom:10px;">이번달 가계부</div>
-
-                        <!-- 수입/지출/손익 (패딩 1.5배, 칸 간격 통일) -->
-                        <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
-                            <div style="background:#f0fdf4;border-radius:10px;padding:9px 10px;display:flex;justify-content:space-between;align-items:center;">
-                                <div>
-                                    <div style="font-size:7px;color:#166534;font-weight:700;letter-spacing:.5px;">INCOME</div>
-                                    <div style="font-size:8px;color:#166534;font-weight:600;margin-top:1px;">📥 수입</div>
-                                </div>
-                                <span id="main-inc" style="font-size:clamp(10px,2.8vw,13px);font-weight:900;color:#166534;text-align:right;word-break:break-all;">–</span>
-                            </div>
-                            <div style="background:#fef2f2;border-radius:10px;padding:9px 10px;display:flex;justify-content:space-between;align-items:center;">
-                                <div>
-                                    <div style="font-size:7px;color:#991b1b;font-weight:700;letter-spacing:.5px;">EXPENSE</div>
-                                    <div style="font-size:8px;color:#991b1b;font-weight:600;margin-top:1px;">📤 지출</div>
-                                </div>
-                                <span id="main-exp" style="font-size:clamp(10px,2.8vw,13px);font-weight:900;color:#991b1b;text-align:right;word-break:break-all;">–</span>
-                            </div>
-                            <div style="background:var(--month-grad-a);border-radius:10px;padding:9px 10px;display:flex;justify-content:space-between;align-items:center;">
-                                <div>
-                                    <div style="font-size:7px;color:var(--month-header);font-weight:700;letter-spacing:.5px;">BALANCE</div>
-                                    <div style="font-size:8px;color:var(--month-header);font-weight:600;margin-top:1px;">📊 손익</div>
-                                </div>
-                                <span id="main-bal" style="font-size:clamp(10px,2.8vw,13px);font-weight:900;color:var(--month-header);text-align:right;word-break:break-all;">–</span>
-                            </div>
-                        </div>
-
-                        <!-- 수입/지출/손익 ↔ 그래프 간격 통일(10px) -->
-                        <div style="margin-top:10px;flex:1;min-height:0;display:flex;flex-direction:column;">
-                            <div style="font-size:8px;font-weight:700;color:#94a3b8;letter-spacing:.6px;margin-bottom:0;flex-shrink:0;">EXPENSE BREAKDOWN</div>
-                            <!-- 그래프 하단 정렬 + 항목 간격 2배(20px) -->
-                            <div id="main-expense-bars" style="flex:1;overflow-y:auto;min-height:0;display:flex;flex-direction:column;justify-content:flex-end;"></div>
-                        </div>
-                        <!-- 그래프 ↔ 하단 간격 통일(10px) -->
-                        <div style="font-size:7px;color:#94a3b8;padding-top:10px;text-align:right;flex-shrink:0;">TAP →</div>
-                    </div>
-                        </div><!-- /dash-right -->
-                        </div><!-- /main-dashboard -->
-            </div>
-        </section>
 
         <!-- 일정 -->
         <section id="schedule-section" class="page-section">
@@ -439,12 +359,6 @@
             </div>
             <input type="file" id="gallery-upload" style="display:none;" multiple accept="image/*" onchange="handleGalleryUpload(this)">
 
-            <!-- 라이트박스 (앨범용 - 기존과 별도) -->
-            <div id="album-lightbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.96);z-index:9999;flex-direction:column;align-items:center;justify-content:center;">
-                <button onclick="document.getElementById('album-lightbox').style.display='none'"
-                    style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.15);border:none;color:white;width:40px;height:40px;border-radius:50%;font-size:20px;cursor:pointer;">✕</button>
-                <img id="album-lightbox-img" src="" style="max-width:95%;max-height:88vh;border-radius:10px;object-fit:contain;">
-            </div>
 
             <!-- 폴더 이동 모달 -->
             <div id="photo-move-modal" class="sch-detail-modal hidden">
@@ -478,6 +392,8 @@
                     <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
                         <button class="plan-filter-btn" id="fbtn-sort"   onclick="togglePlanFilter('sort')" style="display:none;">📅 정렬 ▾</button>
                         <button class="plan-filter-btn" id="fbtn-period" onclick="togglePlanFilter('period')">🗓 기간 ▾</button>
+                        <button class="plan-filter-btn" onclick="mapOpen()" style="margin-left:auto">🗺 여행 노트</button>
+                        <button class="plan-filter-btn" onclick="hikeLogSheet()">⛰️ 산행 기록</button>
                         <button class="plan-filter-btn" id="fbtn-member" onclick="togglePlanFilter('member')" style="display:none;">👥 구성원 ▾</button>
                         <button class="plan-filter-btn" id="fbtn-area"   onclick="togglePlanFilter('area')">🌐 지역 ▾</button>
                         <button class="plan-filter-btn" id="fbtn-type"   onclick="togglePlanFilter('type')" style="display:none;">🗂 유형 ▾</button>
@@ -1058,9 +974,6 @@
                 <input type="hidden" id="setting-lat" value="37.5665">
                 <input type="hidden" id="setting-lon" value="126.9780">
                 <input type="hidden" id="setting-tz"  value="Asia/Seoul">
-                <input type="hidden" id="zoom-slider" value="1">
-                <input type="hidden" id="x-slider"    value="50">
-                <input type="hidden" id="y-slider"    value="50">
             </div>
 
             <!-- 일정 -->
@@ -1299,53 +1212,6 @@
     <script src="js/features/asset-detail.js"></script>
     <script src="js/features/album-select.js"></script>
 
-    <!-- 통번역 설정 모달 -->
-    <!-- 7-Box 설정 모달 -->
-
-    <!-- 실시간 대화 모달 -->
-    <!-- 실시간 대화 모달 -->
-
-    <!-- 번역 모달: 카메라 -->
-
-    <!-- 번역 모달: 사진첨부 -->
-
-    <!-- 번역 모달: 한글작성 -->
-
-    <!-- 가족 암호 인증 모달 -->
-    <div id="family-auth-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10000;align-items:center;justify-content:center;">
-        <div style="background:white;border-radius:20px;width:min(320px,85vw);padding:28px 22px;text-align:center;">
-            <div style="font-size:40px;margin-bottom:10px;">🔑</div>
-            <div style="font-size:16px;font-weight:900;color:#1e293b;margin-bottom:6px;">설연 Family 인증</div>
-            <div style="font-size:12px;color:#94a3b8;margin-bottom:16px;">가족 암호를 입력해주세요</div>
-            <input id="family-pw-input" type="text" autocomplete="off" style="-webkit-text-security:disc" inputmode="numeric" maxlength="10"
-                placeholder="암호 입력"
-                style="width:100%;border:2px solid #e2e8f0;border-radius:14px;padding:14px;font-size:20px;text-align:center;letter-spacing:8px;box-sizing:border-box;outline:none;font-family:monospace;"
-                onkeydown="if(event.key==='Enter')submitFamilyAuth()">
-            <button onclick="submitFamilyAuth()"
-                style="width:100%;padding:14px;border-radius:14px;background:var(--month-header);border:none;color:white;font-size:15px;font-weight:900;cursor:pointer;margin-top:12px;">🔓 인증하기</button>
-            <button onclick="document.getElementById('family-auth-modal').style.display='none';"
-                style="width:100%;padding:8px;border:none;background:none;color:#94a3b8;font-size:12px;cursor:pointer;margin-top:6px;">취소</button>
-            <div style="margin-top:10px;">
-                <button onclick="openSetPasswordModal()" style="font-size:11px;color:#3b82f6;background:none;border:none;cursor:pointer;">암호 변경</button> · <button onclick="document.getElementById('family-auth-modal').style.display='none';famOpenSettings()" style="font-size:11px;color:#f59e0b;background:none;border:none;cursor:pointer;">⚙️ AI 설정</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 암호 변경 모달 -->
-    <div id="family-setpw-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10001;align-items:center;justify-content:center;">
-        <div style="background:white;border-radius:20px;width:min(320px,85vw);padding:24px 22px;text-align:center;">
-            <div style="font-size:16px;font-weight:900;color:#1e293b;margin-bottom:12px;">🔧 암호 변경</div>
-            <input id="family-setpw-input" type="text" autocomplete="off" style="-webkit-text-security:disc" inputmode="numeric" maxlength="10"
-                placeholder="새 암호 입력 (4자리 이상)"
-                style="width:100%;border:2px solid #e2e8f0;border-radius:14px;padding:12px;font-size:18px;text-align:center;letter-spacing:6px;box-sizing:border-box;outline:none;font-family:monospace;">
-            <div style="display:flex;gap:8px;margin-top:12px;">
-                <button onclick="document.getElementById('family-setpw-modal').style.display='none';"
-                    style="flex:1;padding:12px;border-radius:12px;background:#f1f5f9;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;">취소</button>
-                <button onclick="saveNewPassword()"
-                    style="flex:2;padding:12px;border-radius:12px;background:var(--month-header);border:none;color:white;font-size:14px;font-weight:800;cursor:pointer;">저장</button>
-            </div>
-        </div>
-    </div>
 
 
     <link rel="stylesheet" href="css/translator.css">
@@ -1392,7 +1258,10 @@
     <script src="js/core/boot.js"></script>
     <script src="js/features/talk.js"></script>
     <script src="js/features/trip.js"></script>
+    <script src="js/features/trip-extra.js"></script>
     <script src="js/features/hike.js"></script>
+    <script src="js/features/notices.js"></script>
+    <script src="js/features/map.js"></script>
     <script src="js/core/wide.js"></script>
 
 </body>

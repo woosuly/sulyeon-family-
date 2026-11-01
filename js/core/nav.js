@@ -18,9 +18,6 @@
             // 배지 동기화
             var bs=document.getElementById('chat-unread-badge'),bd=document.getElementById('drw-badge');
             if(bs&&bd){ var c=bs.textContent; if(c){bd.textContent=c;bd.style.display='inline-block';}else bd.style.display='none'; }
-            // 인증 버튼
-            var ab=document.getElementById('drw-auth');
-            if(ab) ab.textContent='🚪 로그아웃';
         }
         function closeDrawer(){
             _drwOpen=false;
@@ -67,28 +64,12 @@
             }
         }
 
-        // ── History 유틸: 모달/팝업 열기 시 pushState ────────────────
-        function historyPush(type, data) {
-            history.pushState({ type, ...data }, '', '');
-        }
-
         // 뒤로가기 버튼 → 우선순위: 모달 > 팝업 > 라이트박스 > 폴더 > 섹션
         window.addEventListener('popstate', e => {
-            // 번역/통역 모달 닫기
-            const trModals = ['camera','photo','text'];
-            for (const m of trModals) {
-                const el = document.getElementById('tr-modal-' + m);
-                if (el && el.style.display === 'flex') { el.style.display = 'none'; return; }
-            }
-            const authM = document.getElementById('family-auth-modal');
-            if (authM && authM.style.display === 'flex') { authM.style.display = 'none'; return; }
-            const setPwM = document.getElementById('family-setpw-modal');
-            if (setPwM && setPwM.style.display === 'flex') { setPwM.style.display = 'none'; return; }
-            for(var mid of ['tim-lang-modal','tim-mic-modal','tim-sit-modal']){var el=document.getElementById(mid);if(el&&el.style.display==='flex'){el.style.display='none';if(mid==='tim-mic-modal'){if(typeof timSR!=='undefined'&&timSR)try{timSR.abort();}catch(e){}}return;}}
-            const setting = document.getElementById('tr-setting-modal');
-            if (setting && setting.style.display === 'flex') { setting.style.display = 'none'; return; }
-            const live = document.getElementById('tr-live-modal');
-            if (live && live.style.display === 'flex') { trStopLiveChat(); return; }
+            // 맨 위에 떠 있는 것부터 하나만 닫음 (하단 시트·설정·프로필 확대·통역 크게 보기/마주보기)
+            const top = [['fam-av-zoom', () => famAvatarZoomClose()], ['fam-sheet', () => famSheetClose()], ['map-ov', () => mapClose()], ['tk-big', () => talkBigClose()],
+                         ['fam-settings', () => famCloseSettings()], ['tk-face', () => talkFaceClose()]];
+            for (const [id, close] of top) { const el = document.getElementById(id); if (el && el.style.display === 'flex') { close(); return; } }
         
             const state = e.state || {};
 
@@ -128,11 +109,6 @@
                 lightbox.style.display = 'none'; return;
             }
 
-            // 7. 앨범 라이트박스
-            const albumLb = document.getElementById('album-lightbox');
-            if (albumLb && albumLb.style.display !== 'none' && albumLb.style.display !== '') {
-                albumLb.style.display = 'none'; return;
-            }
 
             // 8. 재미나이 창
             const gemini = document.getElementById('gemini-window');

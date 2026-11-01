@@ -88,7 +88,7 @@
     const CMDS = [
         ['/일정', '내일 7시 치과', '일정 추가'], ['/가계부', '점심 12000', '가계부 기록'], ['/영수증', '', '사진으로 가계부 기록'],
         ['/채팅', '저녁 뭐 먹어?', '가족 채팅 보내기'], ['/쇼핑', '우유 계란', '장보기 목록 추가'], ['/검색', '캠핑', '앱 안에서 찾기'],
-        ['/ai', '이번 주말 서울 날씨', 'AI 웹 검색'], ['/뉴스', '', '오늘 NEWS'], ['/리포트', '', '지난달 가계부 리포트'], ['/저축', '', '저축 목표·정기이체'], ['/예산', '', '항목별 월 예산'], ['/번역', '영어 내일 회의는 3시', '글 번역 (언어 생략 시 한↔영)'], ['/통역', '', '여행 통역 (대화·사진·문장집)'], ['/여행', '', '여행·여가 기록과 경비'], ['/산행', '', '하산 체크인 등록'], ['/파일', '', '사진·PDF 요약·번역'], ['/새대화', '', '대화 초기화 (기록은 지난 대화에 보관)'], ['/지난대화', '', '지난 대화 보기']
+        ['/ai', '이번 주말 서울 날씨', 'AI 웹 검색'], ['/뉴스', '', '오늘 NEWS'], ['/리포트', '', '지난달 가계부 리포트'], ['/저축', '', '저축 목표·정기이체'], ['/예산', '', '항목별 월 예산'], ['/번역', '영어 내일 회의는 3시', '글 번역 (언어 생략 시 한↔영)'], ['/통역', '', '여행 통역 (대화·사진·문장집)'], ['/여행', '', '여행·여가 기록과 경비'], ['/산행', '', '하산 체크인 등록'], ['/산행기록', '', '다녀온 산·산행 기록'], ['/지도', '', '여행 노트 (지도·통계)'], ['/가볼곳', '', '가볼 곳 · 이달의 추천 여행지'], ['/파일', '', '사진·PDF 요약·번역'], ['/새대화', '', '대화 초기화 (기록은 지난 대화에 보관)'], ['/지난대화', '', '지난 대화 보기']
     ];
     let famSuggIdx = 0;
     function famCmdInput(el) {
@@ -102,7 +102,7 @@
     }
     function famPickCmd(c) {
         const el = document.getElementById('home-cmd-input'); document.getElementById('home-sugg').style.display = 'none';
-        if (['/통역', '/여행', '/산행', '/영수증', '/뉴스', '/리포트', '/저축', '/예산', '/지우기', '/새대화', '/지난대화', '/파일', '/도움말'].includes(c)) { el.value = ''; famRun(c); return; }
+        if (['/통역', '/여행', '/산행', '/산행기록', '/지도', '/가볼곳', '/영수증', '/뉴스', '/리포트', '/저축', '/예산', '/지우기', '/새대화', '/지난대화', '/파일', '/도움말'].includes(c)) { el.value = ''; famRun(c); return; }
         el.value = c + ' '; el.focus();
     }
     function famCmdKey(e) {
@@ -187,7 +187,6 @@
     }
     function famFeedOpen() { const m = document.getElementById('main-section'); if (m && !m.classList.contains('active')) showSection('main-section'); }
     function famFeedClose() {}
-    function famFeedClear() { famFeedNew(); }
     // ── 새 대화 · 지난 대화 (이 폰에 보관) ──
     function famHistGet() { try { return JSON.parse(localStorage.getItem('famFeedHist') || '[]'); } catch (e) { return []; } }
     function famHistPut(list) {
@@ -242,6 +241,9 @@
         if (cmd === '통역') return showSection('translator-section');
         if (cmd === '여행') return showSection('travel-section');
         if (cmd === '산행' || cmd === '하산') return hikeForm();
+        if (cmd === '산행기록') return hikeLogSheet();
+        if (cmd === '지도') return mapOpen();
+        if (cmd === '가볼곳') return mapOpen('wish');
         famMe(raw);
         if (cmd === '일정') return famSchCard(arg);
         if (cmd === '가계부') return famAssetCard(arg);
