@@ -336,7 +336,7 @@
             batch.set(db.collection('plans').doc(planId), {
                 id: planId, member, mType, subType, loc,
                 start, end: endDate, startTime, endTime, supplies, memo, dayMemos,
-                albumId: prevPlan.albumId || '', currency: prevPlan.currency || ''
+                albumId: prevPlan.albumId || '', currency: prevPlan.currency || '', budget: prevPlan.budget || null
             });
 
             for (let i = 0; i < days; i++) {

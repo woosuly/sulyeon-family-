@@ -28,3 +28,4 @@
 .hike-ban.late b,.hike-ban.late small{color:#92400e}
 .hike-ban.warn{background:#fef2f2;border-color:#f87171;animation:famPulse 1.6s infinite}
 .hike-ban.warn b,.hike-ban.warn small{color:#991b1b}
+.trip-edit{margin-left:auto;border:none;background:none;color:#64748b;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit}

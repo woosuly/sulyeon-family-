@@ -77,7 +77,7 @@ function talkRender() {
             <button class="tk-lang them" onclick="talkPickLang()">${T[3]} ${T[1]} <span>▾</span></button>
         </div>
         ${sug && sug.lang !== talk.them ? `<button class="tk-sug" onclick="talkSetThem('${sug.lang}')">✈️ ${famEsc(sug.loc)} 여행 · ${tLang(sug.lang)[1]}로 바꾸기</button>` : ''}
-        ${talkHasKey() ? '' : `<button class="tk-sug warn" onclick="famOpenSettings()">⚙️ AI 키를 먼저 설정하세요 (Gemini 권장)</button>`}
+        ${!navigator.onLine ? `<div class="tk-sug warn">📴 인터넷 연결 없음 · 저장해 둔 문장집과 ⭐ 즐겨찾기만 쓸 수 있습니다</div>` : talkHasKey() ? '' : `<button class="tk-sug warn" onclick="famOpenSettings()">⚙️ AI 키를 먼저 설정하세요 (Gemini 권장)</button>`}
         <div class="tk-seg">${[['conv', '💬 대화'], ['photo', '📷 사진'], ['book', '📖 문장집']].map(([k, n]) => `<button class="${talk.tab === k ? 'on' : ''}" onclick="talkTab('${k}')">${n}</button>`).join('')}</div>
         <div class="tk-body" id="tk-body"></div>
         <div class="tk-dock" id="tk-dock" ${talk.tab === 'conv' ? '' : 'style="display:none"'}>
@@ -278,7 +278,7 @@ function talkBookBody(b) {
         const S = TALK_SITS.find(s => s[0] === talk.sit), pack = tLS(talkPackKey(talk.sit));
         b.innerHTML = `<div class="tk-pad"><div class="tk-book-h"><button class="fam-btn" onclick="talk.sit='';talkBody()">◀ 상황</button><b>${S[1]} ${S[2]}</b><button class="fam-btn" onclick="talkPackMake('${talk.sit}',true)">↻ 새로</button></div>
             <div id="tk-pack">${pack ? talkPhraseList(pack.items, 'p') : '<div class="tk-empty"><span class="fam-spin"></span>문장을 준비하는 중…</div>'}</div></div>`;
-        if (!pack) talkPackMake(talk.sit, false);
+        if (!pack) { if (navigator.onLine) talkPackMake(talk.sit, false); else document.getElementById('tk-pack').innerHTML = '<div class="tk-empty">이 상황 문장은 아직 저장되지 않았습니다. 인터넷이 될 때 받아두세요.</div>'; }
         return;
     }
     const have = TALK_SITS.filter(s => tLS(talkPackKey(s[0]))).length;
@@ -353,10 +353,12 @@ function talkFavToggle(id) { const h = talkH(id); talkFavSet(h.lang, h.src, h.tr
     const ss = window.showSection;
     window.showSection = function (id, push) {
         const r = ss.apply(this, arguments);
-        if (id === 'translator-section') { talkFavListen(); talkRender(); }
+        if (id === 'translator-section') { talkFavListen(); if (!navigator.onLine) talk.tab = 'book'; talkRender(); }
         else if (talk.rec) try { talk.rec.abort(); } catch (e) {}
         return r;
     };
+    const net = () => { const sec = document.getElementById('translator-section'); if (sec && sec.classList.contains('active')) talkRender(); };
+    window.addEventListener('online', net); window.addEventListener('offline', net);
     window.addEventListener('popstate', () => {
         const f = document.getElementById('tk-face'), g = document.getElementById('tk-big');
         if (g && g.style.display === 'flex') talkBigClose();

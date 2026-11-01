@@ -146,30 +146,59 @@ function famTripAssetInit(data, date) {
 function tripAssets(pid) { return (typeof anaAll === 'function' ? anaAll() : []).filter(e => e.tripId === pid); }
 function tripCost(pid) { return tripAssets(pid).reduce((a, e) => a + (e.type === '지출' ? e.amt : -e.amt), 0); }
 function tripFolder(p) { return p.albumId ? (typeof albumData !== 'undefined' ? albumData : []).find(f => f.id === p.albumId) : null; }
+// ── 여행 예산 (plans.budget = { total, cats: { 여행비, 식사, 교통비, 여가, 쇼핑, 기타 } }, 원 단위) ──
+const TRIP_BC = [['여행비', '🏨', '숙박·항공'], ['식사', '🍽', '식사'], ['교통비', '🚕', '교통'], ['여가', '🎟', '관광·체험'], ['쇼핑', '🛍', '쇼핑'], ['기타', '📌', '기타']];
+const tripBK = c => TRIP_BC.some(x => x[0] === c) ? c : '기타';
+function tripBudget(p) {
+    const b = p.budget || {}, cats = b.cats || {}, sum = Object.values(cats).reduce((a, v) => a + (+v || 0), 0), total = Math.max(+b.total || 0, sum);
+    return total ? { total, cats } : null;
+}
+function fxSync(cur) { try { return ((JSON.parse(localStorage.getItem('famFx') || 'null') || {}).rates || {})[cur] || 0; } catch (e) { return 0; } }
 function tripCardCost(p) {
-    const n = tripCost(p.id), f = tripFolder(p), ph = f ? (f.photos || []).length : 0;
-    if (!n && !ph) return '';
-    return `<div class="trip-chip">${n ? `💰 ${svW(n)}` : ''}${n && ph ? ' · ' : ''}${ph ? `📷 ${ph}장` : ''}</div>`;
+    const n = tripCost(p.id), f = tripFolder(p), ph = f ? (f.photos || []).length : 0, B = tripBudget(p);
+    if (!n && !ph && !B) return '';
+    const money = B ? `<span style="color:${n > B.total ? '#dc2626' : 'inherit'}">💰 ${svW(n)} / ${svW(B.total)}</span>` : n ? `💰 ${svW(n)}` : '';
+    return `<div class="trip-chip">${money}${money && ph ? ' · ' : ''}${ph ? `📷 ${ph}장` : ''}</div>`;
 }
 function tripRecordHtml(p) {
     const rows = tripAssets(p.id).sort((a, b) => String(a.date).localeCompare(String(b.date)));
     const exp = rows.filter(e => e.type === '지출'), back = rows.filter(e => e.type === '수입');
-    const total = exp.reduce((a, e) => a + e.amt, 0) - back.reduce((a, e) => a + e.amt, 0);
-    const byCat = {}; exp.forEach(e => byCat[e.category] = (byCat[e.category] || 0) + e.amt);
+    const backSum = back.reduce((a, e) => a + e.amt, 0), total = exp.reduce((a, e) => a + e.amt, 0) - backSum;
+    const byCat = {}; exp.forEach(e => { const k = tripBK(e.category); byCat[k] = (byCat[k] || 0) + e.amt; });
     const byCur = {}; exp.filter(e => e.cur && e.cur !== 'KRW').forEach(e => { const o = byCur[e.cur] || (byCur[e.cur] = { f: 0, k: 0 }); o.f += Number(e.fAmt) || 0; o.k += e.amt; });
-    const cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]), max = cats.length ? cats[0][1] : 1;
-    const ps = p.start, pe = tripEnd(p);
+    const ps = p.start, pe = tripEnd(p), today = famYmd(new Date());
     const loose = ps ? (typeof anaAll === 'function' ? anaAll() : []).filter(e => e.type === '지출' && !e.tripId && !e.fixedId && e.date >= ps && e.date <= pe) : [];
-    const people = p.member === '공통' ? 2 : 1, days = ps ? Math.max(1, Math.round((new Date(pe + 'T00:00:00') - new Date(ps + 'T00:00:00')) / 864e5) + 1) : 1;
+    const people = p.member === '공통' ? 2 : 1, dayN = (a, b) => Math.max(1, Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 864e5) + 1), days = ps ? dayN(ps, pe) : 1;
     const f = tripFolder(p), photos = f ? (f.photos || []) : [];
-    const pid = famEsc(p.id);
+    const pid = famEsc(p.id), B = tripBudget(p);
+    const catName = k => { const c = TRIP_BC.find(x => x[0] === k); return c ? `${c[1]} ${c[2]}` : famEsc(k); };
+    let head, bars;
+    if (B) {
+        const left = B.total - total, pct = Math.round(total / B.total * 100), col = typeof budgetColor === 'function' ? budgetColor(pct) : 'var(--month-header)';
+        const rate = p.currency ? fxSync(p.currency) : 0;
+        let pace = '';
+        if (ps && today >= ps && today <= pe) { const rd = dayN(today, pe); pace = left > 0 ? `남은 ${rd}일 · 하루 ${svW(left / rd)}까지` : '예산을 넘었습니다'; }
+        else if (ps && today < ps) pace = `${days}일 · 하루 예산 ${svW(B.total / days)}${people > 1 ? ` · 1인 ${svW(B.total / people)}` : ''}`;
+        else pace = `예산의 ${pct}% 사용${people > 1 ? ` · 1인당 ${svW(total / people)}` : ''}`;
+        head = `<div class="trip-h">💰 ${left >= 0 ? '남은 예산' : '예산 초과'} <b style="color:${left >= 0 ? '#1e293b' : '#dc2626'}">${svW(Math.abs(left))}</b><small>${svW(total)} / ${svW(B.total)}</small><button class="trip-edit" onclick="tripBudgetForm('${pid}')">예산 수정</button></div>
+            <div class="sv-bar" style="margin:2px 0 4px"><i style="width:${Math.min(100, pct)}%;background:${col}"></i></div>
+            <div class="fam-note" style="margin:0 0 6px">${pace}${rate && left > 0 ? ` · 남은 돈 ≈ ${fxFmt(p.currency, left / rate)}` : ''}</div>`;
+        bars = TRIP_BC.filter(([k]) => +B.cats[k] > 0 || byCat[k]).map(([k]) => {
+            const bud = +B.cats[k] || 0, u = byCat[k] || 0, cp = bud ? Math.round(u / bud * 100) : 0;
+            return `<div class="bd-row"><span class="bd-n" style="width:76px">${catName(k)}</span><div class="sv-bar" style="flex:1;margin:0"><i style="width:${bud ? Math.min(100, cp) : 100}%;background:${bud ? (typeof budgetColor === 'function' ? budgetColor(cp) : '') : '#cbd5e1'}"></i></div><span class="bd-v" style="color:${bud && u > bud ? '#dc2626' : '#475569'}">${svW(u)}<small> / ${bud ? svW(bud) : '예산 없음'}</small></span></div>`;
+        }).join('');
+    } else {
+        const cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]), max = cats.length ? cats[0][1] : 1;
+        head = `<div class="trip-h">💰 경비 <b>${svW(total)}</b>${rows.length ? `<small>${rows.length}건${people > 1 ? ` · 1인당 ${svW(total / people)}` : ''}${days > 1 ? ` · 하루 ${svW(total / days)}` : ''}</small>` : ''}</div>`;
+        bars = cats.length ? cats.map(([k, v]) => `<div class="bd-row"><span class="bd-n" style="width:76px">${catName(k)}</span><div class="sv-bar" style="flex:1;margin:0"><i style="width:${Math.max(3, v / max * 100)}%"></i></div><span class="bd-v">${svW(v)}</span></div>`).join('') : '<div class="fam-note" style="margin:0">아직 연결된 경비가 없습니다.</div>';
+    }
     return `
-    <div class="trip-sec"><div class="trip-h">💰 경비 <b>${svW(total)}</b>${rows.length ? `<small>${rows.length}건${people > 1 ? ` · 1인당 ${svW(total / people)}` : ''}${days > 1 ? ` · 하루 ${svW(total / days)}` : ''}</small>` : ''}</div>
-        ${cats.length ? cats.map(([k, v]) => `<div class="bd-row"><span class="bd-n">${famEsc(k)}</span><div class="sv-bar" style="flex:1;margin:0"><i style="width:${Math.max(3, v / max * 100)}%"></i></div><span class="bd-v">${svW(v)}</span></div>`).join('') : '<div class="fam-note" style="margin:0">아직 연결된 경비가 없습니다.</div>'}
+    <div class="trip-sec">${head}${bars}
         ${Object.keys(byCur).length ? `<div class="fam-note">${Object.entries(byCur).map(([k, o]) => `${fxFmt(k, o.f)} → ${svW(o.k)} (평균 ${Math.round(o.k / (o.f || 1)).toLocaleString('ko-KR')}원)`).join(' · ')}</div>` : ''}
-        ${back.length ? `<div class="fam-note">환급·정산 ${svW(back.reduce((a, e) => a + e.amt, 0))} 차감</div>` : ''}
-        ${rows.length ? `<details class="trip-list"><summary>내역 보기</summary>${rows.map(e => `<div class="trip-row"><span>${famEsc(String(e.date).slice(5).replace('-', '/'))}</span><span class="trip-memo">${famEsc(e.memo || e.category)}${e.cur && e.cur !== 'KRW' ? ` <small>${fxFmt(e.cur, e.fAmt)}</small>` : ''}</span><b style="color:${e.type === '수입' ? '#059669' : '#334155'}">${e.type === '수입' ? '+' : ''}${svW(e.amt)}</b><button title="연결 해제" onclick="tripUnlink('${famEsc(e.id)}','${pid}')">✕</button></div>`).join('')}</details>` : ''}
+        ${back.length ? `<div class="fam-note">환급·정산 ${svW(backSum)} 차감</div>` : ''}
+        ${rows.length ? `<details class="trip-list"><summary>내역 보기 (${rows.length}건)</summary>${rows.map(e => `<div class="trip-row"><span>${famEsc(String(e.date).slice(5).replace('-', '/'))}</span><span class="trip-memo">${famEsc(e.memo || e.category)}${e.cur && e.cur !== 'KRW' ? ` <small>${fxFmt(e.cur, e.fAmt)}</small>` : ''}</span><b style="color:${e.type === '수입' ? '#059669' : '#334155'}">${e.type === '수입' ? '+' : ''}${svW(e.amt)}</b><button title="연결 해제" onclick="tripUnlink('${famEsc(e.id)}','${pid}')">✕</button></div>`).join('')}</details>` : ''}
         <div class="trip-btns"><button class="fam-btn pri" onclick="tripAddCost('${pid}')">＋ 경비 추가</button>
+        ${B ? '' : `<button class="fam-btn" onclick="tripBudgetForm('${pid}')">💰 예산 정하기</button>`}
         ${loose.length ? `<button class="fam-btn" onclick="tripLinkSheet('${pid}')">기간 중 미연결 ${loose.length}건 연결</button>` : ''}</div>
     </div>
     <div class="trip-sec"><div class="trip-h">📷 사진 ${photos.length ? `<small>${photos.length}장</small>` : ''}</div>
@@ -177,6 +206,40 @@ function tripRecordHtml(p) {
             <div class="trip-btns"><button class="fam-btn" onclick="tripOpenAlbum('${pid}',false)">앨범 열기</button><button class="fam-btn" onclick="tripOpenAlbum('${pid}',true)">📷 사진 추가</button></div>`
         : `<div class="trip-btns"><button class="fam-btn pri" onclick="tripOpenAlbum('${pid}',true)">📷 앨범 폴더 만들고 사진 추가</button>${(typeof albumData !== 'undefined' && albumData.length) ? `<select class="fam-mini-sel" onchange="if(this.value)tripLinkAlbum('${pid}',this.value)"><option value="">기존 폴더 연결…</option>${albumData.map(x => `<option value="${famEsc(x.id)}">📁 ${famEsc(x.name)}</option>`).join('')}</select>` : ''}</div>`}
     </div>`;
+}
+function tripBudgetForm(pid) {
+    const p = famTripById(pid); if (!p) return;
+    const b = p.budget || {}, cats = b.cats || {}, man = v => +v ? Math.round(v / 10000) : '';
+    const days = p.start ? Math.max(1, Math.round((new Date(tripEnd(p) + 'T00:00:00') - new Date(p.start + 'T00:00:00')) / 864e5) + 1) : 1;
+    famSheet(`<div class="fam-h"><b>💰 ${famEsc(p.loc || '여행')} 예산</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
+        <div class="fam-note" style="margin:-4px 0 10px">만원 단위입니다. 전체만 넣어도 되고, 항목별로 나누면 쓰는 대로 항목마다 남은 금액을 보여줍니다. (${days}일${p.member === '공통' ? ' · 2명' : ''})</div>
+        <div class="ff-form">
+            <div class="full"><label>전체 예산 (만원)</label><input id="tb-total" type="number" inputmode="numeric" value="${man(b.total)}" oninput="tripBudgetSum()" placeholder="예: 400"></div>
+            ${TRIP_BC.map(([k, ic, n]) => `<div><label>${ic} ${n}</label><input class="tb-cat" data-c="${k}" type="number" inputmode="numeric" value="${man(cats[k])}" oninput="tripBudgetSum()"></div>`).join('')}
+            <div class="full fam-note" id="tb-sum" style="margin:0"></div>
+        </div>
+        <div class="fam-btns">${b.total || Object.keys(cats).length ? `<button class="fam-btn" style="color:#dc2626" onclick="tripBudgetSave('${famEsc(pid)}',true)">예산 지우기</button>` : ''}<button class="fam-btn pri" onclick="tripBudgetSave('${famEsc(pid)}')">저장</button></div>`);
+    tripBudgetSum();
+}
+function tripBudgetSum() {
+    const sum = [...document.querySelectorAll('.tb-cat')].reduce((a, i) => a + (+i.value || 0), 0), tot = +(document.getElementById('tb-total') || {}).value || 0, el = document.getElementById('tb-sum');
+    if (!el) return;
+    el.textContent = !sum ? '' : tot > sum ? `항목 합계 ${sum}만원 · 미배정 ${tot - sum}만원 (기타로 쓸 수 있는 여유분)` : tot && tot < sum ? `항목 합계 ${sum}만원이 전체보다 커서 전체 예산을 ${sum}만원으로 저장합니다` : `항목 합계 ${sum}만원`;
+}
+async function tripBudgetSave(pid, clear) {
+    let budget = null;
+    if (!clear) {
+        const cats = {}; document.querySelectorAll('.tb-cat').forEach(i => { const v = Math.round((+i.value || 0) * 10000); if (v > 0) cats[i.dataset.c] = v; });
+        const sum = Object.values(cats).reduce((a, v) => a + v, 0), total = Math.max(Math.round((+document.getElementById('tb-total').value || 0) * 10000), sum);
+        if (!total) { famToast('예산을 입력하세요'); return; }
+        budget = { total, cats };
+    } else if (!confirm('이 여행의 예산을 지울까요? 경비 기록은 그대로 남습니다.')) return;
+    try {
+        await db.collection('plans').doc(pid).update({ budget });
+        const p = famTripById(pid); if (p) p.budget = budget;
+        famSheetClose(); famToast(clear ? '예산을 지웠습니다' : '예산을 저장했습니다'); tripReopen(pid);
+        if (typeof renderPlans === 'function') renderPlans();
+    } catch (e) { famToast('저장 실패: ' + e.message); }
 }
 function tripReopen(pid) { setTimeout(() => { const p = famTripById(pid); if (p && !document.getElementById('travel-detail-modal').classList.contains('hidden')) openTravelDetail(p); }, 450); }
 function tripAddCost(pid) {
