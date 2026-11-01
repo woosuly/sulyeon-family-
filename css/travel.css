@@ -128,3 +128,11 @@ html[data-theme="dark"] .st-tiles div,html[data-theme="dark"] .st-sec{background
 .map-st:empty{display:none}
 .sido{aspect-ratio:1.9}
 @media (min-width:768px){.map-top,.map-seg{width:min(820px,calc(100% - 24px));box-sizing:border-box;margin-left:auto;margin-right:auto}.map-top{padding-left:0;padding-right:0}}
+/* 여행 & 여가: 버튼·필터 한 줄, 같은 크기 (좁으면 옆으로 밀어서 봄) */
+.plan-bar{display:flex;gap:6px;margin-bottom:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.plan-bar::-webkit-scrollbar{display:none}
+.plan-bar #plan-chips{display:contents}
+.plan-bar .plan-filter-btn{flex:1 0 96px;width:96px;height:34px;padding:0 8px;margin:0;font-size:12px;font-weight:700;text-align:center;text-align-last:center;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box;font-family:inherit}
+.plan-bar select.plan-filter-btn{-webkit-appearance:none;appearance:none;background-image:none;outline:none}
+.plan-bar select.plan-filter-btn option{color:#1e293b;background:#fff}
+@media (max-width:599px){.plan-bar{-webkit-mask-image:linear-gradient(to right,#000 88%,transparent);mask-image:linear-gradient(to right,#000 88%,transparent);padding-right:24px}}

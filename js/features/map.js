@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════
 // 🗺 여행 노트 — 지도 · 통계 · 가볼 곳(이달의 추천 포함)
-//   지도: Leaflet(열 때만 불러옴) + CARTO 지도 / 좌표: OpenStreetMap Nominatim(키 불필요, 초당 1회)
+//   지도: Leaflet(열 때만 불러옴) + OpenStreetMap 지도 / 좌표: OpenStreetMap Nominatim(키 불필요, 초당 1회)
 //   좌표는 plans.geo · hikeLogs.geo · wishes.geo 에 저장 {lat,lng,q,cc,country,sido,city} → 두 폰 공유
 //   wishes/{id}: name, note, kind(국내|해외), type, from, by, at
 //   travelRecs/{YYYY-MM}: items[], at, by, ai  (이달의 추천, 한 달에 한 번 만들어 두 폰이 같이 봄)
@@ -128,7 +128,7 @@ async function mapInitMap() {
     box.innerHTML = '';
     if (mapObj) { mapObj.remove(); mapObj = null; }
     mapObj = L.map(box, { zoomControl: true }).setView([36.4, 127.8], 7);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 18, subdomains: 'abcd', attribution: '© OpenStreetMap · © CARTO' }).addTo(mapObj);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(mapObj);
     mapRefresh();
 }
 function mapRefresh() { const list = mapDraw(true); if (list && list.some(x => !x.geo && !x.noGeo)) mapFill(list, false); }

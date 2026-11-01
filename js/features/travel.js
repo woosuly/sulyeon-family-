@@ -1,5 +1,4 @@
         // ── 여행 & 여가 ──────────────────────────────────────────────────
-        let travelFilter = 'all'; // 하위 호환 유지
         // 필터 상태
         const planFilters = { sort:'asc', period:'all', member:'all', area:'all', type:'all' };
         // 버튼 레이블 기본값
@@ -111,13 +110,6 @@
             });
         }
 
-        function filterPlans(btn) {
-            document.querySelectorAll('.travel-tab').forEach(t => t.classList.remove('active'));
-            btn.classList.add('active');
-            travelFilter = btn.dataset.filter;
-            renderPlans();
-        }
-
         function getMemberBg(member) {
             return member === '정우설' ? '#dbeafe' : member === '한미연' ? '#fce7f3' : member === '공통' ? '#f0fdf4' : '#f1f5f9';
         }
@@ -142,9 +134,8 @@
         function planSet(g,v){ PLAN_F[g]=v; try{ localStorage.setItem('planFilter2',JSON.stringify(PLAN_F)); }catch(e){} renderPlans(); }
         function planChips(){
             const el=document.getElementById('plan-chips'); if(!el) return;
-            el.innerHTML = `<div style="display:flex;gap:6px;">
-                <select class="fam-mini-sel" style="flex:1" onchange="planSet('m',this.value)">${[['all','👥 구성원 전체'],['정우설','👨 정우설'],['한미연','👩 한미연'],['공통','👨‍👩‍👧 공통']].map(([k,n])=>`<option value="${k}" ${PLAN_F.m===k?'selected':''}>${n}</option>`).join('')}</select>
-                <select class="fam-mini-sel" style="flex:1" onchange="planSet('t',this.value)"><option value="all">🗂 유형 전체</option>${PLAN_TYPES.map(([k,ic])=>`<option value="${k}" ${PLAN_F.t===k?'selected':''}>${ic} ${k}</option>`).join('')}</select></div>`;
+            el.innerHTML = `<select class="plan-filter-btn plan-sel${PLAN_F.m!=='all'?' active':''}" onchange="planSet('m',this.value)">${[['all','👥 구성원'],['정우설','👨 정우설'],['한미연','👩 한미연'],['공통','👨‍👩‍👧 공통']].map(([k,n])=>`<option value="${k}" ${PLAN_F.m===k?'selected':''}>${n}</option>`).join('')}</select>
+                <select class="plan-filter-btn plan-sel${PLAN_F.t!=='all'?' active':''}" onchange="planSet('t',this.value)"><option value="all">🗂 유형</option>${PLAN_TYPES.map(([k,ic])=>`<option value="${k}" ${PLAN_F.t===k?'selected':''}>${ic} ${k}</option>`).join('')}</select>`;
         }
         function planCard(p){
             const card = document.createElement('div');
@@ -243,7 +234,7 @@
                 ${(p.subType==='골프'||p.subType==='스크린골프')&&p.startTime ? `<span style="margin-left:8px;font-size:12px;color:#3b82f6;">⏰ ${p.startTime}</span>` : ''}
                 </div>
                 ${dayHtml}
-                ${p.supplies ? `<div style="margin-top:10px;font-size:12px;color:#64748b;">🎒 <b>준비물</b>: ${escHtml(p.supplies)}</div>` : ''}
+                ${p.supplies ? `<div style="margin-top:10px;font-size:12px;color:#64748b;">📝 <b>준비물 메모</b>: ${escHtml(p.supplies)}</div>` : ''}
                 ${p.memo     ? `<div style="margin-top:6px;font-size:12px;color:#64748b;">📝 <b>메모</b>: ${escHtml(p.memo)}</div>` : ''}
                 ${typeof tripRecordHtml === 'function' ? tripRecordHtml(p) : ''}
             `;
@@ -336,7 +327,8 @@
             batch.set(db.collection('plans').doc(planId), {
                 id: planId, member, mType, subType, loc,
                 start, end: endDate, startTime, endTime, supplies, memo, dayMemos,
-                albumId: prevPlan.albumId || '', currency: prevPlan.currency || '', budget: prevPlan.budget || null
+                albumId: prevPlan.albumId || '', currency: prevPlan.currency || '', budget: prevPlan.budget || null,
+                geo: prevPlan.loc === loc ? (prevPlan.geo || null) : null   // 장소가 바뀌면 지도 위치 다시 찾기
             });
 
             for (let i = 0; i < days; i++) {

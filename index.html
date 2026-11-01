@@ -151,7 +151,7 @@
                         <div class="ff-tools"><button onclick="famHistOpen()">🕘 지난 대화</button><button id="ff-new" onclick="famFeedNew()">↺ 새 대화</button></div>
                         <div class="fam-feed-body" id="fam-feed-body"></div>
                         <span id="chat-unread-badge" style="display:none"></span>
-                        <div class="footer-info">Family Shared v84.0 &nbsp;·&nbsp; Jung Wooseol 2026</div>
+                        <div class="footer-info">Family Shared v84.1 &nbsp;·&nbsp; Jung Wooseol 2026</div>
                         <div style="height:150px"></div>
                         </div>
                         </div><!-- /main-scroll -->
@@ -388,18 +388,17 @@
 
                     <button class="btn-action btn-primary" style="width:100%;margin-bottom:12px;height:44px;" onclick="openPlanModal(null)">＋ 새 계획 추가</button>
 
-                    <!-- 필터 토글 버튼 -->
-                    <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
-                        <button class="plan-filter-btn" id="fbtn-sort"   onclick="togglePlanFilter('sort')" style="display:none;">📅 정렬 ▾</button>
-                        <button class="plan-filter-btn" id="fbtn-period" onclick="togglePlanFilter('period')">🗓 기간 ▾</button>
-                        <button class="plan-filter-btn" onclick="mapOpen()" style="margin-left:auto">🗺 여행 노트</button>
+                    <!-- 여행 노트·산행 기록 + 필터 (한 줄, 같은 크기) -->
+                    <div class="plan-bar">
+                        <button class="plan-filter-btn" onclick="mapOpen()">🗺 여행 노트</button>
                         <button class="plan-filter-btn" onclick="hikeLogSheet()">⛰️ 산행 기록</button>
-                        <button class="plan-filter-btn" id="fbtn-member" onclick="togglePlanFilter('member')" style="display:none;">👥 구성원 ▾</button>
+                        <button class="plan-filter-btn" id="fbtn-period" onclick="togglePlanFilter('period')">🗓 기간 ▾</button>
                         <button class="plan-filter-btn" id="fbtn-area"   onclick="togglePlanFilter('area')">🌐 지역 ▾</button>
+                        <div id="plan-chips"></div>
+                        <button class="plan-filter-btn" id="fbtn-sort"   onclick="togglePlanFilter('sort')" style="display:none;">📅 정렬 ▾</button>
+                        <button class="plan-filter-btn" id="fbtn-member" onclick="togglePlanFilter('member')" style="display:none;">👥 구성원 ▾</button>
                         <button class="plan-filter-btn" id="fbtn-type"   onclick="togglePlanFilter('type')" style="display:none;">🗂 유형 ▾</button>
                     </div>
-                    <!-- 구성원·유형 체크 -->
-                    <div id="plan-chips" style="margin-bottom:8px;"></div>
 
                     <!-- 드롭다운 패널 -->
                     <!-- 기간 필터: 년/월/주 선택 -->
