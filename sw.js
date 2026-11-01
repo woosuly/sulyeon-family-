@@ -88,9 +88,11 @@ self.addEventListener('fetch', e => {
     const url = new URL(req.url), same = url.origin === self.location.origin && url.pathname.startsWith(BASE);
     if (!same && !CDN_OK.test(req.url)) return;
     e.respondWith(
-        fetch(req).then(res => {
-            if (res && (res.ok || res.type === 'opaque')) { const copy = res.clone(); caches.open(CACHE_NAME).then(c => c.put(req, copy)).catch(() => {}); }
-            return res;
+        fetch(req).then(async res => {
+            if (res && (res.ok || res.type === 'opaque')) { const copy = res.clone(); caches.open(CACHE_NAME).then(c => c.put(req, copy)).catch(() => {}); return res; }
+            // 배포 중 잠깐 404 등이 나면 저장해 둔 파일로 대신 (화면이 깨지지 않게)
+            const hit = await caches.match(req, { ignoreSearch: same });
+            return hit || res;
         }).catch(async () => {
             const hit = await caches.match(req, { ignoreSearch: same });
             if (hit) return hit;

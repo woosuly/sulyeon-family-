@@ -1,0 +1,60 @@
+/* ═══ 태블릿·모니터 배치 ═══
+   768px 이상 : 홈을 한 줄 정렬 그리드(요약 4칸 → 알림 배너 → 대화), 모든 블록 폭 통일
+   900px 이상 : 여행 목록 + 상세 2단
+   1024px 이상: 왼쪽 메뉴 고정(☰로 접기/펴기, 1280px 미만은 기본 접힘) */
+/* ── 홈: 태블릿부터 같은 폭·같은 간격의 그리드 ── */
+@media (min-width:768px){
+    :root{--hc:calc(100vw - 32px);--gap:12px}
+    #main-section .info-bar,#home-scroll{width:var(--hc);max-width:none;margin-left:auto;margin-right:auto;align-self:center}
+    #home-scroll{padding:0!important}
+    .home-side{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--gap);padding:var(--gap) 0 0;align-items:stretch}
+    .home-side #home-today{display:contents}
+    #home-notices,#fam-home-banners{display:contents}
+    .home-strip{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:var(--gap)}
+    .home-strip:empty,.home-strip:not(:has(.home-banner)){display:none}
+    .home-side .home-banner{flex:1 1 230px;margin:0;min-width:0;min-height:52px;box-sizing:border-box}
+    .home-side .home-banner b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .ht-tile{padding:11px 13px}
+    .ht-tile b{font-size:16px}
+    .home-main .ff-tools,.home-main .fam-feed-body{max-width:none;padding-left:0;padding-right:0}
+    .home-cmd{left:calc((100vw - var(--hc)) / 2);right:auto;width:var(--hc);bottom:24px;padding:0;background:none}
+    .home-cmd-in,.home-sugg{max-width:none}
+    .home-cmd-in{padding:8px 8px 8px 10px;border-radius:30px;box-shadow:0 10px 32px rgba(15,23,42,.14)}
+    .home-cmd-in textarea{font-size:16px}
+}
+
+@media (min-width:900px){
+    #travel-section.active{flex-direction:row;align-items:flex-start;gap:16px}
+    #travel-section>.card{flex:1;min-width:0}
+    #travel-detail-modal{position:sticky!important;top:8px;inset:auto!important;background:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;padding:0!important;width:min(520px,44%);flex:none;z-index:1;display:block}
+    #travel-detail-modal.hidden{display:none!important}
+    #travel-detail-modal .sch-detail-content{max-width:none;max-height:calc(100dvh - 90px);box-shadow:0 5px 20px rgba(0,0,0,.06);animation:none}
+}
+
+/* ── 모니터·가로 태블릿: 왼쪽 메뉴 고정 ── */
+@media (min-width:1024px){
+    :root{--nav:220px;--cal-cell-h:clamp(118px,13vh,160px);--hc:min(1200px, calc(100vw - var(--nav) - 48px))}
+    html.nav-mini{--nav:76px}
+    #drw-panel{left:0!important;top:56px!important;height:calc(100dvh - 56px)!important;width:var(--nav)!important;box-shadow:none!important;border-right:1px solid #e2e8f0;z-index:900!important;transition:width .2s!important}
+    #drw-panel>div:first-child{background:none!important;padding:12px 14px!important;border-bottom:1px solid #eef2f7}
+    #drw-panel>div:first-child>div:first-child{display:none!important}
+    #drw-name{color:#1e293b!important}
+    #drw-ov{display:none!important}
+    main{margin-left:var(--nav);max-width:none;width:auto;padding:16px 24px;transition:margin-left .2s}
+    #main-section .info-bar,#home-scroll{width:var(--hc)}
+    .home-cmd{left:calc(var(--nav) + (100vw - var(--nav) - var(--hc)) / 2);bottom:48px}
+    #asset-section>.card,#save-section>.card,#shop-section>.card,#news-section>.card,#asset-analysis-section>.card,#chat-section>.card{max-width:1100px}
+    #asset-section div[style*="height:200px"]{height:280px!important}
+    .shop-grid{grid-template-columns:repeat(6,1fr)}
+    /* 접힌 메뉴: 아이콘 + 짧은 이름 */
+    html.nav-mini #drw-panel nav{padding:8px 6px}
+    html.nav-mini #drw-panel>div:first-child{padding:12px 0!important;display:flex;justify-content:center}
+    html.nav-mini #drw-name{display:none}
+    html.nav-mini #drw-panel nav{padding:8px 6px}
+    html.nav-mini .drawer-item{flex-direction:column;gap:3px;padding:9px 2px;font-size:19px;text-align:center;position:relative}
+    html.nav-mini .drawer-item>span:first-of-type{font-size:10px;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:66px}
+    html.nav-mini #drw-badge{position:absolute;top:4px;right:8px;margin:0!important}
+    html.nav-mini #drw-panel>div:last-child{flex-direction:column;padding:8px 6px}
+    html.nav-mini #drw-panel>div:last-child button{font-size:16px!important;padding:7px 0!important}
+    html.nav-mini #drw-panel>div:last-child button span{display:none}
+}
