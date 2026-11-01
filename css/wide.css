@@ -36,3 +36,15 @@
     #asset-section div[style*="height:200px"]{height:280px!important}
     .shop-grid{grid-template-columns:repeat(6,1fr)}
 }
+
+/* 아주 넓은 화면: 홈 내용을 가운데 1240px 안에 모음 (대화창·요약 패널이 벌어지지 않게) */
+@media (min-width:1024px){
+    :root{--hc:min(1240px, calc(100vw - 268px))}
+    #main-section .info-bar,#home-scroll{width:var(--hc);max-width:none;margin-left:auto;margin-right:auto;align-self:center}
+    .home-cmd{left:calc(220px + (100vw - 220px - var(--hc)) / 2);right:auto;width:calc(var(--hc) - 384px);background:none}
+    .home-cmd-in,.home-sugg{max-width:none}
+}
+@media (min-width:1024px){
+    .home-cmd{bottom:40px;padding-bottom:0}
+    .home-cmd-in{box-shadow:0 10px 32px rgba(15,23,42,.14)}
+}
