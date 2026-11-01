@@ -33,7 +33,9 @@ exports.sendChatNotif = onDocumentCreated(
     const results = await Promise.allSettled(
       subs.map(sub => webpush.sendNotification(
         {endpoint: sub.endpoint, keys: {p256dh: sub.p256dh, auth: sub.auth}},
-        payload
+        payload,
+        // urgency high: 절전(Doze) 상태 폰에도 바로 전달 · topic: 아직 못 받은 이전 알림은 최신 것으로 대체 · TTL: 하루 지나면 폐기
+        {TTL: 86400, urgency: 'high', topic: 'chat'}
       ))
     );
 

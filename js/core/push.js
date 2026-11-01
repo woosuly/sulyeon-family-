@@ -29,6 +29,7 @@
                         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
                     });
                 }
+                window._famPushSub = !!sub;   // 서버 푸시 사용 중 → 앱 자체 알림은 끔(중복 방지)
                 // chatUser 있을 때까지 대기 (최대 30초)
                 let token = localStorage.getItem('chatUser');
                 let tries = 0;

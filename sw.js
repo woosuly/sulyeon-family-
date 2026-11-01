@@ -1,6 +1,6 @@
-// 설연 Family — Service Worker v6
+// 설연 Family — Service Worker v7
 // v6: 앱 파일을 폰에 저장 → 인터넷이 없어도 앱이 열림 (문장집·지난 데이터 사용)
-const CACHE_NAME = 'seolyeon-v6';
+const CACHE_NAME = 'seolyeon-v7';
 const BASE = '/sulyeon-family-/';
 // 앱 파일 (폴더 구조 변경 시 함께 수정)
 const APP_FILES = [
@@ -100,7 +100,7 @@ self.addEventListener('fetch', e => {
 // postMessage (앱 실행 중 백그라운드)
 self.addEventListener('message', e => {
     if (e.data && e.data.type === 'CLEAR_NOTIF') {
-        e.waitUntil(self.registration.getNotifications().then(ns => ns.forEach(n => n.tag === 'chat-message' && n.close())));
+        e.waitUntil(self.registration.getNotifications().then(ns => ns.forEach(n => n.tag !== 'hike' && n.close())));
         return;
     }
     if (!e.data || e.data.type !== 'CHAT_NOTIFY') return;
@@ -115,7 +115,11 @@ self.addEventListener('push', e => {
     let p;
     try { p = e.data.json(); } catch { p = { sender: '설연Family', body: e.data.text() }; }
     e.waitUntil(
-        self.registration.showNotification('💬 ' + (p.sender || '설연Family'), NOTIF_OPTIONS(p.sender, p.body))
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+            // 앱을 보고 있는 중이면 앱 안의 토스트로 대신함
+            if (list.some(c => c.visibilityState === 'visible' && c.focused)) return;
+            return self.registration.showNotification('💬 ' + (p.sender || '설연Family'), NOTIF_OPTIONS(p.sender, p.body));
+        })
     );
 });
 

@@ -384,7 +384,8 @@
             showChatToast(msg, sender);
 
             // ④ 시스템 알림 (상단바 + 잠금화면)
-            if (!chatNotifPermission) return;
+            // 앱을 보고 있으면 토스트로 충분, 서버 푸시가 켜져 있으면 서버가 알림을 보냄 → 중복 알림 방지
+            if (!chatNotifPermission || document.visibilityState === 'visible' || window._famPushSub) return;
             const body = (msg||'').length > 50 ? (msg||'').slice(0,50)+'…' : (msg||'새 메시지');
 
             // SW registration으로 직접 showNotification (가장 확실한 방법)
@@ -393,7 +394,7 @@
                     body,
                     icon:  '/sulyeon-family-/icon-192.png',
                     badge: '/sulyeon-family-/icon-192.png',
-                    tag:   'chat-msg',
+                    tag:   'chat-message',
                     renotify: true,
                     vibrate: [200, 100, 200],
                     data: { url: '/sulyeon-family-/' }
@@ -404,7 +405,7 @@
                 // 직접 Notification
                 try {
                     new Notification('💬 ' + sender, {
-                        body, tag: 'chat-msg', renotify: true,
+                        body, tag: 'chat-message', renotify: true,
                         icon: '/sulyeon-family-/icon-192.png',
                     });
                 } catch(e) {}
