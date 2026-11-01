@@ -1,0 +1,38 @@
+/* ═══ 태블릿·모니터 배치 ═══
+   900px 이상 : 여행 목록 + 상세 2단
+   1024px 이상: 왼쪽 메뉴 고정, 홈 오른쪽 요약 패널, 달력 칸 확대 */
+#home-side-more{display:none}
+.side-box{background:#fff;border:1px solid #eef2f7;border-radius:14px;padding:12px 13px;margin-top:10px;box-shadow:0 2px 8px rgba(15,23,42,.04)}
+.side-box h5{margin:0 0 6px;font-size:12px;font-weight:800;color:#64748b}
+.side-row{display:flex;gap:8px;align-items:baseline;padding:6px 0;border-bottom:1px solid #f1f5f9;font-size:12.5px;color:#1e293b;cursor:pointer}
+.side-row:last-child{border-bottom:0}
+.side-row small{flex:none;width:58px;color:#94a3b8;font-size:11px}
+.side-row span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.side-row b{flex:none;font-size:11px;color:var(--month-accent)}
+
+@media (min-width:900px){
+    #travel-section.active{flex-direction:row;align-items:flex-start;gap:16px}
+    #travel-section>.card{flex:1;min-width:0}
+    #travel-detail-modal{position:sticky!important;top:8px;inset:auto!important;background:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;padding:0!important;width:min(520px,44%);flex:none;z-index:1;display:block}
+    #travel-detail-modal.hidden{display:none!important}
+    #travel-detail-modal .sch-detail-content{max-width:none;max-height:calc(100dvh - 90px);box-shadow:0 5px 20px rgba(0,0,0,.06);animation:none}
+}
+
+@media (min-width:1024px){
+    :root{--cal-cell-h:clamp(118px,13vh,160px)}
+    header>div:first-child>button{display:none}
+    #drw-panel{left:0!important;top:56px!important;height:calc(100dvh - 56px)!important;width:220px!important;box-shadow:none!important;border-right:1px solid #e2e8f0;z-index:900!important}
+    #drw-panel>div:first-child button{display:none}
+    #drw-ov{display:none!important}
+    main{margin-left:220px;max-width:none;width:auto;padding:16px 24px}
+    #home-scroll{flex-direction:row!important;align-items:flex-start;gap:24px}
+    .home-main{flex:1;min-width:0;order:1}
+    .home-side{order:2;width:360px;flex:none;position:sticky;top:0;padding-top:10px}
+    .home-side .home-today{grid-template-columns:1fr 1fr;padding:0;max-width:none}
+    .home-side #fam-home-banners{padding:10px 0 0;max-width:none}
+    #home-side-more{display:block}
+    .home-cmd{left:220px;right:408px}
+    #asset-section>.card,#save-section>.card,#shop-section>.card,#news-section>.card,#asset-analysis-section>.card,#chat-section>.card{max-width:980px}
+    #asset-section div[style*="height:200px"]{height:280px!important}
+    .shop-grid{grid-template-columns:repeat(6,1fr)}
+}

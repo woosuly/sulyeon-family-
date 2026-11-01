@@ -1,0 +1,49 @@
+/* ── 마주보기 통역 ── */
+#face-ov{position:fixed;inset:0;z-index:9600;background:#0f172a;display:none;flex-direction:column}
+.face-half{flex:1;display:flex;flex-direction:column;padding:14px 16px;min-height:0;color:#fff}
+.face-peer{transform:rotate(180deg);background:#064e3b}
+.face-me{background:#1e3a8a}
+.face-lang{font-size:13px;font-weight:800;opacity:.8}
+.face-out{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(22px,6.5vw,34px);font-weight:800;line-height:1.35;overflow-y:auto;padding:6px 0;word-break:keep-all}
+.face-ph{font-size:14px;font-weight:600;opacity:.55}
+.face-said{min-height:18px;font-size:13px;opacity:.75;text-align:center;margin-bottom:8px}
+.face-ctl{display:flex;gap:8px;align-items:center}
+.face-ctl input{flex:1;min-width:0;border:none;border-radius:12px;padding:12px;font-size:15px;font-family:inherit}
+.face-send{width:44px;height:44px;border-radius:50%;border:none;background:#fff;color:#1e3a8a;font-size:18px;cursor:pointer}
+.face-mic{flex:1;min-height:52px;border-radius:26px;border:2px solid rgba(255,255,255,.6);background:rgba(255,255,255,.12);color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit}
+.face-me .face-mic{flex:none;padding:0 18px}
+.face-mic.on{background:#dc2626;border-color:#dc2626;animation:famPulse 1.2s infinite}
+.face-mid{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;background:#020617;color:#cbd5e1;font-size:12px;font-weight:700}
+.face-mid button{border:1px solid #334155;background:#1e293b;color:#e2e8f0;border-radius:16px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+
+/* ── 외화 입력 ── */
+.fx-link{border:1.5px dashed #cbd5e1;background:#fff;border-radius:10px;padding:8px 12px;font-size:12.5px;font-weight:700;color:#475569;cursor:pointer;font-family:inherit}
+.fx-grid{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:8px}
+.fx-note{font-size:11px;color:#64748b;margin-top:4px;min-height:14px}
+
+/* ── 여행 기록 ── */
+.trip-sec{margin-top:12px;padding:12px;border-radius:14px;background:#f8fafc;border:1px solid #eef2f7}
+.trip-h{display:flex;align-items:baseline;gap:8px;font-size:13px;font-weight:800;color:#1e293b;margin-bottom:6px;flex-wrap:wrap}
+.trip-h b{font-size:17px}
+.trip-h small{font-size:11px;color:#94a3b8;font-weight:600}
+.trip-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.trip-btns .fam-btn{padding:7px 12px;font-size:12px}
+.trip-list summary{font-size:12px;font-weight:700;color:#475569;cursor:pointer;margin-top:8px}
+.trip-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eef2f7;font-size:12.5px}
+.trip-row>span:first-child{flex:none;width:38px;color:#94a3b8;font-size:11px}
+.trip-memo{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trip-memo small{color:#94a3b8}
+.trip-row button{border:none;background:none;color:#cbd5e1;font-size:11px;cursor:pointer;padding:2px 4px}
+.trip-ph{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.trip-ph img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;cursor:zoom-in}
+.trip-chip{display:inline-block;margin-top:6px;font-size:11.5px;font-weight:700;color:#475569;background:#f1f5f9;border-radius:8px;padding:3px 8px}
+
+/* ── 하산 체크인 ── */
+.hike-ban{margin:0 0 10px;padding:11px 14px;border-radius:14px;background:#ecfdf5;border:1.5px solid #6ee7b7}
+.hike-ban b{display:block;font-size:14px;color:#064e3b}
+.hike-ban small{display:block;font-size:12px;color:#047857;margin-top:2px}
+.hike-ban.late{background:#fffbeb;border-color:#fcd34d}
+.hike-ban.late b,.hike-ban.late small{color:#92400e}
+.hike-ban.warn{background:#fef2f2;border-color:#f87171;animation:famPulse 1.6s infinite}
+.hike-ban.warn b,.hike-ban.warn small{color:#991b1b}
+html[data-theme="dark"] #face-ov{filter:invert(1) hue-rotate(180deg)}
