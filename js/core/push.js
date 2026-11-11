@@ -77,6 +77,21 @@
         // Firebase 초기화 후 SW 등록 (defer)
         window.addEventListener('load', () => setTimeout(initSW, 2000));
 
+        // ── 채팅 알림 클릭 → 채팅창 열기 ──
+        // 앱이 떠 있을 때: SW가 OPEN_CHAT 메시지 전달
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', e => {
+                if (e.data && e.data.type === 'OPEN_CHAT' && typeof showSection === 'function') showSection('chat-section');
+            });
+        }
+        // 앱이 꺼져 있을 때: ?open=chat 으로 실행됨
+        if (new URLSearchParams(location.search).get('open') === 'chat') {
+            window.addEventListener('load', () => setTimeout(() => {
+                history.replaceState({ section: 'main-section' }, '', location.pathname);
+                if (typeof showSection === 'function') showSection('chat-section');
+            }, 1500));
+        }
+
         // ── 앱 아이콘 뱃지 (App Badging API) ──
         function setAppBadge(count) {
             if ('setAppBadge' in navigator) {

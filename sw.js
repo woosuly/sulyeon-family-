@@ -1,6 +1,6 @@
 // 설연 Family — Service Worker v7
 // v6: 앱 파일을 폰에 저장 → 인터넷이 없어도 앱이 열림 (문장집·지난 데이터 사용)
-const CACHE_NAME = 'seolyeon-v15';
+const CACHE_NAME = 'seolyeon-v16';
 const BASE = '/sulyeon-family-/';
 // 앱 파일 (폴더 구조 변경 시 함께 수정)
 const APP_FILES = [
@@ -130,12 +130,17 @@ self.addEventListener('push', e => {
 // 알림 클릭
 self.addEventListener('notificationclick', e => {
     e.notification.close();
+    if (e.action === 'dismiss') return;
+    const isChat = (e.notification.tag || '').startsWith('chat');   // 채팅 알림이면 채팅창으로
     e.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
             for (const c of list) {
-                if (c.url.startsWith(self.location.origin + BASE) && 'focus' in c) return c.focus();
+                if (c.url.startsWith(self.location.origin + BASE) && 'focus' in c) {
+                    if (isChat) c.postMessage({ type: 'OPEN_CHAT' });
+                    return c.focus();
+                }
             }
-            return clients.openWindow(BASE);
+            return clients.openWindow(BASE + (isChat ? '?open=chat' : ''));
         })
     );
 });
