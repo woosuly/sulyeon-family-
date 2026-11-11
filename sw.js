@@ -1,6 +1,6 @@
 // 설연 Family — Service Worker v7
 // v6: 앱 파일을 폰에 저장 → 인터넷이 없어도 앱이 열림 (문장집·지난 데이터 사용)
-const CACHE_NAME = 'seolyeon-v13';
+const CACHE_NAME = 'seolyeon-v14';
 const BASE = '/sulyeon-family-/';
 // 앱 파일 (폴더 구조 변경 시 함께 수정)
 const APP_FILES = [
@@ -58,7 +58,7 @@ const NOTIF_OPTIONS = (sender, body) => ({
     body,
     icon:     BASE + 'icon-192.png',
     badge:    BASE + 'icon-192.png',
-    tag:      'chat-message',
+    tag:      'chat-' + Date.now(),   // 메시지마다 새 알림 → 매번 팝업
     renotify: true,
     vibrate:  [200, 100, 200],
     silent:   false,
