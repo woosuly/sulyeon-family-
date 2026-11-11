@@ -170,7 +170,8 @@
                         const section = document.getElementById('chat-section');
                         if (section && section.classList.contains('active')) {
                             renderChatMessages();
-                            markChatRead();
+                            // 실제로 화면을 보고 있을 때만 읽음 처리 (백그라운드에서 알림이 바로 지워지는 문제 방지)
+                            if (document.visibilityState === 'visible') markChatRead();
                         }
                     }, err => {
                         console.error('채팅 리스너 오류:', err.code, err.message);
@@ -456,6 +457,11 @@
                 navigator.clearAppBadge().catch(() => {});
             }
         }
+        // 채팅창을 열어둔 채 앱으로 돌아오면 그때 읽음 처리
+        document.addEventListener('visibilitychange', () => {
+            const s = document.getElementById('chat-section');
+            if (document.visibilityState === 'visible' && s && s.classList.contains('active')) markChatRead();
+        });
 
         /* ── Storage 업로드 ── */
         async function uploadAndSendMedia() {
