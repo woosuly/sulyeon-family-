@@ -16,8 +16,8 @@
                 swReg = await navigator.serviceWorker.register('/sulyeon-family-/sw.js', { scope: '/sulyeon-family-/' });
                 console.log('[SW] 등록 성공');
 
-                // 알림 권한 요청
-                const perm = await Notification.requestPermission();
+                // 알림 권한 확인만 (요청은 '알림 켜기' 버튼에서만 → 자동 요청 반복으로 브라우저가 차단하는 문제 방지)
+                const perm = Notification.permission;
                 console.log('[알림] 권한:', perm);
                 if (perm !== 'granted') return;
 
