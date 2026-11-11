@@ -74,6 +74,10 @@
                 raw = getComputedStyle(document.documentElement).getPropertyValue('--month-header').trim();
             }
             if (!raw) return;
+            // 폰 상단 상태바·하단 내비 색을 헤더 색과 맞춤 (그라디언트는 첫 색)
+            const solid = raw.includes('gradient') ? (raw.match(/#[0-9a-f]{6}/i) || [])[0] : raw;
+            const tcMeta = document.querySelector('meta[name="theme-color"]');
+            if (tcMeta && solid) tcMeta.setAttribute('content', solid);
             // 그라디언트: 투명도 무시하고 그대로 적용
             if (raw.includes('gradient')) {
                 document.documentElement.style.setProperty('--month-header', raw);
