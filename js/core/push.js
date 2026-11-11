@@ -77,6 +77,40 @@
         // Firebase 초기화 후 SW 등록 (defer)
         window.addEventListener('load', () => setTimeout(initSW, 2000));
 
+        // ── 알림 켜기 배너: 이 기기에 권한/구독이 없을 때만 표시 ──
+        // 버튼 탭(사용자 동작)으로 권한 요청 → 브라우저가 팝업을 막지 않음
+        async function famPushBanner() {
+            if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
+            if (document.getElementById('fam-push-banner')) return;
+            const reg = await navigator.serviceWorker.getRegistration('/sulyeon-family-/');
+            const sub = reg && await reg.pushManager.getSubscription();
+            if (Notification.permission === 'granted' && sub) return;
+            const b = document.createElement('div');
+            b.id = 'fam-push-banner';
+            b.style.cssText = 'position:fixed;left:12px;right:12px;bottom:84px;z-index:9999;background:#3a6a96;color:#fff;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;font-size:14px;box-shadow:0 4px 14px rgba(0,0,0,.2)';
+            b.innerHTML = '<span id="fam-push-msg" style="flex:1">이 기기의 채팅 알림이 꺼져 있습니다</span>'
+                + '<button id="fam-push-on" style="background:#fff;color:#3a6a96;border:0;border-radius:8px;padding:7px 12px;font-weight:700">알림 켜기</button>'
+                + '<button id="fam-push-x" style="background:none;color:#fff;border:0;font-size:16px;padding:4px">✕</button>';
+            document.body.appendChild(b);
+            const msg = document.getElementById('fam-push-msg');
+            document.getElementById('fam-push-x').onclick = () => b.remove();
+            document.getElementById('fam-push-on').onclick = async () => {
+                const perm = await Notification.requestPermission();
+                if (perm !== 'granted') {
+                    msg.textContent = perm === 'denied' ? '브라우저에서 알림이 차단됨 → 사이트 권한에서 허용 필요' : '권한 요청이 막힘(일시 차단) → 사이트 권한에서 알림 허용 필요';
+                    return;
+                }
+                if (!localStorage.getItem('chatUser')) { msg.textContent = '채팅에서 사용자를 먼저 선택해 주세요'; return; }
+                msg.textContent = '등록 중…';
+                await initSW();
+                const r = await navigator.serviceWorker.getRegistration('/sulyeon-family-/');
+                const s = r && await r.pushManager.getSubscription();
+                msg.textContent = s ? '알림 등록 완료' : '구독 실패 (브라우저가 푸시를 지원하지 않음)';
+                if (s) setTimeout(() => b.remove(), 2500);
+            };
+        }
+        window.addEventListener('load', () => setTimeout(famPushBanner, 5000));
+
         // ── 채팅 알림 클릭 → 채팅창 열기 ──
         // 앱이 떠 있을 때: SW가 OPEN_CHAT 메시지 전달
         if ('serviceWorker' in navigator) {
