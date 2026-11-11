@@ -111,6 +111,21 @@
         }
         window.addEventListener('load', () => setTimeout(famPushBanner, 5000));
 
+        // ── 알림 표시 테스트: 주소 끝에 ?notiftest=1 → 8초 뒤 이 폰에서 직접 알림 (서버 미경유) ──
+        if (new URLSearchParams(location.search).get('notiftest') === '1') {
+            window.addEventListener('load', async () => {
+                const reg = await navigator.serviceWorker.getRegistration('/sulyeon-family-/');
+                const perm = ('Notification' in window) ? Notification.permission : '미지원';
+                alert('권한: ' + perm + ' / SW: ' + (reg ? '있음' : '없음') + '\n확인 후 8초 안에 홈 화면으로 나가세요.');
+                setTimeout(() => {
+                    if (reg && perm === 'granted') reg.showNotification('💬 알림 테스트', {
+                        body: '이 알림이 화면 위로 떴나요?', tag: 'chat-test-' + Date.now(),
+                        icon: '/sulyeon-family-/icon-192.png', vibrate: [200, 100, 200]
+                    });
+                }, 8000);
+            });
+        }
+
         // ── 채팅 알림 클릭 → 채팅창 열기 ──
         // 앱이 떠 있을 때: SW가 OPEN_CHAT 메시지 전달
         if ('serviceWorker' in navigator) {
