@@ -445,8 +445,12 @@
             updateChatBadge(0);
 
             // SW 알림 + PWA 앱 뱃지 모두 닫기
-            if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-                navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_NOTIF' });
+            // controller가 없을 때(SW 교체 직후 등)도 닫히도록 등록 객체에서 직접 닫음
+            if (navigator.serviceWorker) {
+                navigator.serviceWorker.getRegistration('/sulyeon-family-/')
+                    .then(reg => reg && reg.getNotifications())
+                    .then(ns => (ns || []).forEach(n => n.tag !== 'hike' && n.close()))
+                    .catch(() => {});
             }
             if ('clearAppBadge' in navigator) {
                 navigator.clearAppBadge().catch(() => {});
