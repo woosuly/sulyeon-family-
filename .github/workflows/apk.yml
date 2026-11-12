@@ -1,5 +1,6 @@
 # 안드로이드 앱(APK) 만들기: android-app 폴더가 바뀌면 자동으로 빌드해 '릴리스'에 올림
 # 설치 주소: https://github.com/woosuly/sulyeon-family-/releases/latest/download/seolyeon.apk
+# 서명: release.keystore.enc + Secret ANDROID_KEYSTORE_PASS
 name: 안드로이드 앱 만들기
 on:
   workflow_dispatch:
