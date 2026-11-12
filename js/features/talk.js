@@ -76,12 +76,12 @@ function talkRender() {
             <span class="tk-swap">↔</span>
             <button class="tk-lang them" onclick="talkPickLang()">${T[3]} ${T[1]} <span>▾</span></button>
         </div>
-        ${sug && sug.lang !== talk.them ? `<button class="tk-sug" onclick="talkSetThem('${sug.lang}')">✈️ ${famEsc(sug.loc)} 여행 · ${tLang(sug.lang)[1]}로 바꾸기</button>` : ''}
-        ${!navigator.onLine ? `<div class="tk-sug warn">📴 인터넷 연결 없음 · 저장해 둔 문장집과 ⭐ 즐겨찾기만 쓸 수 있습니다</div>` : talkHasKey() ? '' : `<button class="tk-sug warn" onclick="famOpenSettings()">AI 키를 먼저 설정하세요 (Gemini 권장)</button>`}
-        <div class="tk-seg">${[['conv', fi('chat') + '대화'], ['photo', fi('camera') + '사진'], ['book', fi('book') + '문장집']].map(([k, n]) => `<button class="${talk.tab === k ? 'on' : ''}" onclick="talkTab('${k}')">${n}</button>`).join('')}</div>
+        ${sug && sug.lang !== talk.them ? `<button class="tk-sug" onclick="talkSetThem('${sug.lang}')">${famEsc(sug.loc)} 여행 → ${tLang(sug.lang)[1]}로 바꾸기</button>` : ''}
+        ${!navigator.onLine ? `<div class="tk-sug warn">인터넷 연결 없음 · 저장해 둔 문장집과 내 문장만 쓸 수 있습니다</div>` : talkHasKey() ? '' : `<button class="tk-sug warn" onclick="famOpenSettings()">AI 키를 먼저 설정하세요 (Gemini 권장)</button>`}
+        <div class="tk-seg">${[['conv', fi('chat') + '번역'], ['photo', fi('camera') + '사진'], ['book', fi('book') + '문장집']].map(([k, n]) => `<button class="${talk.tab === k ? 'on' : ''}" onclick="talkTab('${k}')">${n}</button>`).join('')}</div>
         <div class="tk-body" id="tk-body"></div>
         <div class="tk-dock" id="tk-dock" ${talk.tab === 'conv' ? '' : 'style="display:none"'}>
-            <div class="tk-input"><textarea id="tk-txt" rows="1" enterkeyhint="send" placeholder="입력하면 언어를 알아서 판단합니다" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,96)+'px'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();talkSendText()}"></textarea><button onclick="talkSendText()">➤</button></div>
+            <div class="tk-input"><textarea id="tk-txt" rows="1" enterkeyhint="send" placeholder="입력하면 언어를 알아서 판단합니다" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,96)+'px'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();talkSendText()}"></textarea><button onclick="talkSendText()" title="번역">${fi('send')}</button></div>
             <div class="tk-mics">
                 <button class="tk-mic me" id="tk-mic-me" onclick="talkMic('me')"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></b><span>${M[3]} ${M[1]}</span></button>
                 <button class="tk-face-btn" onclick="talkFace()" title="마주보기">↕<small>마주보기</small></button>
@@ -99,8 +99,7 @@ function talkBody() {
         b.innerHTML = list.length ? list.map(talkMsgHtml).join('') + '<div id="tk-live"></div>' : `
             <div class="tk-empty">
                 <b>${tLang(talk.them)[3]} ${tLang(talk.them)[1]} 대화</b>
-                <p>아래 마이크를 누르고 말하면 번역해서 읽어줍니다.<br>왼쪽은 우리, 오른쪽은 상대방 버튼입니다.</p>
-                <div class="tk-empty-btns"><button onclick="talkFace()">${fi('swap')}마주보기로 대화</button><button onclick="talkTab('book')">${fi('book')}상황별 문장</button><button onclick="talkTab('photo')">${fi('camera')}메뉴판 번역</button></div>
+                <p>글로 쓰거나 아래 마이크를 누르고 말하면 번역해서 읽어줍니다.<br>왼쪽은 우리, 오른쪽은 상대방 버튼입니다.</p>
             </div><div id="tk-live"></div>`;
         b.scrollTop = b.scrollHeight;
     } else if (talk.tab === 'photo') talkPhotoBody(b);
@@ -112,7 +111,7 @@ function talkMsgHtml(h) {
         <div class="tk-src">${famEsc(h.src)}</div>
         <div class="tk-tr">${famEsc(h.tr)}</div>
         ${h.pron ? `<div class="tk-pron">[${famEsc(h.pron)}]</div>` : ''}
-        <div class="tk-act"><button onclick="talkSpeak(talkH('${h.id}').tr,'${to}')">🔊</button><button onclick="talkBig('${h.id}')">⤢ 크게</button>${mine ? `<button onclick="talkFavToggle('${h.id}')">${talkIsFav(h.lang, h.tr) ? '★' : '☆'}</button>` : ''}</div>
+        <div class="tk-act"><button onclick="talkSpeak(talkH('${h.id}').tr,'${to}')" title="읽기">${fi('speaker')}</button><button onclick="talkBig('${h.id}')">${fi('expand')}크게</button>${mine ? `<button class="${talkIsFav(h.lang, h.tr) ? 'on' : ''}" onclick="talkFavToggle('${h.id}')">${fi('star')}${talkIsFav(h.lang, h.tr) ? '내 문장' : '저장'}</button>` : ''}</div>
     </div>`;
 }
 const talkH = id => talk.hist.find(h => h.id === id) || {};
@@ -187,7 +186,7 @@ function talkBig(id, data) {
     const h = data || talkH(id), to = data ? data.to : (h.side === 'me' ? h.lang : 'ko');
     let o = document.getElementById('tk-big'); if (!o) { o = document.createElement('div'); o.id = 'tk-big'; document.body.appendChild(o); }
     o.innerHTML = `<div class="tk-big-in" id="tk-big-in"><div class="tk-big-tr">${famEsc(h.tr)}</div>${h.src ? `<div class="tk-big-src">${famEsc(h.src)}</div>` : ''}</div>
-        <div class="tk-big-bar"><button onclick="document.getElementById('tk-big-in').classList.toggle('flip')">🔄 뒤집기</button><button onclick="talkSpeak(${famEsc(JSON.stringify(h.tr))},'${to}')">🔊 읽기</button><button onclick="talkBigClose()">✕ 닫기</button></div>`;
+        <div class="tk-big-bar"><button onclick="document.getElementById('tk-big-in').classList.toggle('flip')">뒤집기</button><button onclick="talkSpeak(${famEsc(JSON.stringify(h.tr))},'${to}')">읽기</button><button onclick="talkBigClose()">닫기</button></div>`;
     o.style.display = 'flex'; talkWake(true); history.pushState({ tkBig: 1 }, '', '');
 }
 function talkBigClose() { const o = document.getElementById('tk-big'); if (o) o.style.display = 'none'; talkWake(false); }
@@ -202,9 +201,9 @@ function talkFace() {
         <div class="tkf-out" id="tkf-out-${side}"><span class="tkf-ph">${side === 'me' ? '상대방 말이 여기에 번역됩니다' : famEsc(TALK_TAP[L[0]] || TALK_TAP.en) + ' ↓'}</span></div>
         <div class="tkf-pron" id="tkf-pron-${side}"></div>
         <div class="tkf-said" id="tkf-said-${side}"></div>
-        <button class="tkf-mic" id="tkf-mic-${side}" onclick="talkMic('${side}')">🎙 ${famEsc(TALK_TAP[L[0]] || TALK_TAP.en)}</button>
+        <button class="tkf-mic" id="tkf-mic-${side}" onclick="talkMic('${side}')">${fi('mic')} ${famEsc(TALK_TAP[L[0]] || TALK_TAP.en)}</button>
     </div>`;
-    o.innerHTML = half('them', T) + `<div class="tkf-mid"><button onclick="talkFaceClose()">✕ 닫기</button><span>${M[3]} ↔ ${T[3]}</span><button onclick="talk.auto=!talk.auto;tLS('talkAuto',talk.auto);this.textContent=talk.auto?'🔊 켜짐':'🔇 꺼짐'">${talk.auto ? '🔊 켜짐' : '🔇 꺼짐'}</button></div>` + half('me', M);
+    o.innerHTML = half('them', T) + `<div class="tkf-mid"><button onclick="talkFaceClose()">닫기</button><span>${M[3]} ↔ ${T[3]}</span><button onclick="talk.auto=!talk.auto;tLS('talkAuto',talk.auto);this.textContent=talk.auto?'읽기 켜짐':'읽기 꺼짐'">${talk.auto ? '읽기 켜짐' : '읽기 꺼짐'}</button></div>` + half('me', M);
     o.style.display = 'flex'; talkWake(true); history.pushState({ tkFace: 1 }, '', '');
 }
 function talkFaceOut(side, text, ph, pron) {
@@ -223,8 +222,8 @@ function talkWake(on) {
 function talkPhotoBody(b) {
     const P = talk.photo, T = tLang(talk.them);
     b.innerHTML = `<div class="tk-pad">
-        <div class="tk-chips">${[['menu', '🍽 메뉴판'], ['sign', '🪧 안내문·표지판'], ['text', '📄 일반 글']].map(([k, n]) => `<button class="${talk.photoMode === k ? 'on' : ''}" onclick="talk.photoMode='${k}';talkBody()">${n}</button>`).join('')}</div>
-        <div class="tk-photo-btns"><button class="fam-btn pri" onclick="document.getElementById('tk-cam').click()">📷 촬영</button><button class="fam-btn" onclick="document.getElementById('tk-gal').click()">🖼 사진 선택</button></div>
+        <div class="tk-chips">${[['menu', '메뉴판'], ['sign', '안내문·표지판'], ['text', '일반 글']].map(([k, n]) => `<button class="${talk.photoMode === k ? 'on' : ''}" onclick="talk.photoMode='${k}';talkBody()">${n}</button>`).join('')}</div>
+        <div class="tk-photo-btns"><button class="fam-btn pri" onclick="document.getElementById('tk-cam').click()">${fi('camera')} 촬영</button><button class="fam-btn" onclick="document.getElementById('tk-gal').click()">${fi('image')} 사진 선택</button></div>
         <input type="file" id="tk-cam" accept="image/*" capture="environment" style="display:none" onchange="talkPhoto(this)">
         <input type="file" id="tk-gal" accept="image/*" style="display:none" onchange="talkPhoto(this)">
         <div id="tk-photo-out">${P ? talkPhotoHtml(P) : `<div class="tk-empty"><p>${talk.photoMode === 'menu' ? '메뉴판을 찍으면 메뉴마다 어떤 음식인지, 맵거나 해산물이 들었는지 알려주고 주문 문장도 만들어 줍니다.' : '찍은 글을 한국어로 옮기고 핵심을 정리해 줍니다.'}</p></div>`}</div>
@@ -251,13 +250,13 @@ JSON: {"summary":"한 줄 요약","items":[{"orig":"원문 줄","ko":"한국어"
 function talkPhotoHtml(P) {
     const items = P.items || [];
     return `<img class="tk-thumb" src="${P.thumb}" onclick="openLightbox(this.src)">
-        ${P.summary ? `<div class="tk-sum">${famEsc(P.summary)}</div>` : ''}${P.tip ? `<div class="tk-sum">💡 ${famEsc(P.tip)}</div>` : ''}
+        ${P.summary ? `<div class="tk-sum">${famEsc(P.summary)}</div>` : ''}${P.tip ? `<div class="tk-sum">${famEsc(P.tip)}</div>` : ''}
         ${items.map((x, i) => P.mode === 'menu' ? `<div class="tk-menu">
             <div class="tk-menu-h"><b>${famEsc(x.ko || '')}</b>${x.price ? `<span>${famEsc(x.price)}</span>` : ''}</div>
             <div class="tk-menu-o">${famEsc(x.orig || '')}</div>
             ${x.desc ? `<div class="tk-menu-d">${famEsc(x.desc)}</div>` : ''}
             ${(x.tags || []).length ? `<div class="tk-tags">${x.tags.map(t => `<i class="${/매운|해산|견과|유제|글루텐|돼지|술/.test(t) ? 'w' : ''}">${famEsc(t)}</i>`).join('')}</div>` : ''}
-            <div class="tk-act"><button onclick="talkSpeak(${famEsc(JSON.stringify(x.orig || ''))},'${P.lang}')">🔊 메뉴 이름</button><button onclick="talkOrder(${i})">🙋 이거 주세요</button></div>
+            <div class="tk-act"><button onclick="talkSpeak(${famEsc(JSON.stringify(x.orig || ''))},'${P.lang}')">${fi('speaker')}메뉴 이름</button><button onclick="talkOrder(${i})">이거 주세요</button></div>
         </div>` : `<div class="tk-line"><div class="tk-menu-o">${famEsc(x.orig || '')}</div><div>${famEsc(x.ko || '')}</div></div>`).join('')}`;
 }
 async function talkOrder(i) {
@@ -276,17 +275,18 @@ function talkBookBody(b) {
     const T = tLang(talk.them), favs = talk.favs.filter(f => f.lang === talk.them);
     if (talk.sit) {
         const S = TALK_SITS.find(s => s[0] === talk.sit), pack = tLS(talkPackKey(talk.sit));
-        b.innerHTML = `<div class="tk-pad"><div class="tk-book-h"><button class="fam-btn" onclick="talk.sit='';talkBody()">◀ 상황</button><b>${S[1]} ${S[2]}</b><button class="fam-btn" onclick="talkPackMake('${talk.sit}',true)">↻ 새로</button></div>
+        b.innerHTML = `<div class="tk-pad"><div class="tk-book-h"><button class="fam-btn" onclick="talk.sit='';talkBody()">◀ 상황</button><b>${S[2]}</b><button class="fam-btn" onclick="talkPackMake('${talk.sit}',true)">새로 만들기</button></div>
             <div id="tk-pack">${pack ? talkPhraseList(pack.items, 'p') : '<div class="tk-empty"><span class="fam-spin"></span>문장을 준비하는 중…</div>'}</div></div>`;
         if (!pack) { if (navigator.onLine) talkPackMake(talk.sit, false); else document.getElementById('tk-pack').innerHTML = '<div class="tk-empty">이 상황 문장은 아직 저장되지 않았습니다. 인터넷이 될 때 받아두세요.</div>'; }
         return;
     }
     const have = TALK_SITS.filter(s => tLS(talkPackKey(s[0]))).length;
     b.innerHTML = `<div class="tk-pad">
-        ${favs.length ? `<div class="tk-book-sec">⭐ 즐겨찾기 <small>둘이 함께 보는 목록</small></div>${talkPhraseList(favs, 'f')}` : ''}
-        <div class="tk-book-sec">${T[3]} ${T[1]} 상황별 문장 <small>${have}/${TALK_SITS.length} 저장됨</small></div>
-        <div class="tk-sits">${TALK_SITS.map(([k, ic, n]) => `<button onclick="talk.sit='${k}';talkBody()"><span>${ic}</span>${n}${tLS(talkPackKey(k)) ? '<i>✓</i>' : ''}</button>`).join('')}</div>
-        <button class="fam-btn pri" style="width:100%;margin-top:12px" onclick="talkPackAll(this)">✈️ 여행 전에 전부 받아두기 (오프라인용)</button>
+        <div class="tk-book-sec tk-sec-row"><span>내 문장 <small>둘이 함께 보는 목록 · ${favs.length}개</small></span><button class="fam-btn" onclick="talkMyAdd()">${fi('plus')} 추가</button></div>
+        ${favs.length ? talkPhraseList(favs, 'f') : `<div class="fam-note">자주 쓸 말을 직접 넣어 두세요. 한국어로 쓰면 ${T[1]} 번역과 발음을 붙여 저장합니다.</div>`}
+        <div class="tk-book-sec">${T[1]} 상황별 문장 <small>${have}/${TALK_SITS.length} 저장됨</small></div>
+        <div class="tk-sits">${TALK_SITS.map(([k, ic, n]) => `<button onclick="talk.sit='${k}';talkBody()">${n}${tLS(talkPackKey(k)) ? '<i>✓</i>' : ''}</button>`).join('')}</div>
+        <button class="fam-btn pri" style="width:100%;margin-top:12px" onclick="talkPackAll(this)">여행 전에 전부 받아두기 (오프라인용)</button>
         <div class="fam-note">한 번 받아두면 인터넷이 없어도 문장 보기와 읽어주기가 됩니다. 아내분 폰에서도 다시 만들지 않고 바로 받습니다.</div>
     </div>`;
 }
@@ -296,7 +296,7 @@ function talkPhraseList(items, kind) {
         <div class="tk-ph-ko">${famEsc(x.ko || '')}</div>
         <div class="tk-ph-tr">${famEsc(x.tr || '')}</div>
         ${x.pron ? `<div class="tk-pron">[${famEsc(x.pron)}]</div>` : ''}
-        <div class="tk-act"><button onclick="talkPhr('${kind}',${i},'say')">🔊</button><button onclick="talkPhr('${kind}',${i},'big')">⤢ 크게</button><button onclick="talkPhr('${kind}',${i},'fav')">${talkIsFav(talk.them, x.tr) ? '★' : '☆'}</button></div>
+        <div class="tk-act"><button onclick="talkPhr('${kind}',${i},'say')" title="읽기">${fi('speaker')}</button><button onclick="talkPhr('${kind}',${i},'big')">${fi('expand')}크게</button><button class="${talkIsFav(talk.them, x.tr) ? 'on' : ''}" onclick="talkPhr('${kind}',${i},'fav')">${fi('star')}${kind === 'f' ? '빼기' : talkIsFav(talk.them, x.tr) ? '내 문장' : '저장'}</button></div>
     </div>`).join('');
 }
 function talkPhr(kind, i, act) {
@@ -328,10 +328,33 @@ JSON: {"items":[{"ko":"한국어","tr":"${T[1]}","pron":"${T[1]} 문장을 한�
 async function talkPackAll(btn) {
     btn.disabled = true; let n = 0;
     for (const [k, ic, nm] of TALK_SITS) {
-        btn.textContent = `받는 중… ${ic} ${nm} (${++n}/${TALK_SITS.length})`;
+        btn.textContent = `받는 중… ${nm} (${++n}/${TALK_SITS.length})`;
         if (!tLS(talkPackKey(k))) await talkPackMake(k, false);
     }
     famToast('상황별 문장을 모두 저장했습니다'); talkBody();
+}
+
+// ── 내 문장 직접 추가: 한국어 → 상대 언어 번역·발음 붙여 talkFavs에 저장 ──
+function talkMyAdd() {
+    const T = tLang(talk.them);
+    famSheet(`<div class="fam-h"><b>내 문장 추가 · ${T[1]}</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
+        <textarea id="tk-my" rows="3" class="tk-my-in" placeholder="예) 땅콩 알레르기가 있어요"></textarea>
+        <div class="fam-note">한국어로 쓰면 ${T[1]} 번역과 한글 발음을 붙여 저장합니다. 두 사람 폰에 함께 보입니다.</div>
+        <button class="fam-btn pri" style="width:100%" id="tk-my-go" onclick="talkMySave()">번역해서 저장</button>`);
+    setTimeout(() => { const el = document.getElementById('tk-my'); if (el) el.focus(); }, 100);
+}
+async function talkMySave() {
+    const el = document.getElementById('tk-my'), btn = document.getElementById('tk-my-go'), ko = (el && el.value || '').trim();
+    if (!ko) return;
+    if (!talkHasKey()) { famOpenSettings(); return; }
+    btn.disabled = true; btn.textContent = '번역 중…';
+    try {
+        const lang = talk.them, r = await talkTranslate(ko, 'ko', lang);
+        if (!r.tr) throw new Error('번역하지 못했습니다');
+        const id = 'tf_' + Date.now();
+        await db.collection('talkFavs').doc(id).set({ id, lang, ko, tr: r.tr, pron: r.pron || '', by: famUser(), at: Date.now(), mine: true });
+        famSheetClose(); famToast('내 문장에 저장했습니다');
+    } catch (e) { btn.disabled = false; btn.textContent = '번역해서 저장'; famToast(e.message); }
 }
 
 // ── 즐겨찾기 (부부 공유) ──
@@ -342,8 +365,8 @@ function talkFavListen() {
 const talkIsFav = (lang, tr) => talk.favs.some(f => f.lang === lang && f.tr === tr);
 function talkFavSet(lang, ko, tr, pron) {
     const ex = talk.favs.find(f => f.lang === lang && f.tr === tr);
-    if (ex) { db.collection('talkFavs').doc(ex.id).delete().catch(e => famToast(e.message)); famToast('즐겨찾기에서 뺐습니다'); }
-    else { const id = 'tf_' + Date.now(); db.collection('talkFavs').doc(id).set({ id, lang, ko: ko || '', tr, pron: pron || '', by: famUser(), at: Date.now() }).catch(e => famToast(e.message)); famToast('⭐ 즐겨찾기에 넣었습니다'); }
+    if (ex) { db.collection('talkFavs').doc(ex.id).delete().catch(e => famToast(e.message)); famToast('내 문장에서 뺐습니다'); }
+    else { const id = 'tf_' + Date.now(); db.collection('talkFavs').doc(id).set({ id, lang, ko: ko || '', tr, pron: pron || '', by: famUser(), at: Date.now() }).catch(e => famToast(e.message)); famToast('내 문장에 저장했습니다'); }
     setTimeout(talkBody, 300);
 }
 function talkFavToggle(id) { const h = talkH(id); talkFavSet(h.lang, h.src, h.tr, h.pron); }

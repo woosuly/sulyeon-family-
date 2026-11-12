@@ -118,3 +118,21 @@
 .tk-phrase .tk-act button{background:#f1f5f9}
 
 html[data-theme="dark"] #tk-face,html[data-theme="dark"] .tk-mic,html[data-theme="dark"] .tk-input button{filter:invert(1) hue-rotate(180deg)}
+/* 정리: 안내 배너는 작은 글 링크, 버튼은 선 아이콘 */
+.tk-sug{border:none;background:none;padding:2px 2px 6px;font-size:12.5px;font-weight:700;color:var(--month-header,#2b3a55);text-decoration:underline;text-underline-offset:3px}
+.tk-sug.warn{border:none;background:none;color:#b45309}
+.tk-act button{display:inline-flex;align-items:center;gap:3px}
+.tk-act button .fi{width:15px;height:15px}
+.tk-act button.on{color:var(--month-header,#2b3a55)}
+.tk-act button.on .fi{fill:currentColor}
+.tk-input button{display:flex;align-items:center;justify-content:center;background:var(--month-header,#1e293b)}
+.tk-input button .fi{width:18px;height:18px}
+.tk-sec-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tk-sec-row .fam-btn{padding:6px 10px;font-size:12px;display:inline-flex;align-items:center;gap:3px}
+.tk-sits button{padding:14px 4px}
+.tk-photo-btns .fam-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.tkf-mic .fi{width:18px;height:18px}
+.tk-my-in{width:100%;box-sizing:border-box;border:1.5px solid #e2e8f0;border-radius:12px;padding:10px 12px;font-size:15px;font-family:inherit;resize:vertical;margin:6px 0}
+.tk-seg button{display:inline-flex;align-items:center;justify-content:center;gap:5px}
+
+.tk-lang.them{border-color:var(--month-header,#2b3a55);background:#fff;color:var(--month-header,#2b3a55)}

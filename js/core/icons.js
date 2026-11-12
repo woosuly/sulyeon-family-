@@ -23,6 +23,10 @@ const FI = {
  "camera": "<path d=\"M4 8h3l2-3h6l2 3h3v11H4z\"/><circle cx=\"12\" cy=\"13\" r=\"3.5\"/>",
  "mic": "<rect x=\"9\" y=\"3\" width=\"6\" height=\"11\" rx=\"3\"/><path d=\"M5 11a7 7 0 0 0 14 0M12 18v3\"/>",
  "book": "<path d=\"M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z\"/><path d=\"M4 19V5\"/>",
- "swap": "<path d=\"M7 4v16M7 4L3 8M7 4l4 4\"/><path d=\"M17 20V4M17 20l-4-4M17 20l4-4\"/>"
+ "swap": "<path d=\"M7 4v16M7 4L3 8M7 4l4 4\"/><path d=\"M17 20V4M17 20l-4-4M17 20l4-4\"/>",
+ "speaker": "<path d=\"M11 5L6 9H3v6h3l5 4z\"/><path d=\"M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13\"/>",
+ "expand": "<path d=\"M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7\"/>",
+ "star": "<path d=\"M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z\"/>",
+ "plus": "<path d=\"M12 5v14M5 12h14\"/>"
 };
 function fi(n, cls) { return '<svg class="fi' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (FI[n] || '') + '</svg>'; }
