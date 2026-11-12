@@ -171,7 +171,31 @@
             const go = r => { if (r && r.k === 'chat' && typeof showSection === 'function') showSection('chat-section'); };
             N.takeLaunchPush().then(go).catch(() => {});
             N.addListener('pushOpen', go);
+            famBackBind();
             famApkUpdateCheck();
+        }
+        // 안드로이드 뒤로가기 버튼 → 웹의 뒤로가기(popstate) 처리와 연결
+        //  열린 창·하위 화면이 있으면 하나 닫고, 홈이면 앱을 백그라운드로
+        function famBackBind() {
+            const A = famPlug('App');
+            if (!A || famBackBind.done) return;
+            famBackBind.done = true;
+            let waiting = false;
+            window.addEventListener('popstate', () => { waiting = false; });
+            const overlayOpen = () => ['fam-av-zoom', 'fam-sheet', 'map-ov', 'tk-big', 'fam-settings', 'tk-face', 'master-modal', 'gemini-window', 'profile-modal']
+                .some(id => { const el = document.getElementById(id); return el && el.style.display === 'flex'; })
+                || ['sch-detail-modal', 'sch-action-sheet', 'travel-detail-modal', 'asset-day-modal'].some(id => { const el = document.getElementById(id); return el && !el.classList.contains('hidden'); })
+                || (() => { const lb = document.getElementById('lightbox'); return lb && lb.style.display && lb.style.display !== 'none'; })()
+                || (() => { const ep = document.getElementById('chat-emoji-panel'); return ep && ep.style.display !== 'none'; })()
+                || (() => { const pd = document.getElementById('photo-detail-view'); return pd && !pd.classList.contains('hidden'); })();
+            const atHome = () => { const m = document.getElementById('main-section'); return m && m.classList.contains('active'); };
+            A.addListener('backButton', () => {
+                if (!overlayOpen() && atHome()) { A.minimizeApp(); return; }
+                waiting = true;
+                history.back();
+                // 웹 기록이 없어 아무 일도 안 일어나면 직접 처리 (창 닫기 → 홈)
+                setTimeout(() => { if (waiting) { waiting = false; window.dispatchEvent(new PopStateEvent('popstate', { state: { section: 'main-section' } })); } }, 250);
+            });
         }
         async function famApkUpdateCheck() {
             try {
