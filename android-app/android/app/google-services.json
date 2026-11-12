@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "143116408143",
+    "firebase_url": "https://seolyeon-family-seoul-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "seolyeon-family-seoul",
+    "storage_bucket": "seolyeon-family-seoul.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:143116408143:android:a6300245600e4bdfcd213a",
+        "android_client_info": {
+          "package_name": "com.seolyeon.family"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "143116408143-rdf4alrv2ttf1su8ilvfdu0bercfc08b.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDrU6MD6LVFQbXyFBBNDC_VuimbKcl6MVE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "143116408143-rdf4alrv2ttf1su8ilvfdu0bercfc08b.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
