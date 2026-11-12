@@ -63,6 +63,10 @@
         .page-section { display: none; width: 100%; flex-direction: column; align-items: center; animation: fadeIn 0.3s ease-out; }
         .page-section.active { display: flex !important; min-height: calc(100dvh - 56px); }
         #main-section.active { height: calc(100dvh - 56px); min-height: unset; overflow: hidden; display: flex; flex-direction: column; align-items: stretch; }
+        /* 안드로이드 앱(화면 끝까지 그림): 상태바 높이만큼 헤더를 내림 — 브라우저에서는 0 */
+        header { box-sizing: border-box; height: calc(56px + env(safe-area-inset-top, 0px)); padding-top: env(safe-area-inset-top, 0px); }
+        .page-section.active { min-height: calc(100dvh - 56px - env(safe-area-inset-top, 0px)); }
+        #main-section.active { height: calc(100dvh - 56px - env(safe-area-inset-top, 0px)); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         /* ═══ 날짜·날씨 1줄 배너 ═══ */
@@ -312,7 +316,7 @@
         /* ── 채팅 배경 ── */
         .chat-bg    { position:absolute; inset:0; z-index:0; border-radius:inherit; overflow:hidden; pointer-events:none; }
         
-        .chat-wrap  { position:relative; z-index:3; display:flex; flex-direction:column; height:calc(100svh - 70px); overflow:hidden; }
+        .chat-wrap  { position:relative; z-index:3; display:flex; flex-direction:column; height:calc(100svh - 70px - env(safe-area-inset-top, 0px)); overflow:hidden; }
 
         /* ── 채팅 배너 뱃지 ── */
 
