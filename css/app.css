@@ -127,6 +127,8 @@
 
         /* 배경 설정 버튼 (헤더 우측) */
         .footer-info { width: 100%; text-align: right; margin-top: 10px; font-size: clamp(9px, 1vw, 11px); color: rgba(0,0,0,0.22); line-height: 1.6; }
+        .kb-open .footer-info { visibility: hidden; }   /* 키보드가 열리면 버전 표시 숨김 */
+        #chat-unread-badge { position: absolute; visibility: hidden; pointer-events: none; }   /* 안 읽은 수 전달용(화면에 숫자 안 보이게) */
 
         /* ── 공통 버튼/카드 ── */
         .btn-action {

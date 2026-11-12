@@ -86,3 +86,6 @@
     setTimeout(famVerCheck, 5000);
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') famVerCheck(); });
 
+// 입력창에 글을 쓰는 동안(키보드 열림) 표시용 클래스
+document.addEventListener('focusin', e => { if (e.target.matches && e.target.matches('input,textarea,[contenteditable="true"]')) document.documentElement.classList.add('kb-open'); });
+document.addEventListener('focusout', () => document.documentElement.classList.remove('kb-open'));
