@@ -62,10 +62,10 @@
         const shop = (famShopItems || []).filter(i => !i.done);
         const man = n => n >= 10000 ? `${Math.round(n / 10000).toLocaleString('ko-KR')}만원` : `${n.toLocaleString('ko-KR')}원`;
         el.innerHTML = `
-            <div class="ht-tile" onclick="showSection('schedule-section')"><small>📅 오늘 일정</small><b>${sch.length ? sch.length + '건' : '없음'}</b><span>${nx ? famEsc((nx.startTime ? nx.startTime + ' ' : '') + (nx.memo || '')) : '&nbsp;'}</span></div>
-            <div class="ht-tile" onclick="showSection('asset-section')"><small>💰 ${+ym.slice(5)}월 지출</small><b>${man(exp)}</b><span>${(() => { const bt = typeof budgetTotal === 'function' ? budgetTotal() : 0; if (!bt) return '&nbsp;'; const sp = budgetSpent(ym), used = Object.keys(famBudget).reduce((a, c) => a + (sp[c] || 0), 0), p = Math.round(used / bt * 100); return `<span style="color:${budgetColor(p)};font-weight:700">예산 ${p}%</span>`; })()}</span></div>
-            <div class="ht-tile" onclick="showSection('travel-section')"><small>✈️ 다음 여행</small><b>${trip ? (dd > 0 ? 'D-' + dd : '진행 중') : '없음'}</b><span>${trip ? famEsc(trip.loc || '') : '&nbsp;'}</span></div>
-            <div class="ht-tile" onclick="showSection('shop-section')"><small>🛒 장보기</small><b>${shop.length ? shop.length + '개' : '없음'}</b><span>${shop.length ? famEsc(shop.slice(0, 3).map(i => i.text).join(', ')) : '&nbsp;'}</span></div>`;
+            <div class="ht-tile" onclick="showSection('schedule-section')"><small>${fi('calendar')}오늘 일정</small><b>${sch.length ? sch.length + '건' : '없음'}</b><span>${nx ? famEsc((nx.startTime ? nx.startTime + ' ' : '') + (nx.memo || '')) : '&nbsp;'}</span></div>
+            <div class="ht-tile" onclick="showSection('asset-section')"><small>${fi('wallet')}${+ym.slice(5)}월 지출</small><b>${man(exp)}</b><span>${(() => { const bt = typeof budgetTotal === 'function' ? budgetTotal() : 0; if (!bt) return '&nbsp;'; const sp = budgetSpent(ym), used = Object.keys(famBudget).reduce((a, c) => a + (sp[c] || 0), 0), p = Math.round(used / bt * 100); return `<span style="color:${budgetColor(p)};font-weight:700">예산 ${p}%</span>`; })()}</span></div>
+            <div class="ht-tile" onclick="showSection('travel-section')"><small>${fi('plane')}다음 여행</small><b>${trip ? (dd > 0 ? 'D-' + dd : '진행 중') : '없음'}</b><span>${trip ? famEsc(trip.loc || '') : '&nbsp;'}</span></div>
+            <div class="ht-tile" onclick="showSection('shop-section')"><small>${fi('cart')}장보기</small><b>${shop.length ? shop.length + '개' : '없음'}</b><span>${shop.length ? famEsc(shop.slice(0, 3).map(i => i.text).join(', ')) : '&nbsp;'}</span></div>`;
     }
     function famHomeReportWatch() { try { db.collection('budgetReports').doc(rptPrevYM(1)).onSnapshot(d => { rptHomeDoc = d.exists ? d.data() : null; famHomeBanners(); }, () => {}); } catch (e) {} }
 

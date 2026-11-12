@@ -121,7 +121,7 @@
     let famRec = null;
     function famMicSwap() {
         const b = document.getElementById('home-cmd-go'), v = (document.getElementById('home-cmd-input') || {}).value || ''; if (!b) return;
-        b.textContent = famRec ? '■' : (!v.trim() && FamSR) ? '🎤' : '➤'; b.classList.toggle('rec', !!famRec);
+        b.innerHTML = famRec ? '■' : (!v.trim() && FamSR) ? fi('mic') : fi('send'); b.classList.toggle('rec', !!famRec);
     }
     function famGoBtn() {
         const el = document.getElementById('home-cmd-input');

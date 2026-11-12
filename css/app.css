@@ -332,7 +332,8 @@
         /* ── 채팅 배경 ── */
         .chat-bg    { position:absolute; inset:0; z-index:0; border-radius:inherit; overflow:hidden; pointer-events:none; }
         
-        .chat-wrap  { position:relative; z-index:3; display:flex; flex-direction:column; height:calc(100svh - 70px - env(safe-area-inset-top, 0px)); overflow:hidden; }
+        /* 화면 높이 - 헤더 - 상태바 - 바깥 여백·카드 여백(위아래) → 입력줄이 하단 바에 닿지 않게 */
+        .chat-wrap  { position:relative; z-index:3; display:flex; flex-direction:column; height:calc(100dvh - 56px - env(safe-area-inset-top, 0px) - 2 * clamp(8px,1.5vw,20px) - 2 * clamp(12px,2vw,20px) - 4px); overflow:hidden; }
 
         /* ── 채팅 배너 뱃지 ── */
 
@@ -744,4 +745,27 @@
         @keyframes timPulse{0%,100%{box-shadow:0 0 0 0 rgba(59,130,246,0.4);}50%{box-shadow:0 0 0 8px rgba(59,130,246,0);}}
 
         /* 스와이프 아이콘 버튼 */
+
+/* ── 선 아이콘 (이모지 대신) ── */
+.fi { width:1.15em; height:1.15em; flex:none; vertical-align:-0.2em; }
+.drawer-item .fi { width:20px; height:20px; color:var(--month-header); margin-right:2px; }
+header button .fi { width:22px; height:22px; }
+.btn-home .fi { width:15px; height:15px; }
+.fi-title { display:flex; color:var(--month-header); }
+.fi-title .fi { width:22px; height:22px; }
+.ff-tools button { display:inline-flex; align-items:center; gap:4px; }
+.home-cmd-btn .fi { width:22px; height:22px; }
+.ht-tile small { display:inline-flex; align-items:center; gap:4px; }
+.ht-tile small .fi { color:var(--month-header); }
+.tk-seg button, .tk-empty-btns button { display:inline-flex; align-items:center; justify-content:center; gap:5px; }
+
+/* 채팅 입력줄 높이 축소 + 위 구분선 */
+.chat-input-bar { padding:8px 0 0; gap:6px; align-items:center; border-top:1px solid #e2e8f0; }
+.chat-input-wrap { min-height:40px; padding:4px 6px 4px 12px; border-radius:20px; align-items:center; }
+.chat-input-wrap textarea { min-height:22px; padding:5px 0; line-height:1.4; font-size:15px; }
+.chat-send-btn { width:40px; height:40px; }
+.chat-send-btn svg { width:20px; height:20px; }
+.chat-pm-btn { width:36px; height:40px; }
+.chat-newline-btn { align-self:center; }
+header button .fi { color:#fff; }
 

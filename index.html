@@ -28,6 +28,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="css/app.css">
 
+    <script src="js/core/icons.js"></script>
     <script src="js/core/push.js"></script>
 </head>
 <body>
@@ -45,21 +46,21 @@
             </div>
         </div>
         <nav style="flex:1;overflow-y:auto;padding:10px 8px;">
-            <div class="drawer-item active" id="di-main"       onclick="drawerGo('main-section')">🏠 <span>홈</span></div>
-            <div class="drawer-item" id="di-schedule"          onclick="drawerGo('schedule-section')">📅 <span>일정</span></div>
-            <div class="drawer-item" id="di-asset"             onclick="drawerGo('asset-section')">💰 <span>가계부</span></div>
-            <div class="drawer-item" id="di-photo"             onclick="drawerGo('photo-section')">📸 <span>앨범</span></div>
-            <div class="drawer-item" id="di-travel"            onclick="drawerGo('travel-section')">✈️ <span>여행 &amp; 여가</span></div>
-            <div class="drawer-item" id="di-trans"             onclick="drawerGo('translator-section')">🌐 <span>번역 · 통역</span></div>
-            <div class="drawer-item" id="di-chat"              onclick="drawerGo('chat-section')">🫧 <span>채팅</span><span id="drw-badge" style="display:none;background:#ef4444;color:white;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:800;margin-left:auto;"></span></div>
-            <div class="drawer-item" id="di-shop"              onclick="drawerGo('shop-section')">🛒 <span>쇼핑 · 장보기</span></div>
-            <div class="drawer-item" id="di-save"              onclick="drawerGo('save-section')">🎯 <span>저축 · 정기이체</span></div>
+            <div class="drawer-item active" id="di-main"       onclick="drawerGo('main-section')"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg><span>홈</span></div>
+            <div class="drawer-item" id="di-schedule"          onclick="drawerGo('schedule-section')"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>일정</span></div>
+            <div class="drawer-item" id="di-asset"             onclick="drawerGo('asset-section')"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h12v4"/><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M16 13.5h2"/></svg><span>가계부</span></div>
+            <div class="drawer-item" id="di-photo"             onclick="drawerGo('photo-section')"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg><span>앨범</span></div>
+            <div class="drawer-item" id="di-travel"            onclick="drawerGo('travel-section')"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 13.5L3 11l1.5-1.5 8 1 4-4.5c1-1 2.6-1.4 3.2-.8s.2 2.2-.8 3.2l-4.5 4 1 8L14 21.5l-2.5-7.5"/><path d="M6 17l-2 .5 1.5 1.5"/></svg><span>여행 &amp; 여가</span></div>
+            <div class="drawer-item" id="di-trans"             onclick="drawerGo('translator-section')"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><span>번역 · 통역</span></div>
+            <div class="drawer-item" id="di-chat"              onclick="drawerGo('chat-section')"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg><span>채팅</span><span id="drw-badge" style="display:none;background:#ef4444;color:white;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:800;margin-left:auto;"></span></div>
+            <div class="drawer-item" id="di-shop"              onclick="drawerGo('shop-section')"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.5"/><circle cx="17" cy="20" r="1.5"/><path d="M3 4h2l2.4 11h11L21 8H6.2"/></svg><span>쇼핑 · 장보기</span></div>
+            <div class="drawer-item" id="di-save"              onclick="drawerGo('save-section')"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg><span>저축 · 정기이체</span></div>
             <div style="height:1px;background:#e2e8f0;margin:6px 4px;"></div>
-            <div class="drawer-item drawer-item-accent" id="di-news" onclick="drawerGo('news-section')">📰 <span>NEWS</span></div>
+            <div class="drawer-item drawer-item-accent" id="di-news" onclick="drawerGo('news-section')"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg><span>NEWS</span></div>
         </nav>
         <div style="padding:10px 12px;border-top:1px solid #e2e8f0;display:flex;gap:8px;flex-shrink:0;">
-            <button onclick="famOpenSettings();closeDrawer();" style="flex:1;padding:9px;border-radius:10px;background:#f1f5f9;border:none;font-size:11px;font-weight:700;color:#64748b;cursor:pointer;" title="설정">⚙️ <span>설정</span></button>
-            <button onclick="closeDrawer();famLogout();" style="flex:1;padding:9px;border-radius:10px;background:#f1f5f9;border:none;font-size:11px;font-weight:700;color:#64748b;cursor:pointer;" id="drw-auth" title="로그아웃">🚪 <span>로그아웃</span></button>
+            <button onclick="famOpenSettings();closeDrawer();" style="flex:1;padding:9px;border-radius:10px;background:#f1f5f9;border:none;font-size:11px;font-weight:700;color:#64748b;cursor:pointer;" title="설정"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg> <span>설정</span></button>
+            <button onclick="closeDrawer();famLogout();" style="flex:1;padding:9px;border-radius:10px;background:#f1f5f9;border:none;font-size:11px;font-weight:700;color:#64748b;cursor:pointer;" id="drw-auth" title="로그아웃"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg> <span>로그아웃</span></button>
         </div>
     </div>
 
@@ -90,12 +91,12 @@
 
     <header>
         <div style="display:flex;align-items:center;gap:10px;">
-            <button onclick="toggleDrawer()" title="메뉴" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.18);border:none;cursor:pointer;font-size:18px;color:white;">☰</button>
+            <button onclick="toggleDrawer()" title="메뉴" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.18);border:none;cursor:pointer;font-size:18px;color:white;"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
             <div class="logo" onclick="showSection('main-section')">설연 <span class="accent">Family</span></div>
         </div>
         <!-- 오른쪽: 테마버튼만 유지 (로그인 아이콘 제거) -->
         <div style="display:flex;align-items:center;gap:8px;">
-            <button id="theme-color-btn" onclick="famOpenSettings()" title="설정">⚙️</button>
+            <button id="theme-color-btn" onclick="famOpenSettings()" title="설정"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
             <div id="header-profile" style="display:none;">
                 <span id="header-profile-avatar"></span>
                 <span id="header-profile-name"></span>
@@ -135,7 +136,7 @@
             <div id="weekly-weather-modal" class="sch-detail-modal hidden" style="flex-shrink:0;">
                 <div class="sch-detail-content" style="max-width:420px;">
                     <div class="sch-detail-header">
-                        <div style="font-weight:800;font-size:16px;">🌤 주간 날씨 <span id="weekly-city" style="font-size:13px;color:#94a3b8;font-weight:500;"></span></div>
+                        <div style="font-weight:800;font-size:16px;">주간 날씨 <span id="weekly-city" style="font-size:13px;color:#94a3b8;font-weight:500;"></span></div>
                         <button onclick="document.getElementById('weekly-weather-modal').classList.add('hidden')" style="background:none;border:none;font-size:22px;cursor:pointer;color:#cbd5e1;">✕</button>
                     </div>
                     <div id="weekly-weather-list" style="margin-top:8px;"></div>
@@ -149,7 +150,7 @@
                         <div class="home-strip"><div id="home-notices"></div><div id="fam-home-banners"></div></div>
                         </aside>
                         <div class="home-main">
-                        <div class="ff-tools"><button onclick="famHistOpen()">🕘 지난 대화</button><button id="ff-new" onclick="famFeedNew()">↺ 새 대화</button></div>
+                        <div class="ff-tools"><button onclick="famHistOpen()"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>지난 대화</button><button id="ff-new" onclick="famFeedNew()"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.3L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16"/><path d="M3 21v-5h5"/></svg>새 대화</button></div>
                         <div class="fam-feed-body" id="fam-feed-body"></div>
                         <span id="chat-unread-badge" style="display:none"></span>
                         <div class="footer-info">Family Shared v84.1 &nbsp;·&nbsp; Jung Wooseol 2026</div>
@@ -162,8 +163,8 @@
                 <div class="home-cmd-in">
                     <button class="home-cmd-btn" title="사진·파일" onclick="famPlusMenu()" style="font-size:22px;font-weight:300">＋</button>
                     <textarea id="home-cmd-input" rows="1" placeholder="무엇이든 입력하세요" autocomplete="off" autocorrect="off" enterkeyhint="send" oninput="famCmdInput(this);famMicSwap()" onkeydown="famCmdKey(event)" onfocus="famCmdFocus()"></textarea>
-                    <button class="home-cmd-btn" title="도움말" onclick="famHelp()" style="background:none;width:30px;font-size:15px;color:#94a3b8">❔</button>
-                    <button class="home-cmd-btn go" id="home-cmd-go" onclick="famGoBtn()">➤</button>
+                    <button class="home-cmd-btn" title="도움말" onclick="famHelp()" style="background:none;width:30px;font-size:15px;color:#94a3b8"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.7"/><path d="M12 17h.01"/></svg></button>
+                    <button class="home-cmd-btn go" id="home-cmd-go" onclick="famGoBtn()"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12l16-8-6 16-2.5-6.5z"/><path d="M11.5 13.5L20 4"/></svg></button>
                 </div>
             </div>
         </section>
@@ -175,10 +176,10 @@
                 <!-- 헤더 -->
                 <div class="sch-header">
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-size:20px;">📅</span>
+                        <span class="fi-title"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
                         <h3 style="margin:0; font-size:clamp(15px,2vw,18px); font-weight:800;">일정</h3>
                     </div>
-                    <button onclick="showSection('main-section')" class="btn-home">🏠 Home</button>
+                    <button onclick="showSection('main-section')" class="btn-home"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>홈</button>
                 </div>
 
                 <!-- 네비게이션 -->
@@ -218,7 +219,7 @@
                         <button class="btn-action btn-primary" style="width:100%; height:44px; font-size:14px;"
                             onclick="openSchModal(null, schDetailDate)">＋ 이 날 일정 추가</button>
                         <button class="btn-action" style="width:100%; height:42px; font-size:13px; margin-top:8px; background:#f0fdf4; color:#166534; border:1.5px solid #bbf7d0;"
-                            onclick="schAddPlan(schDetailDate)">✈️ 이 날부터 여행·여가 계획</button>
+                            onclick="schAddPlan(schDetailDate)">이 날부터 여행·여가 계획</button>
                     </div>
                 </div>
             </div>
@@ -231,8 +232,8 @@
                         <button onclick="closeSchAction()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#cbd5e1;">✕</button>
                     </div>
                     <div id="sch-action-meta" style="font-size:12px; color:#94a3b8; margin-bottom:16px;"></div>
-                    <button id="sch-action-edit-btn" class="btn-action btn-primary" style="width:100%; height:46px; margin-bottom:10px;">✏️ 수정</button>
-                    <button id="sch-action-del-btn"  class="btn-action btn-danger"  style="width:100%; height:46px;">🗑 삭제</button>
+                    <button id="sch-action-edit-btn" class="btn-action btn-primary" style="width:100%; height:46px; margin-bottom:10px;">수정</button>
+                    <button id="sch-action-del-btn"  class="btn-action btn-danger"  style="width:100%; height:46px;">삭제</button>
                 </div>
             </div>
 
@@ -255,10 +256,10 @@
             <div class="card" style="padding:clamp(12px,2vw,20px);">
                 <div class="sch-header">
                     <div style="display:flex;align-items:center;gap:8px;">
-                        <span style="font-size:20px;">💰</span>
+                        <span class="fi-title"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h12v4"/><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M16 13.5h2"/></svg></span>
                         <h3 style="margin:0;font-size:clamp(15px,2vw,18px);font-weight:800;">가계부</h3>
                     </div>
-                    <button onclick="showSection('main-section')" class="btn-home">🏠 Home</button>
+                    <button onclick="showSection('main-section')" class="btn-home"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>홈</button>
                 </div>
 
                 <!-- 기간 탭 -->
@@ -299,12 +300,10 @@
                 </div>
 
                 <!-- 집계·AI 분석 버튼 -->
-                <button class="btn-action" style="width:100%;height:48px;font-size:14px;margin-bottom:8px;background:white;border:1.5px solid var(--month-header);color:var(--month-header);font-weight:800;border-radius:12px;cursor:pointer;" onclick="showSection('asset-analysis-section')">
-                    📊 구성원·항목별 집계 · AI 트렌드 분석
+                <button class="btn-action" style="width:100%;height:48px;font-size:14px;margin-bottom:8px;background:white;border:1.5px solid var(--month-header);color:var(--month-header);font-weight:800;border-radius:12px;cursor:pointer;" onclick="showSection('asset-analysis-section')">구성원·항목별 집계 · AI 트렌드 분석
                 </button>
                 <!-- 일별 가계부 캘린더 버튼 -->
-                <button class="btn-action btn-primary" style="width:100%;height:48px;font-size:14px;" onclick="showSection('asset-cal-section')">
-                    📆 일별 가계부 보기
+                <button class="btn-action btn-primary" style="width:100%;height:48px;font-size:14px;" onclick="showSection('asset-cal-section')">일별 가계부 보기
                 </button>
             </div>
         </section>
@@ -316,10 +315,10 @@
                 <div class="card" style="padding:clamp(12px,2vw,20px);">
                     <div class="sch-header">
                         <div style="display:flex;align-items:center;gap:8px;">
-                            <span style="font-size:20px;">📸</span>
+                            <span class="fi-title"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg></span>
                             <h3 style="margin:0;font-size:clamp(15px,2vw,18px);font-weight:800;">앨범</h3>
                         </div>
-                        <button onclick="showSection('main-section')" class="btn-home">🏠 Home</button>
+                        <button onclick="showSection('main-section')" class="btn-home"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>홈</button>
                     </div>
                     <button class="btn-action btn-primary" style="width:100%;height:44px;margin-bottom:14px;" onclick="openFolderModal(null)">＋ 새 폴더 만들기</button>
                     <div class="folder-grid" id="folder-container"></div>
@@ -336,14 +335,14 @@
                         </div>
                         <div style="display:flex;gap:6px;">
                             <button id="photo-select-btn" class="btn-action btn-nav" style="height:36px;min-width:60px;font-size:12px;" onclick="togglePhotoSelect()">선택</button>
-                            <button class="btn-action btn-primary" style="height:36px;min-width:72px;font-size:12px;" onclick="document.getElementById('gallery-upload').click()">📷 사진추가</button>
+                            <button class="btn-action btn-primary" style="height:36px;min-width:72px;font-size:12px;" onclick="document.getElementById('gallery-upload').click()">사진추가</button>
                         </div>
                     </div>
                     <!-- 선택 모드 액션바 -->
                     <div id="photo-select-bar" style="display:none;background:#f8fafc;border-radius:12px;padding:10px 14px;margin-bottom:10px;align-items:center;gap:10px;flex-wrap:wrap;">
                         <span id="photo-select-count" style="font-size:12px;color:#64748b;flex:1;">0개 선택됨</span>
-                        <button class="btn-action btn-nav" style="height:34px;font-size:12px;" onclick="movePhotos()">📂 이동</button>
-                        <button class="btn-action btn-danger" style="height:34px;font-size:12px;" onclick="deleteSelectedPhotos()">🗑 삭제</button>
+                        <button class="btn-action btn-nav" style="height:34px;font-size:12px;" onclick="movePhotos()">이동</button>
+                        <button class="btn-action btn-danger" style="height:34px;font-size:12px;" onclick="deleteSelectedPhotos()">삭제</button>
                         <button class="btn-action btn-nav" style="height:34px;font-size:12px;" onclick="togglePhotoSelect()">취소</button>
                     </div>
                     <!-- 하위 폴더 -->
@@ -352,9 +351,9 @@
                     <div class="gallery-grid" id="gallery-container"></div>
                     <!-- 폴더 관리 버튼 -->
                     <div style="display:flex;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid #f1f5f9;">
-                        <button class="btn-action btn-nav" style="flex:1;height:38px;font-size:12px;" onclick="openFolderModal(currentFolderId)">✏️ 이름 수정</button>
-                        <button class="btn-action btn-nav" style="height:38px;font-size:12px;" onclick="openFolderModal(null, currentFolderId)">📁 하위폴더 추가</button>
-                        <button class="btn-action btn-danger" style="height:38px;font-size:12px;" onclick="deleteFolder()">🗑 삭제</button>
+                        <button class="btn-action btn-nav" style="flex:1;height:38px;font-size:12px;" onclick="openFolderModal(currentFolderId)">이름 수정</button>
+                        <button class="btn-action btn-nav" style="height:38px;font-size:12px;" onclick="openFolderModal(null, currentFolderId)">하위폴더 추가</button>
+                        <button class="btn-action btn-danger" style="height:38px;font-size:12px;" onclick="deleteFolder()">삭제</button>
                     </div>
                 </div>
             </div>
@@ -365,7 +364,7 @@
             <div id="photo-move-modal" class="sch-detail-modal hidden">
                 <div class="sch-detail-content" style="max-width:400px;">
                     <div class="sch-detail-header">
-                        <div style="font-weight:800;font-size:16px;">📂 폴더로 이동</div>
+                        <div style="font-weight:800;font-size:16px;">폴더로 이동</div>
                         <button onclick="document.getElementById('photo-move-modal').classList.add('hidden')" style="background:none;border:none;font-size:22px;cursor:pointer;color:#cbd5e1;">✕</button>
                     </div>
                     <div id="photo-move-folder-list" style="max-height:300px;overflow-y:auto;margin-top:10px;"></div>
@@ -381,24 +380,24 @@
                 <div style="flex-shrink:0;">
                     <div class="sch-header">
                         <div style="display:flex;align-items:center;gap:8px;">
-                            <span style="font-size:20px;">✈️</span>
+                            <span class="fi-title"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 13.5L3 11l1.5-1.5 8 1 4-4.5c1-1 2.6-1.4 3.2-.8s.2 2.2-.8 3.2l-4.5 4 1 8L14 21.5l-2.5-7.5"/><path d="M6 17l-2 .5 1.5 1.5"/></svg></span>
                             <h3 style="margin:0;font-size:clamp(15px,2vw,18px);font-weight:800;">여행 &amp; 여가</h3>
                         </div>
-                        <button onclick="showSection('main-section')" class="btn-home">🏠 Home</button>
+                        <button onclick="showSection('main-section')" class="btn-home"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>홈</button>
                     </div>
 
                     <button class="btn-action btn-primary" style="width:100%;margin-bottom:12px;height:44px;" onclick="openPlanModal(null)">＋ 새 계획 추가</button>
 
                     <!-- 여행 노트·산행 기록 + 필터 (한 줄, 같은 크기) -->
                     <div class="plan-bar">
-                        <button class="plan-filter-btn" onclick="mapOpen()">🗺 여행 노트</button>
-                        <button class="plan-filter-btn" onclick="hikeLogSheet()">⛰️ 산행 기록</button>
-                        <button class="plan-filter-btn" id="fbtn-period" onclick="togglePlanFilter('period')">🗓 기간 ▾</button>
-                        <button class="plan-filter-btn" id="fbtn-area"   onclick="togglePlanFilter('area')">🌐 지역 ▾</button>
+                        <button class="plan-filter-btn" onclick="mapOpen()">여행 노트</button>
+                        <button class="plan-filter-btn" onclick="hikeLogSheet()">산행 기록</button>
+                        <button class="plan-filter-btn" id="fbtn-period" onclick="togglePlanFilter('period')">기간 ▾</button>
+                        <button class="plan-filter-btn" id="fbtn-area"   onclick="togglePlanFilter('area')">지역 ▾</button>
                         <div id="plan-chips"></div>
-                        <button class="plan-filter-btn" id="fbtn-sort"   onclick="togglePlanFilter('sort')" style="display:none;">📅 정렬 ▾</button>
-                        <button class="plan-filter-btn" id="fbtn-member" onclick="togglePlanFilter('member')" style="display:none;">👥 구성원 ▾</button>
-                        <button class="plan-filter-btn" id="fbtn-type"   onclick="togglePlanFilter('type')" style="display:none;">🗂 유형 ▾</button>
+                        <button class="plan-filter-btn" id="fbtn-sort"   onclick="togglePlanFilter('sort')" style="display:none;">정렬 ▾</button>
+                        <button class="plan-filter-btn" id="fbtn-member" onclick="togglePlanFilter('member')" style="display:none;">구성원 ▾</button>
+                        <button class="plan-filter-btn" id="fbtn-type"   onclick="togglePlanFilter('type')" style="display:none;">유형 ▾</button>
                     </div>
 
                     <!-- 드롭다운 패널 -->
@@ -413,32 +412,32 @@
                         <div style="padding:10px 14px 6px;font-size:8px;font-weight:700;color:#94a3b8;letter-spacing:.6px;">WEEK</div>
                         <div id="fbox-period-weeks" style="display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 10px;"></div>
                         <div style="padding:8px 14px;">
-                            <div class="plan-filter-option" style="color:#94a3b8;font-size:12px;padding:6px 0;" onclick="setPlanFilter('period','all')">✕ 기간 필터 해제</div>
+                            <div class="plan-filter-option" style="color:#94a3b8;font-size:12px;padding:6px 0;" onclick="setPlanFilter('period','all')">기간 필터 해제</div>
                         </div>
                     </div>
                     <div id="fbox-sort" class="plan-filter-box" style="display:none;">
-                        <div class="plan-filter-option" onclick="setPlanFilter('sort','asc')">📅 가까운 날짜순</div>
-                        <div class="plan-filter-option" onclick="setPlanFilter('sort','desc')">📅 오래된 날짜순</div>
+                        <div class="plan-filter-option" onclick="setPlanFilter('sort','asc')">가까운 날짜순</div>
+                        <div class="plan-filter-option" onclick="setPlanFilter('sort','desc')">오래된 날짜순</div>
                     </div>
                     <div id="fbox-member" class="plan-filter-box" style="display:none;">
-                        <div class="plan-filter-option" onclick="setPlanFilter('member','all')">👥 전체</div>
-                        <div class="plan-filter-option" onclick="setPlanFilter('member','공통')">👨‍👩‍👧 공통</div>
-                        <div class="plan-filter-option" onclick="setPlanFilter('member','정우설')">👨 정우설</div>
-                        <div class="plan-filter-option" onclick="setPlanFilter('member','한미연')">👩 한미연</div>
+                        <div class="plan-filter-option" onclick="setPlanFilter('member','all')">전체</div>
+                        <div class="plan-filter-option" onclick="setPlanFilter('member','공통')">공통</div>
+                        <div class="plan-filter-option" onclick="setPlanFilter('member','정우설')">정우설</div>
+                        <div class="plan-filter-option" onclick="setPlanFilter('member','한미연')">한미연</div>
                     </div>
                     <div id="fbox-area" class="plan-filter-box" style="display:none;">
-                        <div class="plan-filter-option" onclick="setPlanFilter('area','all')">🌐 전체</div>
-                        <div class="plan-filter-option" onclick="setPlanFilter('area','국내')">🇰🇷 국내</div>
-                        <div class="plan-filter-option" onclick="setPlanFilter('area','해외')">🌏 해외</div>
+                        <div class="plan-filter-option" onclick="setPlanFilter('area','all')">전체</div>
+                        <div class="plan-filter-option" onclick="setPlanFilter('area','국내')">국내</div>
+                        <div class="plan-filter-option" onclick="setPlanFilter('area','해외')">해외</div>
                     </div>
                     <div id="fbox-type" class="plan-filter-box" style="display:none;">
-                        <div class="plan-filter-option" onclick="setPlanFilter('type','all')">🗂 전체</div>
-                        <div class="plan-filter-option" onclick="setPlanFilter('type','여행')">✈️ 여행</div>
-                        <div class="plan-filter-option" onclick="setPlanFilter('type','캠핑')">⛺ 캠핑</div>
-                        <div class="plan-filter-option" onclick="setPlanFilter('type','골프')">⛳ 골프</div>
-                        <div class="plan-filter-option" onclick="setPlanFilter('type','스크린골프')">🏌️ 스크린골프</div>
-                        <div class="plan-filter-option" onclick="setPlanFilter('type','등산')">🏔️ 등산</div>
-                        <div class="plan-filter-option" onclick="setPlanFilter('type','기타')">📌 기타</div>
+                        <div class="plan-filter-option" onclick="setPlanFilter('type','all')">전체</div>
+                        <div class="plan-filter-option" onclick="setPlanFilter('type','여행')">여행</div>
+                        <div class="plan-filter-option" onclick="setPlanFilter('type','캠핑')">캠핑</div>
+                        <div class="plan-filter-option" onclick="setPlanFilter('type','골프')">골프</div>
+                        <div class="plan-filter-option" onclick="setPlanFilter('type','스크린골프')">스크린골프</div>
+                        <div class="plan-filter-option" onclick="setPlanFilter('type','등산')">등산</div>
+                        <div class="plan-filter-option" onclick="setPlanFilter('type','기타')">기타</div>
                     </div>
                 </div>
 
@@ -455,8 +454,8 @@
                     </div>
                     <div id="travel-detail-body"></div>
                     <div style="display:flex;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid #f1f5f9;">
-                        <button id="travel-edit-btn"  class="btn-action btn-primary"  style="flex:1;height:44px;">✏️ 수정</button>
-                        <button id="travel-del-btn"   class="btn-action btn-danger"   style="flex:1;height:44px;">🗑 삭제</button>
+                        <button id="travel-edit-btn"  class="btn-action btn-primary"  style="flex:1;height:44px;">수정</button>
+                        <button id="travel-del-btn"   class="btn-action btn-danger"   style="flex:1;height:44px;">삭제</button>
                     </div>
                 </div>
             </div>
@@ -486,7 +485,7 @@
                         <div style="display:flex;align-items:center;gap:6px;">
                             <button class="chat-chip" onclick="openChatBgModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/><circle cx="8.5" cy="7.5" r="1"/><circle cx="6.5" cy="12.5" r="1"/><path d="M12 2a10 10 0 0 0 0 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.4A5.6 5.6 0 0 0 22 9.8C22 5.5 17.5 2 12 2z"/></svg>배경</button>
                             <button class="chat-chip" onclick="famProfileSheet()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>프로필</button>
-                            <button onclick="showSection('main-section')" class="btn-home">🏠 Home</button>
+                            <button onclick="showSection('main-section')" class="btn-home"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>홈</button>
                         </div>
                     </div>
 
@@ -500,7 +499,7 @@
 
                     <!-- 수정 중 표시바 -->
                     <div class="chat-edit-bar" id="chat-edit-bar" style="display:none;">
-                        <span>✏️ 메시지 수정 중...</span>
+                        <span>메시지 수정 중...</span>
                         <button onclick="cancelChatEdit()" style="background:none;border:none;color:#92400e;cursor:pointer;font-size:18px;">✕</button>
                     </div>
 
@@ -560,21 +559,21 @@
         <div id="chat-bg-modal" class="sch-detail-modal hidden">
             <div class="sch-detail-content" style="max-width:420px;max-height:88dvh;overflow-y:auto;">
                 <div class="sch-detail-header" style="flex-shrink:0;">
-                    <div style="font-weight:800;font-size:16px;">🎨 채팅 배경</div>
+                    <div style="font-weight:800;font-size:16px;">채팅 배경</div>
                     <button onclick="document.getElementById('chat-bg-modal').classList.add('hidden')"
                         style="background:none;border:none;font-size:22px;cursor:pointer;color:#cbd5e1;">✕</button>
                 </div>
 
                 <!-- 탭 -->
                 <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;">
-                    <button class="chat-bg-tab active" data-tab="color"   onclick="switchChatBgTab(this)">🎨 색상</button>
-                    <button class="chat-bg-tab"         data-tab="weather" onclick="switchChatBgTab(this)">❄️ 날씨효과</button>
-                    <button class="chat-bg-tab"         data-tab="custom"  onclick="switchChatBgTab(this)">📷 직접</button>
+                    <button class="chat-bg-tab active" data-tab="color"   onclick="switchChatBgTab(this)">색상</button>
+                    <button class="chat-bg-tab"         data-tab="weather" onclick="switchChatBgTab(this)">날씨효과</button>
+                    <button class="chat-bg-tab"         data-tab="custom"  onclick="switchChatBgTab(this)">직접</button>
                 </div>
 
                 <!-- ② 날씨효과 탭 -->
                 <div id="chatbgtab-weather" class="chat-bg-panel" style="display:none;display:none;">
-                    <div style="font-size:11px;color:#94a3b8;margin-bottom:10px;">✨ 움직이는 애니메이션 오버레이</div>
+                    <div style="font-size:11px;color:#94a3b8;margin-bottom:10px;">움직이는 애니메이션 오버레이</div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
                         <button class="weather-fx-btn" id="fxbtn-snow"   onclick="setChatFx('snow')">❄️ 눈</button>
                         <button class="weather-fx-btn" id="fxbtn-rain"   onclick="setChatFx('rain')">🌧 비</button>
@@ -587,7 +586,7 @@
 
                 <!-- ③ 색상 탭 -->
                 <div id="chatbgtab-color" class="chat-bg-panel">
-                    <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:8px;">🎨 파스텔 단색</div>
+                    <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:8px;">파스텔 단색</div>
                     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
                         <div class="chat-bg-swatch" style="background:#fce4ec;" onclick="setChatBg('color','#fce4ec')"></div>
 <div class="chat-bg-swatch" style="background:#f8bbd0;" onclick="setChatBg('color','#f8bbd0')"></div>
@@ -614,7 +613,7 @@
 <div class="chat-bg-swatch" style="background:#ecfeff;" onclick="setChatBg('color','#ecfeff')"></div>
 <div class="chat-bg-swatch" style="background:#fefce8;" onclick="setChatBg('color','#fefce8')"></div>
 </div>
-                    <div style="font-size:11px;font-weight:700;color:#64748b;margin:4px 0 8px;">🌈 혼합 그라디언트</div>
+                    <div style="font-size:11px;font-weight:700;color:#64748b;margin:4px 0 8px;">혼합 그라디언트</div>
                     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
                     <div class="chat-bg-swatch" style="background:linear-gradient(135deg,#fbc2eb,#a18cd1);" onclick="setChatBg('color','linear-gradient(135deg,#fbc2eb,#a18cd1)')"></div>
 <div class="chat-bg-swatch" style="background:linear-gradient(135deg,#fddb92,#d1fdff);" onclick="setChatBg('color','linear-gradient(135deg,#fddb92,#d1fdff)')"></div>
@@ -637,7 +636,7 @@
 <div class="chat-bg-swatch" style="background:linear-gradient(135deg,#1a1a2e,#16213e);" onclick="setChatBg('color','linear-gradient(135deg,#1a1a2e,#16213e)')"></div>
 <div class="chat-bg-swatch" style="background:linear-gradient(135deg,#0f3460,#533483);" onclick="setChatBg('color','linear-gradient(135deg,#0f3460,#533483)')"></div>
 </div>
-                    <div style="font-size:11px;font-weight:700;color:#64748b;margin:4px 0 8px;">🌑 다크 계열</div>
+                    <div style="font-size:11px;font-weight:700;color:#64748b;margin:4px 0 8px;">다크 계열</div>
                     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
                     <div class="chat-bg-swatch" style="background:#1e293b;" onclick="setChatBg('color','#1e293b')"></div>
 <div class="chat-bg-swatch" style="background:#0f172a;" onclick="setChatBg('color','#0f172a')"></div>
@@ -651,11 +650,11 @@
                 <div id="chatbgtab-custom" class="chat-bg-panel" style="display:none;">
                     <button onclick="document.getElementById('chat-bg-upload').click()"
                         style="width:100%;padding:14px;border-radius:12px;border:2px dashed #e2e8f0;background:white;font-size:13px;color:#64748b;cursor:pointer;font-weight:600;margin-bottom:10px;">
-                        📷 내 사진 선택하기
+                        내 사진 선택하기
                     </button>
                     <input type="file" id="chat-bg-upload" accept="image/*" style="display:none;" onchange="onChatBgUpload(this)">
                     <button onclick="setChatBg('none','')" style="width:100%;padding:11px;border-radius:12px;border:1.5px solid #e2e8f0;background:white;font-size:12px;color:#ef4444;cursor:pointer;font-weight:600;">
-                        🗑 배경 초기화
+                        배경 초기화
                     </button>
                 </div>
 
@@ -683,7 +682,7 @@
                 </div>
                 <!-- 적용 / 초기화 버튼 -->
                 <div style="display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid #f1f5f9;">
-                    <button onclick="resetChatBgAll()" style="flex:1;padding:12px;border-radius:12px;border:1.5px solid #e2e8f0;background:white;font-size:13px;font-weight:700;color:#ef4444;cursor:pointer;">🗑 초기화</button>
+                    <button onclick="resetChatBgAll()" style="flex:1;padding:12px;border-radius:12px;border:1.5px solid #e2e8f0;background:white;font-size:13px;font-weight:700;color:#ef4444;cursor:pointer;">초기화</button>
                     <button onclick="applyChatBgAndClose()" style="flex:2;padding:12px;border-radius:12px;border:none;background:var(--month-header);font-size:13px;font-weight:700;color:white;cursor:pointer;">✓ 변경 적용</button>
                 </div>
             </div>
@@ -693,7 +692,7 @@
         <div id="theme-color-modal" class="sch-detail-modal hidden">
             <div class="sch-detail-content" style="max-width:380px;">
                 <div class="sch-detail-header">
-                    <div style="font-weight:800;font-size:15px;">🎨 앱 테마 색상</div>
+                    <div style="font-weight:800;font-size:15px;">앱 테마 색상</div>
                     <button onclick="document.getElementById('theme-color-modal').classList.add('hidden')"
                         style="background:none;border:none;font-size:22px;cursor:pointer;color:#cbd5e1;">✕</button>
                 </div>
@@ -726,7 +725,7 @@
         <div id="chat-location-modal" class="sch-detail-modal hidden">
             <div class="sch-detail-content" style="max-width:360px;">
                 <div class="sch-detail-header">
-                    <div style="font-weight:800;font-size:16px;">📍 위치 공유</div>
+                    <div style="font-weight:800;font-size:16px;">위치 공유</div>
                     <button onclick="document.getElementById('chat-location-modal').classList.add('hidden')"
                         style="background:none;border:none;font-size:22px;cursor:pointer;color:#cbd5e1;">✕</button>
                 </div>
@@ -741,8 +740,7 @@
                     <div style="font-size:11px;color:#94a3b8;margin-top:6px;">입력한 주소로 Google Maps 링크를 전송해요</div>
                 </div>
                 <button onclick="confirmChatLocation()"
-                    class="btn-action btn-primary" style="width:100%;height:44px;font-size:14px;">
-                    📍 위치 전송
+                    class="btn-action btn-primary" style="width:100%;height:44px;font-size:14px;">위치 전송
                 </button>
             </div>
         </div>
@@ -819,17 +817,17 @@
             <div class="card" style="padding:clamp(12px,2vw,20px);">
                 <div class="sch-header">
                     <div style="display:flex;align-items:center;gap:8px;">
-                        <span style="font-size:20px;">📆</span>
+                        <span class="fi-title"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
                         <h3 style="margin:0;font-size:clamp(15px,2vw,18px);font-weight:800;">일별 가계부</h3>
                     </div>
-                    <button onclick="showSection('asset-section')" class="btn-home">◀ Back</button>
+                    <button onclick="showSection('asset-section')" class="btn-home"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>뒤로</button>
                 </div>
                 <!-- 구성원 필터 -->
                 <div style="display:flex;gap:6px;margin-bottom:12px;">
                     <button class="asset-member-tab active" data-m="all"  onclick="switchAssetMember(this)">전체</button>
-                    <button class="asset-member-tab"        data-m="공통"   onclick="switchAssetMember(this)">👨‍👩‍👧 공통</button>
-                    <button class="asset-member-tab"        data-m="정우설" onclick="switchAssetMember(this)">👨 정우설</button>
-                    <button class="asset-member-tab"        data-m="한미연" onclick="switchAssetMember(this)">👩 한미연</button>
+                    <button class="asset-member-tab"        data-m="공통"   onclick="switchAssetMember(this)">공통</button>
+                    <button class="asset-member-tab"        data-m="정우설" onclick="switchAssetMember(this)">정우설</button>
+                    <button class="asset-member-tab"        data-m="한미연" onclick="switchAssetMember(this)">한미연</button>
                 </div>
                 <!-- 네비게이션 -->
                 <div class="sch-nav-bar" style="margin-bottom:12px;">
@@ -876,10 +874,10 @@
             <div class="card" style="padding:clamp(12px,2vw,20px);">
                 <div class="sch-header">
                     <div style="display:flex;align-items:center;gap:8px;">
-                        <span style="font-size:20px;">📰</span>
+                        <span class="fi-title"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg></span>
                         <h3 style="margin:0;font-size:clamp(15px,2vw,18px);font-weight:800;">NEWS</h3>
                     </div>
-                    <button onclick="showSection('main-section')" class="btn-home">🏠 Home</button>
+                    <button onclick="showSection('main-section')" class="btn-home"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>홈</button>
                 </div>
                 <div id="news-meta"></div>
                 <div id="news-body"></div>
@@ -891,13 +889,13 @@
             <div class="card" style="padding:clamp(12px,2vw,20px);">
                 <div class="sch-header">
                     <div style="display:flex;align-items:center;gap:8px;">
-                        <span style="font-size:20px;">📊</span>
+                        <span class="fi-title"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>
                         <h3 style="margin:0;font-size:clamp(15px,2vw,18px);font-weight:800;">집계 · AI 분석</h3>
                     </div>
-                    <button onclick="showSection('asset-section')" class="btn-home">◀ Back</button>
+                    <button onclick="showSection('asset-section')" class="btn-home"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>뒤로</button>
                 </div>
                 <div id="ana-root"></div>
-                <div class="fam-box" style="margin-top:12px"><h4>📑 월간 AI 리포트</h4><div id="rpt-root"></div></div>
+                <div class="fam-box" style="margin-top:12px"><h4>월간 AI 리포트</h4><div id="rpt-root"></div></div>
             </div>
         </section>
 
@@ -906,17 +904,17 @@
             <div class="card" style="padding:clamp(12px,2vw,20px);">
                 <div class="sch-header">
                     <div style="display:flex;align-items:center;gap:8px;">
-                        <span style="font-size:20px;">🎯</span>
+                        <span class="fi-title"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg></span>
                         <h3 style="margin:0;font-size:clamp(15px,2vw,18px);font-weight:800;">저축 · 정기이체</h3>
                     </div>
-                    <button onclick="showSection('main-section')" class="btn-home">🏠 Home</button>
+                    <button onclick="showSection('main-section')" class="btn-home"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>홈</button>
                 </div>
                 <div class="fam-box">
-                    <h4 style="display:flex;align-items:center">💰 저축<button class="fam-btn" style="margin-left:auto;padding:4px 10px;font-size:11px" onclick="svGoalForm()">＋ 저축</button></h4>
+                    <h4 style="display:flex;align-items:center">저축<button class="fam-btn" style="margin-left:auto;padding:4px 10px;font-size:11px" onclick="svGoalForm()">＋ 저축</button></h4>
                     <div id="sv-goals"></div>
                 </div>
                 <div class="fam-box">
-                    <h4 style="display:flex;align-items:center">🔁 정기 이체<button class="fam-btn" style="margin-left:auto;padding:4px 10px;font-size:11px" onclick="fxForm()">＋ 추가</button></h4>
+                    <h4 style="display:flex;align-items:center">정기 이체<button class="fam-btn" style="margin-left:auto;padding:4px 10px;font-size:11px" onclick="fxForm()">＋ 추가</button></h4>
                     <div class="fam-note" style="margin:0 0 8px">매월 지정일이 되면 자동으로 기록됩니다. 지출은 가계부에, 저축은 해당 저축에 쌓입니다. 같은 달에 두 번 기록되지 않습니다.</div>
                     <div id="sv-fixed"></div>
                 </div>
@@ -928,14 +926,14 @@
             <div class="card" style="padding:clamp(12px,2vw,20px);">
                 <div class="sch-header">
                     <div style="display:flex;align-items:center;gap:8px;">
-                        <span style="font-size:20px;">🛒</span>
+                        <span class="fi-title"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.5"/><circle cx="17" cy="20" r="1.5"/><path d="M3 4h2l2.4 11h11L21 8H6.2"/></svg></span>
                         <h3 style="margin:0;font-size:clamp(15px,2vw,18px);font-weight:800;">쇼핑 · 장보기</h3>
                     </div>
-                    <button onclick="showSection('main-section')" class="btn-home">🏠 Home</button>
+                    <button onclick="showSection('main-section')" class="btn-home"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>홈</button>
                 </div>
                 <div id="shop-grid" class="shop-grid"></div>
                 <div class="fam-box">
-                    <h4 style="display:flex;align-items:center">📝 장보기 목록 <small id="shop-count" style="margin-left:8px;color:#94a3b8;font-weight:600"></small><button class="fam-btn" style="margin-left:auto;padding:4px 10px;font-size:11px" onclick="famShopToAsset()">🧾 가계부로</button><button class="fam-btn" style="margin-left:6px;padding:4px 10px;font-size:11px" onclick="famShopClearDone()">완료 지우기</button></h4>
+                    <h4 style="display:flex;align-items:center">장보기 목록 <small id="shop-count" style="margin-left:8px;color:#94a3b8;font-weight:600"></small><button class="fam-btn" style="margin-left:auto;padding:4px 10px;font-size:11px" onclick="famShopToAsset()">가계부로</button><button class="fam-btn" style="margin-left:6px;padding:4px 10px;font-size:11px" onclick="famShopClearDone()">완료 지우기</button></h4>
                     <div style="display:flex;gap:8px;margin-bottom:6px"><input id="shop-new" class="fam-sel" style="flex:1" placeholder="우유, 계란 (쉼표로 여러 개)" onkeydown="if(event.key==='Enter'){event.preventDefault();famShopAddInput()}"><button class="fam-btn pri" onclick="famShopAddInput()">추가</button></div>
                     <div id="shop-list"></div>
                 </div>
@@ -958,10 +956,10 @@
                 <div style="text-align:center;font-size:28px;margin:10px 0 4px;">🌍</div>
                 <div style="text-align:center;font-size:14px;font-weight:800;color:#1e293b;margin-bottom:4px;">위치 설정</div>
                 <div style="text-align:center;font-size:12px;color:#94a3b8;margin-bottom:18px;">도시 이름을 입력하면<br>날씨·시간이 자동으로 바뀌어요</div>
-                <label class="field-label">🔍 도시 이름</label>
+                <label class="field-label">도시 이름</label>
                 <input type="text" id="setting-city" placeholder="예: Seoul, Tokyo, New York, Paris"
                     style="font-size:15px;padding:12px 14px;border-radius:14px;">
-                <div style="font-size:11px;color:#94a3b8;margin-top:8px;text-align:center;">💡 영문 입력 시 정확도가 높아요</div>
+                <div style="font-size:11px;color:#94a3b8;margin-top:8px;text-align:center;">영문 입력 시 정확도가 높아요</div>
                 <!-- 내부 처리용 hidden (JS에서 자동 채움) -->
                 <input type="hidden" id="setting-lat" value="37.5665">
                 <input type="hidden" id="setting-lon" value="126.9780">
@@ -973,23 +971,23 @@
                 <label class="field-label">중요도</label>
                 <div class="sch-chip-group" id="sch-priority-group">
                     <button type="button" class="sch-chip active" data-val="일반" onclick="selectChip(this,'sch-priority-group')">일반</button>
-                    <button type="button" class="sch-chip"        data-val="중요" onclick="selectChip(this,'sch-priority-group')">⭐ 중요</button>
+                    <button type="button" class="sch-chip"        data-val="중요" onclick="selectChip(this,'sch-priority-group')">중요</button>
                 </div>
                 <input type="hidden" id="sch-priority" value="일반">
 
                 <label class="field-label">구성원</label>
                 <div class="sch-chip-group" id="sch-member-group">
-                    <button type="button" class="sch-chip" data-val="공통" onclick="selectChip(this,'sch-member-group')">👨‍👩‍👧 공통</button>
-                    <button type="button" class="sch-chip active" data-val="정우설" onclick="selectChip(this,'sch-member-group')">👨 정우설</button>
-                    <button type="button" class="sch-chip" data-val="한미연" onclick="selectChip(this,'sch-member-group')">👩 한미연</button>
+                    <button type="button" class="sch-chip" data-val="공통" onclick="selectChip(this,'sch-member-group')">공통</button>
+                    <button type="button" class="sch-chip active" data-val="정우설" onclick="selectChip(this,'sch-member-group')">정우설</button>
+                    <button type="button" class="sch-chip" data-val="한미연" onclick="selectChip(this,'sch-member-group')">한미연</button>
                 </div>
                 <input type="hidden" id="sch-member" value="정우설">
 
                 <label class="field-label">카테고리</label>
                 <div class="sch-chip-group" id="sch-category-group">
-                    <button type="button" class="sch-chip active" data-val="개인" onclick="selectChip(this,'sch-category-group')">🙍 개인</button>
-                    <button type="button" class="sch-chip"        data-val="회사" onclick="selectChip(this,'sch-category-group')">💼 회사</button>
-                    <button type="button" class="sch-chip"        data-val="가족" onclick="selectChip(this,'sch-category-group')">👨‍👩‍👧 가족</button>
+                    <button type="button" class="sch-chip active" data-val="개인" onclick="selectChip(this,'sch-category-group')">개인</button>
+                    <button type="button" class="sch-chip"        data-val="회사" onclick="selectChip(this,'sch-category-group')">회사</button>
+                    <button type="button" class="sch-chip"        data-val="가족" onclick="selectChip(this,'sch-category-group')">가족</button>
                 </div>
                 <input type="hidden" id="sch-category" value="개인">
 
@@ -1022,7 +1020,7 @@
                     <!-- 반복 체크 헤더 -->
                     <label style="display:flex; align-items:center; gap:10px; padding:12px 14px; cursor:pointer; background:#f8fafc;">
                         <input type="checkbox" id="sch-repeat-chk" onchange="toggleRepeatBox()" style="width:16px;height:16px;margin:0;accent-color:var(--month-header);">
-                        <span style="font-size:13px;font-weight:700;color:#1e293b;">🔁 반복 일정</span>
+                        <span style="font-size:13px;font-weight:700;color:#1e293b;">반복 일정</span>
                     </label>
                     <!-- 반복 옵션 (체크 시 표시) -->
                     <div id="sch-repeat-box" style="display:none; padding:12px 14px; border-top:1px solid #f1f5f9; background:white;">
@@ -1058,29 +1056,29 @@
                 <!-- 구성원 -->
                 <label class="field-label">구성원</label>
                 <div class="sch-chip-group" id="plan-member-group">
-                    <button type="button" class="sch-chip plan-chip-family active" data-val="공통"   onclick="selectChip(this,'plan-member-group')">👨‍👩‍👧 공통</button>
-                    <button type="button" class="sch-chip plan-chip-ws"            data-val="정우설" onclick="selectChip(this,'plan-member-group')">👨 정우설</button>
-                    <button type="button" class="sch-chip plan-chip-hm"            data-val="한미연" onclick="selectChip(this,'plan-member-group')">👩 한미연</button>
+                    <button type="button" class="sch-chip plan-chip-family active" data-val="공통"   onclick="selectChip(this,'plan-member-group')">공통</button>
+                    <button type="button" class="sch-chip plan-chip-ws"            data-val="정우설" onclick="selectChip(this,'plan-member-group')">정우설</button>
+                    <button type="button" class="sch-chip plan-chip-hm"            data-val="한미연" onclick="selectChip(this,'plan-member-group')">한미연</button>
                 </div>
                 <input type="hidden" id="plan-member" value="공통">
 
                 <!-- 국내/해외 -->
                 <label class="field-label">지역</label>
                 <div class="sch-chip-group" id="plan-area-group">
-                    <button type="button" class="sch-chip active" data-val="국내" onclick="selectChip(this,'plan-area-group')">🇰🇷 국내</button>
-                    <button type="button" class="sch-chip"        data-val="해외" onclick="selectChip(this,'plan-area-group')">🌏 해외</button>
+                    <button type="button" class="sch-chip active" data-val="국내" onclick="selectChip(this,'plan-area-group')">국내</button>
+                    <button type="button" class="sch-chip"        data-val="해외" onclick="selectChip(this,'plan-area-group')">해외</button>
                 </div>
                 <input type="hidden" id="plan-main-type" value="국내">
 
                 <!-- 활동 유형 -->
                 <label class="field-label">활동 유형</label>
                 <div class="sch-chip-group" id="plan-type-group">
-                    <button type="button" class="sch-chip active" data-val="여행"       onclick="selectChip(this,'plan-type-group');togglePlanTimeSection()">✈️ 여행</button>
-                    <button type="button" class="sch-chip"        data-val="캠핑"       onclick="selectChip(this,'plan-type-group');togglePlanTimeSection()">⛺ 캠핑</button>
-                    <button type="button" class="sch-chip"        data-val="골프"       onclick="selectChip(this,'plan-type-group');togglePlanTimeSection()">⛳ 골프</button>
-                    <button type="button" class="sch-chip"        data-val="스크린골프" onclick="selectChip(this,'plan-type-group');togglePlanTimeSection()">🏌️ 스크린골프</button>
-                    <button type="button" class="sch-chip"        data-val="등산"       onclick="selectChip(this,'plan-type-group');togglePlanTimeSection()">🏔️ 등산</button>
-                    <button type="button" class="sch-chip"        data-val="기타"       onclick="selectChip(this,'plan-type-group');togglePlanTimeSection()">📌 기타</button>
+                    <button type="button" class="sch-chip active" data-val="여행"       onclick="selectChip(this,'plan-type-group');togglePlanTimeSection()">여행</button>
+                    <button type="button" class="sch-chip"        data-val="캠핑"       onclick="selectChip(this,'plan-type-group');togglePlanTimeSection()">캠핑</button>
+                    <button type="button" class="sch-chip"        data-val="골프"       onclick="selectChip(this,'plan-type-group');togglePlanTimeSection()">골프</button>
+                    <button type="button" class="sch-chip"        data-val="스크린골프" onclick="selectChip(this,'plan-type-group');togglePlanTimeSection()">스크린골프</button>
+                    <button type="button" class="sch-chip"        data-val="등산"       onclick="selectChip(this,'plan-type-group');togglePlanTimeSection()">등산</button>
+                    <button type="button" class="sch-chip"        data-val="기타"       onclick="selectChip(this,'plan-type-group');togglePlanTimeSection()">기타</button>
                 </div>
                 <input type="hidden" id="plan-sub-type" value="여행">
 
@@ -1098,7 +1096,7 @@
 
                 <!-- 골프/스크린골프 시작 시간 (기간 선택 하단) -->
                 <div id="plan-time-section" style="display:none;margin-top:2px;">
-                    <label class="field-label">⏰ 시작 시간</label>
+                    <label class="field-label">시작 시간</label>
                     <input type="time" id="plan-start-time" style="margin-top:0;padding:10px 12px;font-size:14px;width:100%;">
                     <div style="font-size:10px;color:#94a3b8;margin-top:4px;">라운딩 / 게임 시작 시간</div>
                 </div>
@@ -1119,16 +1117,16 @@
             <div id="asset-entry-fields" class="field-group hidden">
                 <label class="field-label">구성원</label>
                 <div class="sch-chip-group" id="as-member-group">
-                    <button type="button" class="sch-chip" data-val="공통" onclick="selectChip(this,'as-member-group')">👨‍👩‍👧 공통</button>
-                    <button type="button" class="sch-chip active" data-val="정우설" onclick="selectChip(this,'as-member-group')">👨 정우설</button>
-                    <button type="button" class="sch-chip" data-val="한미연" onclick="selectChip(this,'as-member-group')">👩 한미연</button>
+                    <button type="button" class="sch-chip" data-val="공통" onclick="selectChip(this,'as-member-group')">공통</button>
+                    <button type="button" class="sch-chip active" data-val="정우설" onclick="selectChip(this,'as-member-group')">정우설</button>
+                    <button type="button" class="sch-chip" data-val="한미연" onclick="selectChip(this,'as-member-group')">한미연</button>
                 </div>
                 <input type="hidden" id="as-member" value="정우설">
 
                 <label class="field-label">수입 / 지출</label>
                 <div class="sch-chip-group" id="as-type-group">
-                    <button type="button" class="sch-chip active" data-val="수입" onclick="selectChip(this,'as-type-group');toggleAssetCat()">📥 수입</button>
-                    <button type="button" class="sch-chip"        data-val="지출" onclick="selectChip(this,'as-type-group');toggleAssetCat()">📤 지출</button>
+                    <button type="button" class="sch-chip active" data-val="수입" onclick="selectChip(this,'as-type-group');toggleAssetCat()">수입</button>
+                    <button type="button" class="sch-chip"        data-val="지출" onclick="selectChip(this,'as-type-group');toggleAssetCat()">지출</button>
                 </div>
                 <input type="hidden" id="as-type" value="수입">
 
@@ -1136,10 +1134,10 @@
                 <div id="as-income-section">
                     <label class="field-label">수입 구분</label>
                     <div class="sch-chip-group" id="as-income-cat-group">
-                        <button type="button" class="sch-chip active" data-val="급여"    onclick="selectChip(this,'as-income-cat-group')">💼 급여</button>
-                        <button type="button" class="sch-chip"        data-val="상여"    onclick="selectChip(this,'as-income-cat-group')">🎁 상여</button>
-                        <button type="button" class="sch-chip"        data-val="주식"    onclick="selectChip(this,'as-income-cat-group')">📈 주식</button>
-                        <button type="button" class="sch-chip"        data-val="기타수입" onclick="selectChip(this,'as-income-cat-group')">💰 기타</button>
+                        <button type="button" class="sch-chip active" data-val="급여"    onclick="selectChip(this,'as-income-cat-group')">급여</button>
+                        <button type="button" class="sch-chip"        data-val="상여"    onclick="selectChip(this,'as-income-cat-group')">상여</button>
+                        <button type="button" class="sch-chip"        data-val="주식"    onclick="selectChip(this,'as-income-cat-group')">주식</button>
+                        <button type="button" class="sch-chip"        data-val="기타수입" onclick="selectChip(this,'as-income-cat-group')">기타</button>
                     </div>
                     <input type="hidden" id="as-income-cat" value="급여">
                 </div>
@@ -1148,22 +1146,22 @@
                 <div id="as-expense-section" style="display:none;">
                     <label class="field-label">지출 유형</label>
                     <div class="sch-chip-group" id="as-expense-cat-group">
-                        <button type="button" class="sch-chip" data-val="생활비"  onclick="selectChip(this,'as-expense-cat-group')">🏠 생활비</button>
-                        <button type="button" class="sch-chip" data-val="의료비"  onclick="selectChip(this,'as-expense-cat-group')">🏥 의료비</button>
-                        <button type="button" class="sch-chip" data-val="쇼핑"    onclick="selectChip(this,'as-expense-cat-group')">🛍 쇼핑</button>
-                        <button type="button" class="sch-chip" data-val="식사"    onclick="selectChip(this,'as-expense-cat-group')">🍽 식사</button>
-                        <button type="button" class="sch-chip" data-val="교통비"  onclick="selectChip(this,'as-expense-cat-group')">🚗 교통비</button>
-                        <button type="button" class="sch-chip" data-val="여가"    onclick="selectChip(this,'as-expense-cat-group')">🎭 여가</button>
-                        <button type="button" class="sch-chip" data-val="여행비"  onclick="selectChip(this,'as-expense-cat-group')">✈️ 여행비</button>
-                        <button type="button" class="sch-chip" data-val="가족"    onclick="selectChip(this,'as-expense-cat-group')">👨‍👩‍👧 가족</button>
-                        <button type="button" class="sch-chip" data-val="기타지출" onclick="selectChip(this,'as-expense-cat-group')">📌 기타</button>
+                        <button type="button" class="sch-chip" data-val="생활비"  onclick="selectChip(this,'as-expense-cat-group')">생활비</button>
+                        <button type="button" class="sch-chip" data-val="의료비"  onclick="selectChip(this,'as-expense-cat-group')">의료비</button>
+                        <button type="button" class="sch-chip" data-val="쇼핑"    onclick="selectChip(this,'as-expense-cat-group')">쇼핑</button>
+                        <button type="button" class="sch-chip" data-val="식사"    onclick="selectChip(this,'as-expense-cat-group')">식사</button>
+                        <button type="button" class="sch-chip" data-val="교통비"  onclick="selectChip(this,'as-expense-cat-group')">교통비</button>
+                        <button type="button" class="sch-chip" data-val="여가"    onclick="selectChip(this,'as-expense-cat-group')">여가</button>
+                        <button type="button" class="sch-chip" data-val="여행비"  onclick="selectChip(this,'as-expense-cat-group')">여행비</button>
+                        <button type="button" class="sch-chip" data-val="가족"    onclick="selectChip(this,'as-expense-cat-group')">가족</button>
+                        <button type="button" class="sch-chip" data-val="기타지출" onclick="selectChip(this,'as-expense-cat-group')">기타</button>
                     </div>
                     <input type="hidden" id="as-expense-cat" value="생활비">
 
                     <label class="field-label">결제 수단</label>
                     <div class="sch-chip-group" id="as-pay-group">
-                        <button type="button" class="sch-chip active" data-val="카드" onclick="selectChip(this,'as-pay-group')">💳 카드</button>
-                        <button type="button" class="sch-chip"        data-val="현금" onclick="selectChip(this,'as-pay-group')">💵 현금</button>
+                        <button type="button" class="sch-chip active" data-val="카드" onclick="selectChip(this,'as-pay-group')">카드</button>
+                        <button type="button" class="sch-chip"        data-val="현금" onclick="selectChip(this,'as-pay-group')">현금</button>
                     </div>
                     <input type="hidden" id="as-pay" value="카드">
                 </div>

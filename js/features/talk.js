@@ -77,8 +77,8 @@ function talkRender() {
             <button class="tk-lang them" onclick="talkPickLang()">${T[3]} ${T[1]} <span>▾</span></button>
         </div>
         ${sug && sug.lang !== talk.them ? `<button class="tk-sug" onclick="talkSetThem('${sug.lang}')">✈️ ${famEsc(sug.loc)} 여행 · ${tLang(sug.lang)[1]}로 바꾸기</button>` : ''}
-        ${!navigator.onLine ? `<div class="tk-sug warn">📴 인터넷 연결 없음 · 저장해 둔 문장집과 ⭐ 즐겨찾기만 쓸 수 있습니다</div>` : talkHasKey() ? '' : `<button class="tk-sug warn" onclick="famOpenSettings()">⚙️ AI 키를 먼저 설정하세요 (Gemini 권장)</button>`}
-        <div class="tk-seg">${[['conv', '💬 대화'], ['photo', '📷 사진'], ['book', '📖 문장집']].map(([k, n]) => `<button class="${talk.tab === k ? 'on' : ''}" onclick="talkTab('${k}')">${n}</button>`).join('')}</div>
+        ${!navigator.onLine ? `<div class="tk-sug warn">📴 인터넷 연결 없음 · 저장해 둔 문장집과 ⭐ 즐겨찾기만 쓸 수 있습니다</div>` : talkHasKey() ? '' : `<button class="tk-sug warn" onclick="famOpenSettings()">AI 키를 먼저 설정하세요 (Gemini 권장)</button>`}
+        <div class="tk-seg">${[['conv', fi('chat') + '대화'], ['photo', fi('camera') + '사진'], ['book', fi('book') + '문장집']].map(([k, n]) => `<button class="${talk.tab === k ? 'on' : ''}" onclick="talkTab('${k}')">${n}</button>`).join('')}</div>
         <div class="tk-body" id="tk-body"></div>
         <div class="tk-dock" id="tk-dock" ${talk.tab === 'conv' ? '' : 'style="display:none"'}>
             <div class="tk-input"><textarea id="tk-txt" rows="1" enterkeyhint="send" placeholder="입력하면 언어를 알아서 판단합니다" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,96)+'px'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();talkSendText()}"></textarea><button onclick="talkSendText()">➤</button></div>
@@ -100,7 +100,7 @@ function talkBody() {
             <div class="tk-empty">
                 <b>${tLang(talk.them)[3]} ${tLang(talk.them)[1]} 대화</b>
                 <p>아래 마이크를 누르고 말하면 번역해서 읽어줍니다.<br>왼쪽은 우리, 오른쪽은 상대방 버튼입니다.</p>
-                <div class="tk-empty-btns"><button onclick="talkFace()">↕ 마주보기로 대화</button><button onclick="talkTab('book')">📖 상황별 문장</button><button onclick="talkTab('photo')">📷 메뉴판 번역</button></div>
+                <div class="tk-empty-btns"><button onclick="talkFace()">${fi('swap')}마주보기로 대화</button><button onclick="talkTab('book')">${fi('book')}상황별 문장</button><button onclick="talkTab('photo')">${fi('camera')}메뉴판 번역</button></div>
             </div><div id="tk-live"></div>`;
         b.scrollTop = b.scrollHeight;
     } else if (talk.tab === 'photo') talkPhotoBody(b);

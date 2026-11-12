@@ -3,11 +3,11 @@
         const planFilters = { sort:'asc', period:'all', member:'all', area:'all', type:'all' };
         // 버튼 레이블 기본값
         const filterLabels = {
-            sort:   { asc:'📅 정렬', desc:'📅 정렬' },
-            period: { all:'🗓 기간' },   // 동적으로 채워짐
-            member: { all:'👥 구성원', 공통:'👨‍👩‍👧 공통', 정우설:'👨 정우설', 한미연:'👩 한미연' },
-            area:   { all:'🌐 지역', 국내:'🇰🇷 국내', 해외:'🌏 해외' },
-            type:   { all:'🗂 유형', 여행:'✈️ 여행', 캠핑:'⛺ 캠핑', 골프:'⛳ 골프', 스크린골프:'🏌️ 스크린', 등산:'🏔️ 등산', 기타:'📌 기타' },
+            sort:   { asc:'정렬', desc:'정렬' },
+            period: { all:'기간' },   // 동적으로 채워짐
+            member: { all:'구성원', 공통:'공통', 정우설:'정우설', 한미연:'한미연' },
+            area:   { all:'지역', 국내:'국내', 해외:'해외' },
+            type:   { all:'유형', 여행:'여행', 캠핑:'캠핑', 골프:'골프', 스크린골프:'스크린', 등산:'등산', 기타:'기타' },
         };
 
         function togglePlanFilter(key) {
@@ -80,10 +80,10 @@
             planFilters[key] = val;
             // period 레이블 동적 업데이트
             if (key === 'period') {
-                if (val === 'all') filterLabels.period.all = '🗓 기간';
-                else if (val.startsWith('Y')) filterLabels.period[val] = '🗓 ' + val.slice(1)+'년';
-                else if (val.startsWith('M')) { const [y,m]=val.slice(1).split('-'); filterLabels.period[val]='🗓 '+y.slice(2)+'년 '+parseInt(m)+'월'; }
-                else if (val.startsWith('W')) { const wn=val.slice(1).split('~')[0]; filterLabels.period[val]='🗓 W'+wn.split('-W')[1]||wn; }
+                if (val === 'all') filterLabels.period.all = '기간';
+                else if (val.startsWith('Y')) filterLabels.period[val] = val.slice(1)+'년';
+                else if (val.startsWith('M')) { const [y,m]=val.slice(1).split('-'); filterLabels.period[val]=y.slice(2)+'년 '+parseInt(m)+'월'; }
+                else if (val.startsWith('W')) { const wn=val.slice(1).split('~')[0]; filterLabels.period[val]='W'+wn.split('-W')[1]||wn; }
             }
             // 선택 시 박스 닫기
             const box = document.getElementById(`fbox-${key}`);
