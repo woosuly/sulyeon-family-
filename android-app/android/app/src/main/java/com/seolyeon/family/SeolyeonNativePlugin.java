@@ -15,6 +15,16 @@ import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import androidx.core.content.ContextCompat;
+import androidx.credentials.Credential;
+import androidx.credentials.CredentialManager;
+import androidx.credentials.CredentialManagerCallback;
+import androidx.credentials.CustomCredential;
+import androidx.credentials.GetCredentialRequest;
+import androidx.credentials.GetCredentialResponse;
+import androidx.credentials.exceptions.GetCredentialException;
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption;
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 
 /** 알림이 잘 오도록 휴대폰 설정 화면을 열어 주는 기능 */
 @CapacitorPlugin(name = "SeolyeonNative")
@@ -170,5 +180,32 @@ public class SeolyeonNativePlugin extends Plugin {
         i.setData(Uri.parse("package:" + getContext().getPackageName()));
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         getContext().startActivity(i);
+    }
+
+    /** Google 로그인 (앱 안 웹화면에서는 Google 로그인 페이지가 막혀 있어 안드로이드 기본 로그인 창 사용) */
+    @PluginMethod
+    public void googleSignIn(PluginCall call) {
+        String cid = call.getString("clientId");
+        if (cid == null || cid.isEmpty()) { call.reject("clientId 없음"); return; }
+        GetSignInWithGoogleOption opt = new GetSignInWithGoogleOption.Builder(cid).build();
+        GetCredentialRequest req = new GetCredentialRequest.Builder().addCredentialOption(opt).build();
+        CredentialManager cm = CredentialManager.create(getContext());
+        cm.getCredentialAsync(getActivity(), req, null, ContextCompat.getMainExecutor(getContext()),
+            new CredentialManagerCallback<GetCredentialResponse, GetCredentialException>() {
+                @Override
+                public void onResult(GetCredentialResponse r) {
+                    Credential c = r.getCredential();
+                    if (c instanceof CustomCredential && GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL.equals(c.getType())) {
+                        try {
+                            GoogleIdTokenCredential g = GoogleIdTokenCredential.createFrom(((CustomCredential) c).getData());
+                            JSObject o = new JSObject();
+                            o.put("idToken", g.getIdToken());
+                            call.resolve(o);
+                        } catch (Exception e) { call.reject("토큰 읽기 실패: " + e.getMessage()); }
+                    } else call.reject("Google 계정 정보가 아님");
+                }
+                @Override
+                public void onError(GetCredentialException e) { call.reject(e.getType() + " " + e.getMessage()); }
+            });
     }
 }

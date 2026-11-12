@@ -48,8 +48,21 @@
     }
     function famLoginHide() { const o = document.getElementById('fam-login'); if (o) o.style.display = 'none'; }
     function famLoginMsg(t) { const m = document.getElementById('fam-login-msg'); if (m && t) m.textContent = t; }
+    // 안드로이드 앱: 웹 로그인 페이지가 막혀 있어 앱 기본 Google 로그인 창 사용 (웹 클라이언트 ID)
+    const FAM_WEB_CLIENT_ID = '143116408143-rdf4alrv2ttf1su8ilvfdu0bercfc08b.apps.googleusercontent.com';
     async function famLogin() {
         const a = firebase.auth(), pv = new firebase.auth.GoogleAuthProvider(); pv.setCustomParameters({ prompt: 'select_account' });
+        const N = window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform() && Capacitor.Plugins && Capacitor.Plugins.SeolyeonNative;
+        if (N) {
+            try {
+                const r = await N.googleSignIn({ clientId: FAM_WEB_CLIENT_ID });
+                await a.signInWithCredential(firebase.auth.GoogleAuthProvider.credential(r.idToken));
+            } catch (e) {
+                const m = String((e && e.message) || e);
+                famLoginMsg(/Cancel/i.test(m) ? '' : (/not implemented|is not a function/i.test(m) ? '앱을 최신 버전으로 업데이트해 주세요.' : '로그인 실패: ' + m));
+            }
+            return;
+        }
         try { await a.signInWithPopup(pv); }
         catch (e) {
             if (/popup-blocked|operation-not-supported|web-storage-unsupported/.test(e.code || '')) { try { await a.signInWithRedirect(pv); } catch (e2) { famLoginMsg(famAuthErr(e2)); } }
