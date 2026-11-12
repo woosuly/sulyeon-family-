@@ -30,11 +30,17 @@ jobs:
       - name: 서명 키
         env:
           KS: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KP: ${{ secrets.ANDROID_KEYSTORE_PASS }}
         run: |
-          if [ -n "$KS" ]; then echo "$KS" | tr -d ' \r\n' | base64 -d > android-app/android/app/release.keystore
+          # 저장소의 암호화된 키(release.keystore.enc)를 짧은 비밀번호로 풀어 사용
+          if [ -z "$KS" ] && [ -n "$KP" ] && [ -f android-app/android/app/release.keystore.enc ]; then
+            openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in android-app/android/app/release.keystore.enc -out android-app/android/app/release.keystore -pass "pass:$(echo "$KP" | tr -d ' \r\n')"
+            KS=used-enc; fi
+          if [ "$KS" = used-enc ]; then echo "암호화된 키 사용"; keytool -list -keystore android-app/android/app/release.keystore -storepass seolyeon-family | head -5
+          elif [ -n "$KS" ]; then echo "$KS" | tr -d ' \r\n' | base64 -d > android-app/android/app/release.keystore
             echo "키 파일 확인(sha256 앞부분): $(sha256sum android-app/android/app/release.keystore | cut -c1-12), 크기 $(stat -c%s android-app/android/app/release.keystore)"
             keytool -list -keystore android-app/android/app/release.keystore -storepass seolyeon-family | head -5 || true
-          else echo "::warning::서명 키(ANDROID_KEYSTORE_B64)가 없어 임시 키로 서명합니다. 이 APK는 업데이트 설치가 안 될 수 있어요."; fi
+          else echo "::warning::서명 키(ANDROID_KEYSTORE_PASS)가 없어 임시 키로 서명합니다. 이 APK는 업데이트 설치가 안 될 수 있어요."; fi
       - name: 빌드
         working-directory: android-app/android
         run: chmod +x gradlew && ./gradlew assembleRelease -Pvc=${{ github.run_number }} --no-daemon
