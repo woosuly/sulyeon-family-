@@ -9,7 +9,27 @@
     const FAM_NAMES = { claude:'Claude', gpt:'GPT', gemini:'Gemini' };
     const famEsc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     function famLS(k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; } }
-    function famKeys() { return (typeof timGetKeys === 'function') ? timGetKeys() : { gemini: famLS('timKey_gemini') || '', claude: famLS('timKey_claude') || '', gpt: famLS('timKey_gpt') || '' }; }
+    // AI 키: 한 사람이 설정에 넣으면 가족 공유 문서(config/aiShared)에 저장 → 다른 폰은 AI 종류만 고르면 됨
+    let famShared = (() => { try { return JSON.parse(famLS('famSharedKeys') || '{}') || {}; } catch (e) { return {}; } })();
+    function famLocalKeys() { return (typeof timGetKeys === 'function') ? timGetKeys() : { gemini: famLS('timKey_gemini') || '', claude: famLS('timKey_claude') || '', gpt: famLS('timKey_gpt') || '' }; }
+    function famKeys() { const l = famLocalKeys(), o = {}; ['gemini', 'claude', 'gpt'].forEach(p => o[p] = famShared[p] || l[p] || ''); return o; }
+    (function famSharedListen() {
+        try {
+            firebase.auth().onAuthStateChanged(u => {
+                if (!u) return;
+                db.collection('config').doc('aiShared').onSnapshot(d => {
+                    famShared = d.exists ? (d.data() || {}) : {};
+                    famLS('famSharedKeys', JSON.stringify({ gemini: famShared.gemini || '', claude: famShared.claude || '', gpt: famShared.gpt || '', by: famShared.by || '' }));
+                    if (famShared.gemini && typeof _GCLOUD_KEY !== 'undefined') { try { _GCLOUD_KEY = famShared.gemini; } catch (e) {} }
+                    const st = document.getElementById('fam-settings-body'); if (st && st.offsetParent) famRenderSettings();
+                }, () => {});
+                // 이 폰에만 있던 키는 처음 한 번 공유 문서로 올림
+                const l = famLocalKeys(), up = {};
+                ['gemini', 'claude', 'gpt'].forEach(p => { if (l[p] && !famShared[p]) up[p] = l[p]; });
+                if (Object.keys(up).length) db.collection('config').doc('aiShared').set({ ...up, by: famUser(), at: Date.now() }, { merge: true }).catch(() => {});
+            });
+        } catch (e) {}
+    })();
     function famProv() { const p = famLS('famAI_provider'); if (p) return p; const k = famKeys(); return k.claude ? 'claude' : k.gemini ? 'gemini' : k.gpt ? 'gpt' : 'claude'; }
     function famModelList(p) { try { const l = JSON.parse(famLS('famAI_list_' + p) || 'null'); if (l && l.length) return l; } catch (e) {} return FAM_MODEL_DEFAULTS[p]; }
     function famModel(p) { return famLS('famAI_model_' + p) || famModelList(p)[0]; }
@@ -17,6 +37,9 @@
         v = (v || '').trim();
         famLS('timKey_' + p, v || null);
         if (p === 'gemini' && typeof _GCLOUD_KEY !== 'undefined') { try { _GCLOUD_KEY = v; } catch (e) {} }
+        famShared[p] = v;
+        clearTimeout(famSetKey._t);
+        famSetKey._t = setTimeout(() => { try { db.collection('config').doc('aiShared').set({ [p]: v, by: famUser(), at: Date.now() }, { merge: true }).catch(e => famToast('키 공유 저장 실패: ' + e.message)); } catch (e) {} }, 800);
     }
 
     async function famCallAI(system, user, opt) {
@@ -92,14 +115,14 @@
                 <button class="fam-btn" style="width:100%" onclick="famCloseSettings();openThemeColorModal();">앱 테마 색상 변경</button>
             </div>
             <div class="fam-box"><h4>🤖 AI 연결</h4>
-                <div class="fam-note" style="margin:0 0 10px">NEWS 브리프와 가계부 AI 분석에 사용됩니다. 키는 이 기기에만 저장됩니다.</div>
+                <div class="fam-note" style="margin:0 0 10px">번역, 홈 비서, NEWS, 가계부 분석에 사용됩니다. 키는 한 사람만 넣으면 가족 계정에 저장되어 다른 폰에서도 그대로 씁니다. 다른 폰에서는 사용할 AI만 고르면 됩니다.</div>
                 <span class="fam-lbl" style="margin-top:0">사용할 AI</span>
                 <div class="fam-seg">${['claude', 'gpt', 'gemini'].map(k => `<button class="${k === p ? 'on' : ''}" onclick="famSetProv('${k}')">${FAM_NAMES[k]}</button>`).join('')}</div>
                 <span class="fam-lbl">${FAM_NAMES[p]} API 키</span>
                 <input id="fam-key" class="fam-in" type="text" style="${famShowKey ? '' : '-webkit-text-security:disc'}" value="${famEsc(key)}" placeholder="${FAM_NAMES[p]} API 키 붙여넣기" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" oninput="famKeyInput(this.value)">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
                     <label class="fam-chk" style="border:none;padding:0;background:none"><input type="checkbox" ${famShowKey ? 'checked' : ''} onchange="famShowKey=this.checked;document.getElementById('fam-key').style.webkitTextSecurity=this.checked?'none':'disc'"> 키 보이기</label>
-                    <span id="fam-key-st" style="font-size:11px;color:#64748b">${key ? '입력됨 · 끝자리 ' + famEsc(key.slice(-4)) : '미입력'}</span>
+                    <span id="fam-key-st" style="font-size:11px;color:#64748b">${key ? (famShared[p] ? '공유됨' + (famShared.by ? ' · ' + famEsc(famShared.by) + ' 등록' : '') : '입력됨') + ' · 끝자리 ' + famEsc(key.slice(-4)) : '미입력'}</span>
                 </div>
                 <span class="fam-lbl">${FAM_NAMES[p]} 모델</span>
                 <select class="fam-sel" onchange="famPickModel(this.value)">${list.map(m => `<option value="${famEsc(m)}" ${m === cur && !custom ? 'selected' : ''}>${famEsc(m)}</option>`).join('')}<option value="__custom" ${custom ? 'selected' : ''}>직접 입력…</option></select>
@@ -128,7 +151,7 @@
             const out = { app: '설연 Family', version: FAM_VER, exportedAt: new Date().toISOString(), by: famUser(), data: {} };
             for (const c of FAM_BACKUP_COLS) {
                 const snap = await db.collection(c).get({ source: 'server' }).catch(() => db.collection(c).get());
-                out.data[c] = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+                out.data[c] = snap.docs.filter(d => !(c === 'config' && d.id === 'aiShared')).map(d => ({ _id: d.id, ...d.data() }));   // AI 키는 백업 파일에서 제외
             }
             const json = JSON.stringify(out, (k, v) => (v && typeof v.toDate === 'function') ? v.toDate().toISOString() : v, 1);
             famDownload(`seolyeon-backup-${famYmd(new Date())}.json`, json, 'application/json');
