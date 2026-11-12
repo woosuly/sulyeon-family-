@@ -262,9 +262,9 @@
             const panel = document.getElementById('chat-media-panel');
             if (!panel) return;
             const isOpen = panel.style.display !== 'none';
-            panel.style.display = isOpen ? 'none' : 'block';
+            panel.style.display = isOpen ? 'none' : 'grid';
             const btn = document.getElementById('media-btn');
-            if (btn) btn.textContent = isOpen ? '📷' : '✕';
+            if (btn) btn.classList.toggle('open', !isOpen);   // + 아이콘이 ×로 회전
         }
 
         function openChatBgModal() {

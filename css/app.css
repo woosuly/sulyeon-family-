@@ -298,6 +298,22 @@
             flex-shrink:0; transition:.15s;
         }
         .chat-send-btn:active { transform:scale(.93); }
+        /* 채팅 입력줄·+메뉴 (한씨네 방식: 선 아이콘, 테마 한 색) */
+        .chat-send-btn { width:44px; height:44px; }
+        .chat-send-btn svg { width:22px; height:22px; }
+        .chat-newline-btn { background:none; border:none; color:#94a3b8; padding:4px; display:flex; }
+        .chat-newline-btn svg { width:18px; height:18px; }
+        .chat-pm-btn { flex-shrink:0; width:40px; height:44px; border:none; background:none; color:#64748b; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; }
+        .chat-pm-btn svg { width:26px; height:26px; transition:transform .15s; }
+        .chat-pm-btn.open svg { transform:rotate(45deg); }
+        .chat-plusmenu { grid-template-columns:repeat(6,minmax(0,1fr)); gap:4px; background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:10px 4px; margin-bottom:6px; box-shadow:0 4px 16px rgba(0,0,0,.08); flex-shrink:0; }
+        .cpm-i { border:none; background:none; display:flex; flex-direction:column; align-items:center; gap:4px; font-size:11.5px; color:#334155; cursor:pointer; padding:2px; font-family:inherit; }
+        .cpm-i span { width:44px; height:44px; border-radius:14px; background:color-mix(in srgb, var(--month-header) 12%, #fff); color:var(--month-header); display:flex; align-items:center; justify-content:center; }
+        .cpm-i svg { width:22px; height:22px; }
+        .chat-chip { display:inline-flex; align-items:center; gap:4px; font-size:12px; padding:5px 10px; border-radius:20px; border:1.5px solid #e2e8f0; background:#fff; color:#475569; font-weight:600; cursor:pointer; font-family:inherit; }
+        .chat-chip svg { width:14px; height:14px; }
+        .chat-search-ic { display:flex; color:#94a3b8; }
+        .chat-search-ic svg { width:16px; height:16px; }
 
         /* ── 프로필 선택 모달 ── */
 
