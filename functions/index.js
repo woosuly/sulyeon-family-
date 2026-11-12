@@ -1,56 +1,47 @@
+/* 설연 가족 앱 서버 기능: 새 채팅이 오면 가족 폰에 푸시 알림 (FCM 토큰 방식) */
 const {onDocumentCreated} = require('firebase-functions/v2/firestore');
-const admin = require('firebase-admin');
-const webpush = require('web-push');
+const {initializeApp} = require('firebase-admin/app');
+const {getFirestore} = require('firebase-admin/firestore');
+const {getMessaging} = require('firebase-admin/messaging');
 
-admin.initializeApp();
+initializeApp();
+const db = getFirestore();
 
-const VAPID_PUBLIC = 'BDlXswc9xHJln8xnXJ_EBBtBAms9h2luzkBFHgP4ScfVsWA4cdQHF_Esa8Ng46eFO_aS2DlFRQJsP5Tv4RUCsbo';
+const TYPE_BODY = {image: '사진을 보냈어요', video: '동영상을 보냈어요', location: '위치를 보냈어요', file: '파일을 보냈어요'};
+const clip = (s, n) => { s = String(s || ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
 
 exports.sendChatNotif = onDocumentCreated(
   {document: 'messages/{msgId}', region: 'asia-northeast3'},
   async (event) => {
-    const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY;
-    if (!VAPID_PRIVATE) { console.error('no vapid key'); return; }
-
-    webpush.setVapidDetails('mailto:woosuly@gmail.com', VAPID_PUBLIC, VAPID_PRIVATE);
-
-    const msg = event.data.data();
+    const msg = event.data && event.data.data();
+    if (!msg) return;
     const sender = msg.sender || 'Family';
-    const body = (msg.text || 'new message').slice(0, 60);
+    const body = clip(msg.text || TYPE_BODY[msg.type] || '새 메시지', 120);
+    const msgId = event.params.msgId;
 
-    const tokensSnap = await admin.firestore()
-      .collection('pushTokens')
-      .where('token', '!=', sender)
-      .get();
+    // 보낸 사람을 뺀 가족의 폰 (FCM 토큰이 있는 것만, 예전 web-push 구독은 무시)
+    const snap = await db.collection('pushTokens').where('token', '!=', sender).get();
+    const devs = snap.docs.map(d => ({ref: d.ref, ...d.data()})).filter(d => d.fcm);
+    if (!devs.length) { console.log('no tokens'); return; }
 
-    if (tokensSnap.empty) { console.log('no tokens'); return; }
+    const tokens = [...new Set(devs.map(d => d.fcm))];
+    // 데이터 메시지로 보내고, 표시는 앱(네이티브)·서비스워커(브라우저)가 함
+    const res = await getMessaging().sendEachForMulticast({
+      tokens,
+      data: {k: 'chat', id: msgId, title: '💬 ' + sender, body, tag: 'chat-' + msgId, sender},
+      webpush: {headers: {Urgency: 'high', TTL: '86400'}},
+      android: {priority: 'high', ttl: 86400 * 1000},
+    });
 
-    const subs = tokensSnap.docs.map(d => d.data()).filter(d => d.endpoint && d.p256dh && d.auth);
-    if (!subs.length) { console.log('no subs'); return; }
-
-    const payload = JSON.stringify({sender, body});
-
-    const results = await Promise.allSettled(
-      subs.map(sub => webpush.sendNotification(
-        {endpoint: sub.endpoint, keys: {p256dh: sub.p256dh, auth: sub.auth}},
-        payload,
-        // urgency high: 절전(Doze) 상태 폰에도 바로 전달 · topic: 아직 못 받은 이전 알림은 최신 것으로 대체 · TTL: 하루 지나면 폐기
-        {TTL: 86400, urgency: 'high', topic: 'chat'}
-      ))
-    );
-
-    for (let i = 0; i < results.length; i++) {
-      const r = results[i];
-      if (r.status === 'rejected') {
-        console.log('fail:', subs[i].token, r.reason && r.reason.statusCode);
-        if (r.reason && (r.reason.statusCode === 404 || r.reason.statusCode === 410)) {
-          const old = await admin.firestore().collection('pushTokens')
-            .where('endpoint', '==', subs[i].endpoint).get();
-          old.forEach(function(d) { d.ref.delete(); });
-        }
-      } else {
-        console.log('ok:', subs[i].token);
-      }
-    }
+    // 결과 기록 + 더 이상 쓰지 않는 토큰 정리
+    const dead = [];
+    res.responses.forEach((r, i) => {
+      const who = devs.filter(d => d.fcm === tokens[i]).map(d => d.token + (d.native ? '(앱)' : '(웹)')).join(',');
+      if (r.success) { console.log('ok:', who); return; }
+      const code = r.error && r.error.code;
+      console.log('fail:', who, code);
+      if (code === 'messaging/registration-token-not-registered' || code === 'messaging/invalid-registration-token') dead.push(tokens[i]);
+    });
+    await Promise.all(devs.filter(d => dead.includes(d.fcm)).map(d => d.ref.delete().catch(() => null)));
   }
 );

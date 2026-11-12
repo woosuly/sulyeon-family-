@@ -1,0 +1,16 @@
+{
+  "name": "seolyeon-android",
+  "private": true,
+  "version": "1.0.0",
+  "description": "설연 가족 앱 안드로이드 껍데기 (웹 앱을 열고 알림을 담당)",
+  "dependencies": {
+    "@capacitor-community/speech-recognition": "7.0.1",
+    "@capacitor/android": "7.6.10",
+    "@capacitor/app": "7.1.2",
+    "@capacitor/core": "7.6.10",
+    "@capacitor/push-notifications": "7.0.7"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "7.6.10"
+  }
+}

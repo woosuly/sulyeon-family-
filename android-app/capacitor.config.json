@@ -1,0 +1,18 @@
+{
+  "appId": "com.seolyeon.family",
+  "appName": "설연",
+  "webDir": "www",
+  "server": {
+    "url": "https://woosuly.github.io/sulyeon-family-/",
+    "androidScheme": "https",
+    "errorPath": "offline.html"
+  },
+  "android": {
+    "backgroundColor": "#f0f4f8"
+  },
+  "plugins": {
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    }
+  }
+}

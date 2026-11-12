@@ -1,0 +1,50 @@
+# 안드로이드 앱(APK) 만들기: android-app 폴더가 바뀌면 자동으로 빌드해 '릴리스'에 올림
+# 설치 주소: https://github.com/woosuly/sulyeon-family-/releases/latest/download/seolyeon.apk
+name: 안드로이드 앱 만들기
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['android-app/**', '.github/workflows/apk.yml']
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Firebase 설정 파일 확인
+        run: |
+          if [ ! -f android-app/android/app/google-services.json ]; then
+            echo "::error::android-app/android/app/google-services.json 이 없습니다. Firebase 콘솔에서 안드로이드 앱(com.seolyeon.family)을 추가하고 받은 파일을 올려 주세요."; exit 1; fi
+      - name: 준비
+        working-directory: android-app
+        run: npm ci && npx cap sync android
+      - name: 서명 키
+        env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KS" ]; then echo "$KS" | tr -d ' \r\n' | base64 -d > android-app/android/app/release.keystore
+            echo "키 파일 확인(sha256 앞부분): $(sha256sum android-app/android/app/release.keystore | cut -c1-12), 크기 $(stat -c%s android-app/android/app/release.keystore)"
+            keytool -list -keystore android-app/android/app/release.keystore -storepass seolyeon-family | head -5 || true
+          else echo "::warning::서명 키(ANDROID_KEYSTORE_B64)가 없어 임시 키로 서명합니다. 이 APK는 업데이트 설치가 안 될 수 있어요."; fi
+      - name: 빌드
+        working-directory: android-app/android
+        run: chmod +x gradlew && ./gradlew assembleRelease -Pvc=${{ github.run_number }} --no-daemon
+      - name: 파일 이름 정리
+        run: cp android-app/android/app/build/outputs/apk/release/app-release.apk seolyeon.apk
+      - name: 릴리스에 올리기
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.${{ github.run_number }}
+          name: 설연 앱 1.${{ github.run_number }}
+          body: 설연 가족 앱 안드로이드 설치 파일
+          files: seolyeon.apk
+          make_latest: true

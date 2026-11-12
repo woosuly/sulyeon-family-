@@ -14,8 +14,7 @@
   "main": "index.js",
   "dependencies": {
     "firebase-admin": "^12.7.0",
-    "firebase-functions": "^7.2.5",
-    "web-push": "^3.6.7"
+    "firebase-functions": "^7.2.5"
   },
   "devDependencies": {
     "firebase-functions-test": "^3.4.1"
