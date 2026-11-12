@@ -83,9 +83,9 @@ function talkRender() {
         <div class="tk-dock" id="tk-dock" ${talk.tab === 'conv' ? '' : 'style="display:none"'}>
             <div class="tk-input"><textarea id="tk-txt" rows="1" enterkeyhint="send" placeholder="입력하면 언어를 알아서 판단합니다" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,96)+'px'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();talkSendText()}"></textarea><button onclick="talkSendText()">➤</button></div>
             <div class="tk-mics">
-                <button class="tk-mic me" id="tk-mic-me" onclick="talkMic('me')"><b>🎙</b><span>${M[3]} ${M[1]}</span></button>
+                <button class="tk-mic me" id="tk-mic-me" onclick="talkMic('me')"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></b><span>${M[3]} ${M[1]}</span></button>
                 <button class="tk-face-btn" onclick="talkFace()" title="마주보기">↕<small>마주보기</small></button>
-                <button class="tk-mic them" id="tk-mic-them" onclick="talkMic('them')"><b>🎙</b><span>${T[3]} ${famEsc(T[4])}</span></button>
+                <button class="tk-mic them" id="tk-mic-them" onclick="talkMic('them')"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></b><span>${T[3]} ${famEsc(T[4])}</span></button>
             </div>
             <div class="tk-sub"><label><input type="checkbox" ${talk.auto ? 'checked' : ''} onchange="talk.auto=this.checked;tLS('talkAuto',this.checked)"> 번역 자동 읽어주기</label><button onclick="talkClear()">대화 지우기</button></div>
         </div>`;
