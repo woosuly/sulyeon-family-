@@ -34,6 +34,8 @@ jobs:
           KP: ${{ secrets.ANDROID_KEYSTORE_PASS }}
         run: |
           # 저장소의 암호화된 키(release.keystore.enc)를 짧은 비밀번호로 풀어 사용
+          # (ANDROID_KEYSTORE_B64 에 짧은 비밀번호를 넣은 경우도 비밀번호로 처리)
+          if [ -n "$KS" ] && [ ${#KS} -lt 100 ]; then KP="$KS"; KS=""; fi
           if [ -z "$KS" ] && [ -n "$KP" ] && [ -f android-app/android/app/release.keystore.enc ]; then
             openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in android-app/android/app/release.keystore.enc -out android-app/android/app/release.keystore -pass "pass:$(echo "$KP" | tr -d ' \r\n')"
             KS=used-enc; fi
