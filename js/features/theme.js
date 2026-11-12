@@ -78,6 +78,9 @@
             const solid = raw.includes('gradient') ? (raw.match(/#[0-9a-f]{6}/i) || [])[0] : raw;
             const tcMeta = document.querySelector('meta[name="theme-color"]');
             if (tcMeta && solid) tcMeta.setAttribute('content', solid);
+            // 안드로이드 앱: 하단 내비게이션 바 영역도 같은 색으로 (위·아래 테두리)
+            const nb = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.SeolyeonNative;
+            if (nb && nb.setBars && solid) nb.setBars({ color: solid }).catch(() => {});
             // 그라디언트: 투명도 무시하고 그대로 적용
             if (raw.includes('gradient')) {
                 document.documentElement.style.setProperty('--month-header', raw);

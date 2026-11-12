@@ -16,6 +16,10 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import androidx.core.content.ContextCompat;
+import android.graphics.Color;
+import android.view.View;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.credentials.Credential;
 import androidx.credentials.CredentialManager;
 import androidx.credentials.CredentialManagerCallback;
@@ -207,5 +211,23 @@ public class SeolyeonNativePlugin extends Plugin {
                 @Override
                 public void onError(GetCredentialException e) { call.reject(e.getType() + " " + e.getMessage()); }
             });
+    }
+
+    /** 상태바·내비게이션 바 영역 색 (웹 테마 색에 맞춤) */
+    @PluginMethod
+    public void setBars(PluginCall call) {
+        String c = call.getString("color");
+        getActivity().runOnUiThread(() -> {
+            try {
+                int col = Color.parseColor(c);
+                View wv = getBridge().getWebView();
+                ((View) wv.getParent()).setBackgroundColor(col);
+                double lum = (0.299 * Color.red(col) + 0.587 * Color.green(col) + 0.114 * Color.blue(col)) / 255.0;
+                WindowInsetsControllerCompat ic = WindowCompat.getInsetsController(getActivity().getWindow(), getActivity().getWindow().getDecorView());
+                ic.setAppearanceLightStatusBars(lum > 0.6);
+                ic.setAppearanceLightNavigationBars(lum > 0.6);
+                call.resolve();
+            } catch (Exception e) { call.reject(String.valueOf(e.getMessage())); }
+        });
     }
 }
