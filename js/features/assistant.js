@@ -198,6 +198,7 @@
         for (let n = list.length; n >= 0; n--) { try { localStorage.setItem('famFeedHist', JSON.stringify(list.slice(0, n))); return; } catch (e) {} }
     }
     function famFeedNew() {
+        famAskHist = []; famAskAt = 0;
         const b = document.getElementById('fam-feed-body'); famFeedSave();
         const items = b.querySelectorAll('.ff-card,.ff-me');
         if (!items.length) { famToast('새 대화입니다'); return; }
@@ -264,6 +265,8 @@
         if (m) return famFeedAdd(`"/${famEsc(cmd)}"는 없는 명령입니다. <b>/도움말</b>을 입력해 보세요.`);
         // 슬래시 없음 → 말하듯 쓴 문장 해석 → 자동 분류
         if (famIntent(raw)) return;
+        // AI와 대화 중(15분 이내)이면 짧은 기록 문장('점심 12000')이 아닌 한 이어서 답변
+        if (famAskHist.length && Date.now() - famAskAt < 15 * 60 * 1000 && !(raw.length <= 20 && famParseAmount(raw).amt >= 100)) return famAsk(raw);
         // 알아봐 달라·추천·비교 같은 '물어보는 말'이나 긴 문장은 기록 카드로 보내지 않고 AI 답변으로
         const famAskLike = /[?？]|알아\s*봐|알아봐|찾아\s*봐|추천|좋을지|좋을까|나을까|어때|어떨까|어떤\s*게|알려\s*줘|비교|방법|뭐가|할까|하려는데|하려고|가려는데|갈까|계획|정보|후기|가볼\s*만|맛집|숙소/.test(raw);
         if (famAskLike) return famAsk(raw);
@@ -500,11 +503,16 @@
     function famGoPlan(id) { const p = (planData || []).find(x => String(x.id) === String(id)); famFeedClose(); showSection('travel-section'); if (p) setTimeout(() => openTravelDetail(p), 350); }
 
     // ── AI 웹 검색 ──
+    // 이어지는 대화: 최근 질문·답을 함께 보내 앞 내용을 기억하게 함 (새 대화에서 초기화)
+    let famAskHist = [], famAskAt = 0;
     async function famAsk(q) {
         if (!q) return famFeedAdd('예) <b>/ai 이번 주말 서울 날씨</b>');
         const c = famFeedAdd('<span class="fam-spin"></span>AI가 웹을 검색하는 중…');
         try {
-            const r = await famCallAI('너는 가족이 함께 쓰는 앱의 AI 비서다. 필요하면 웹 검색으로 최신 정보를 확인하고, 한국어로 짧고 정확하게 답한다. 모르면 모른다고 한다.', q, { search: true, maxTokens: 1500 });
+            const ctx = famAskHist.slice(-6).map(h => `사용자: ${h.q}\nAI: ${h.a.slice(0, 1500)}`).join('\n\n');
+            const prompt = ctx ? `[앞선 대화]\n${ctx}\n\n[이번 질문] ${q}\n(앞선 대화의 조건·장소·날짜를 이어서 반영해 답한다. 이미 들은 정보를 다시 묻지 않는다.)` : q;
+            const r = await famCallAI('너는 가족이 함께 쓰는 앱의 AI 비서다. 필요하면 웹 검색으로 최신 정보를 확인하고, 한국어로 짧고 정확하게 답한다. 정보가 조금 부족해도 가정을 밝히고 먼저 구체적으로 답한다. 모르면 모른다고 한다.', prompt, { search: true, maxTokens: 6000 });
+            famAskHist.push({ q, a: r.text || '' }); famAskAt = Date.now();
             const seen = new Set(), src = (r.sources || []).filter(s => /^https?:/.test(s.url) && !seen.has(s.url) && seen.add(s.url)).slice(0, 5);
             const oid = 'ai' + Date.now(); c.dataset.raw = r.text || '';
             c.innerHTML = `<div class="fam-ai" id="${oid}">${famMd(r.text || '(응답 없음)')}</div>${src.length ? `<div style="margin-top:8px;border-top:1px solid #e2e8f0;padding-top:6px">${src.map(s => `<a href="${famEsc(s.url)}" target="_blank" rel="noopener" style="display:block;font-size:11.5px;color:#2563eb;padding:2px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">↗ ${famEsc(s.title)}</a>`).join('')}</div>` : ''}<div class="fam-note" style="display:flex;align-items:center;gap:6px">${famEsc(FAM_NAMES[famProv()])} · 웹 검색<button onclick="famSpeak(this,'${oid}','ko-KR')" style="margin-left:auto;border:none;background:none;font-size:15px;cursor:pointer;padding:2px 4px">🔊</button></div>`;
