@@ -168,7 +168,7 @@
             const N = famPlug('SeolyeonNative');
             if (!N || famNativeBooted) return;
             famNativeBooted = true;
-            const go = r => { if (r && r.k === 'chat' && typeof showSection === 'function') showSection('chat-section'); };
+            const go = r => { if (r && r.k === 'chat' && typeof showSection === 'function') showSection('chat-section'); if (r && r.k === 'card' && typeof ibOpen === 'function') { if (typeof showSection === 'function') showSection('main-section'); ibDrain().then(ibOpen); } };
             N.takeLaunchPush().then(go).catch(() => {});
             N.addListener('pushOpen', go);
             famBackBind();

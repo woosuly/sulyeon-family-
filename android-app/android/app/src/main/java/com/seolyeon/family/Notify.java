@@ -17,6 +17,7 @@ import java.util.Map;
 public class Notify {
     public static final String CH_FAMILY = "family";
     public static final String CH_SOS = "sos";
+    public static final String CH_LEDGER = "ledger";
 
     public static void createChannels(Context c) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
@@ -28,12 +29,15 @@ public class Notify {
         fam.setVibrationPattern(new long[]{0, 200, 100, 200});
         fam.setLockscreenVisibility(NotificationCompat.VISIBILITY_PUBLIC);
         nm.createNotificationChannel(fam);
+        NotificationChannel led = new NotificationChannel(CH_LEDGER, "가계부 확인", NotificationManager.IMPORTANCE_DEFAULT);
+        led.setDescription("카드 결제 문자를 가계부에 반영할지 확인");
+        nm.createNotificationChannel(led);
     }
 
     public static void show(Context c, Map<String, String> d) {
         createChannels(c);
         String k = val(d, "k"), id = val(d, "id");
-        boolean sos = "sos".equals(k);
+        boolean sos = "sos".equals(k), card = "card".equals(k);
         String tag = val(d, "tag").isEmpty() ? k + "-" + id : val(d, "tag");
 
         Intent open = new Intent(c, MainActivity.class);
@@ -44,7 +48,7 @@ public class Notify {
         PendingIntent pi = PendingIntent.getActivity(c, req, open,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        NotificationCompat.Builder b = new NotificationCompat.Builder(c, sos ? CH_SOS : CH_FAMILY)
+        NotificationCompat.Builder b = new NotificationCompat.Builder(c, sos ? CH_SOS : card ? CH_LEDGER : CH_FAMILY)
                 .setSmallIcon(R.drawable.ic_stat_notify)
                 .setColor(0xFF2B3A55)
                 .setContentTitle(val(d, "title").isEmpty() ? "설연" : val(d, "title"))
@@ -61,7 +65,7 @@ public class Notify {
             // 긴급: 잠금화면 위에 바로 띄움 (권한이 있을 때)
             if (canFullScreen(c)) b.setFullScreenIntent(pi, true);
         }
-        wakeScreen(c);
+        if (!card) wakeScreen(c);   // 가계부 확인 알림은 화면을 켜지 않음
         try {
             NotificationManagerCompat.from(c).notify(tag, 1, b.build());
         } catch (SecurityException e) {

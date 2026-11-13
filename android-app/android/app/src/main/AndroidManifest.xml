@@ -33,6 +33,16 @@
             </intent-filter>
         </service>
 
+        <!-- 카드 결제 문자 읽기: 폰 알림 중 카드 승인·취소 문자만 골라 가계부 확인 대기로 -->
+        <service android:name=".CardNotifListener"
+            android:label="설연 카드 문자 기록"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
         <!-- 푸시 알림 기본값: 가족 소식 채널, 알림 아이콘·색 -->
         <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="family" />
         <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/ic_stat_notify" />
@@ -59,6 +69,7 @@
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_SMS" />
     <queries>
         <intent><action android:name="android.speech.RecognitionService" /></intent>
         <intent><action android:name="android.intent.action.TTS_SERVICE" /></intent>

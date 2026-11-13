@@ -15,6 +15,16 @@ import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.Permission;
+import com.getcapacitor.annotation.PermissionCallback;
+import com.getcapacitor.PermissionState;
+import com.getcapacitor.JSArray;
+import android.Manifest;
+import android.content.ComponentName;
+import android.database.Cursor;
+import android.provider.Telephony;
+import androidx.core.app.NotificationManagerCompat;
+import org.json.JSONArray;
 import androidx.core.content.ContextCompat;
 import android.graphics.Color;
 import android.view.View;
@@ -31,7 +41,8 @@ import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption;
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 
 /** 알림이 잘 오도록 휴대폰 설정 화면을 열어 주는 기능 */
-@CapacitorPlugin(name = "SeolyeonNative")
+@CapacitorPlugin(name = "SeolyeonNative",
+    permissions = { @Permission(alias = "sms", strings = { Manifest.permission.READ_SMS }) })
 public class SeolyeonNativePlugin extends Plugin {
     private static SeolyeonNativePlugin instance;
     private static String pendK = null, pendId = null;
@@ -243,5 +254,102 @@ public class SeolyeonNativePlugin extends Plugin {
             getContext().startActivity(c);
             call.resolve();
         } catch (Exception e) { call.reject(String.valueOf(e.getMessage())); }
+    }
+
+    // ═══ 카드 결제 문자 → 가계부 ═══
+
+    /** 앱이 열려 있을 때 새 카드 문자가 들어오면 웹화면에 바로 알림 */
+    static void fireCardQueued(int n) {
+        if (instance == null) return;
+        JSObject r = new JSObject();
+        r.put("n", n);
+        instance.notifyListeners("cardQueued", r, true);
+    }
+
+    /** 보관함의 카드 문자를 모두 꺼냄 [{text, ts}] */
+    @PluginMethod
+    public void cardQueueTake(PluginCall call) {
+        JSArray a = new JSArray();
+        try {
+            JSONArray q = CardQueue.take(getContext());
+            for (int i = 0; i < q.length(); i++) a.put(q.getJSONObject(i));
+        } catch (Exception ignored) { }
+        JSObject r = new JSObject();
+        r.put("items", a);
+        call.resolve(r);
+    }
+
+    /** 알림 읽기 허용 여부, 문자 읽기 허용 여부 */
+    @PluginMethod
+    public void cardState(PluginCall call) {
+        JSObject r = new JSObject();
+        r.put("listener", NotificationManagerCompat.getEnabledListenerPackages(getContext()).contains(getContext().getPackageName()));
+        r.put("sms", getPermissionState("sms") == PermissionState.GRANTED);
+        call.resolve(r);
+    }
+
+    /** 알림 읽기 허용 화면 열기 */
+    @PluginMethod
+    public void openCardListenerSettings(PluginCall call) {
+        try {
+            Intent i;
+            if (Build.VERSION.SDK_INT >= 30) {
+                i = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_DETAIL_SETTINGS);
+                i.putExtra(Settings.EXTRA_NOTIFICATION_LISTENER_COMPONENT_NAME,
+                        new ComponentName(getContext(), CardNotifListener.class).flattenToString());
+            } else {
+                i = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
+            }
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(i);
+        } catch (Exception e) {
+            Intent i = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(i);
+        }
+        call.resolve();
+    }
+
+    /** 받은 문자함에서 최근 문자 읽기 (알림을 놓친 것까지 채움, 인증번호 제외) — days: 며칠 전부터 */
+    @PluginMethod
+    public void readCardSms(PluginCall call) {
+        if (getPermissionState("sms") != PermissionState.GRANTED) {
+            if (Boolean.TRUE.equals(call.getBoolean("ask", false))) requestPermissionForAlias("sms", call, "smsPermCb");
+            else call.reject("no-permission");
+            return;
+        }
+        doReadSms(call);
+    }
+
+    @PermissionCallback
+    private void smsPermCb(PluginCall call) {
+        if (getPermissionState("sms") == PermissionState.GRANTED) doReadSms(call);
+        else call.reject("denied");
+    }
+
+    private void doReadSms(PluginCall call) {
+        int days = call.getInt("days", 3);
+        long since = System.currentTimeMillis() - days * 86400000L;
+        JSArray a = new JSArray();
+        try (Cursor c = getContext().getContentResolver().query(Telephony.Sms.Inbox.CONTENT_URI,
+                new String[]{ Telephony.Sms.BODY, Telephony.Sms.DATE, Telephony.Sms.ADDRESS },
+                Telephony.Sms.DATE + " >= ?", new String[]{ String.valueOf(since) },
+                Telephony.Sms.DATE + " DESC")) {
+            int n = 0;
+            while (c != null && c.moveToNext() && n < 300) {
+                String body = c.getString(0);
+                if (body == null || CardQueue.isSecret(body)) continue;   // 인증번호 문자 제외
+                JSObject o = new JSObject();
+                o.put("text", body.replaceAll("\\s+", " ").trim());
+                o.put("ts", c.getLong(1));
+                o.put("from", c.getString(2) == null ? "" : c.getString(2));
+                o.put("kind", CardQueue.looksCard(body) ? "card" : "sms");
+                a.put(o);
+                n++;
+            }
+        } catch (Exception e) { call.reject(String.valueOf(e.getMessage())); return; }
+        JSObject r = new JSObject();
+        r.put("items", a);
+        call.resolve(r);
     }
 }

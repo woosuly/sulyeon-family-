@@ -95,7 +95,7 @@
     // ⚙️ 설정 (테마 + AI)
     // ═══════════════════════════════════════════════════════════
     let famShowKey = false, famCustomModel = false;
-    function famOpenSettings() { famCustomModel = false; famRenderSettings(); document.getElementById('fam-settings').style.display = 'flex'; history.pushState({ famSettings: 1 }, '', ''); }
+    function famOpenSettings() { famCustomModel = false; famRenderSettings(); if (typeof ibStateRefresh === 'function') setTimeout(ibStateRefresh, 50); document.getElementById('fam-settings').style.display = 'flex'; history.pushState({ famSettings: 1 }, '', ''); }
     function famCloseSettings() { document.getElementById('fam-settings').style.display = 'none'; }
     function famThemeMode() { try { return localStorage.getItem('famThemeMode') || 'light'; } catch (e) { return 'light'; } }
     function famApplyTheme() {
@@ -130,6 +130,7 @@
                 <div class="fam-note">${fetched ? '이 키로 불러온 실제 사용 가능 목록입니다.' : '기본 목록입니다. 키 입력 후 "모델 목록 불러오기"로 최신 목록을 받으세요.'}</div>
                 <div class="fam-btns"><button class="fam-btn" onclick="famLoadModels()">모델 목록 불러오기</button><button class="fam-btn" onclick="famTestAI()">연결 테스트</button></div>
             </div>
+            ${typeof ibSetHtml === 'function' ? ibSetHtml() : ''}
             <div class="fam-box"><h4>💾 데이터 백업</h4>
                 <div class="fam-note" style="margin:0 0 10px">Firestore 데이터를 파일로 내려받습니다. 월 1회 정도 받아 두세요.</div>
                 <div class="fam-btns" style="margin-top:0"><button class="fam-btn pri" onclick="famBackupJSON(this)">전체 백업 (JSON)</button><button class="fam-btn" onclick="famBackupCSV(this)">가계부 (CSV · 엑셀)</button></div>
