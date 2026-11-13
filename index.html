@@ -122,7 +122,7 @@
                         </div>
                     </div>
                     <!-- 오른쪽: 날씨 (클릭 → 주간날씨) -->
-                    <div class="idc-weather" onclick="event.stopPropagation();openWeeklyWeather()">
+                    <div class="idc-weather" onclick="event.stopPropagation();weatherAt ? openWeeklyWeather() : initWeather()">
                         <span class="iwc-icon" id="weather-icon">⏳</span>
                         <div class="iwc-right">
                             <div class="iwc-temp" id="weather-temp">––°</div>

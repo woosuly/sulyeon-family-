@@ -145,19 +145,35 @@
         let userLon = parseFloat(localStorage.getItem('userLon') || '126.9780');
         let userCityName = localStorage.getItem('userCityName') || '서울';
 
-        async function initWeather() {
-            updateWeatherDisplay(null); // 로딩 표시
+        // 날씨: 8초 안에 응답이 없거나 형식이 다르면 한 번 더 시도, 그래도 안 되면 '다시 시도' 표시
+        // (앱은 며칠씩 켜져 있으므로 화면으로 돌아올 때 30분 지났으면 새로 받음)
+        let weatherAt = 0, weatherBusy = false;
+        async function weatherFetchOnce() {
+            const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 8000);
             try {
-                const url = `https://api.open-meteo.com/v1/forecast?latitude=${userLat}&longitude=${userLon}&current_weather=true&hourly=temperature_2m,weathercode&timezone=auto`;
-                const res = await fetch(url);
-                const data = await res.json();
-                updateWeatherDisplay(data.current_weather);
-            } catch(e) {
-                document.getElementById('weather-icon').textContent = '–';
-                document.getElementById('weather-temp').textContent = '';
-                document.getElementById('weather-desc').textContent = '날씨 로딩 실패';
-            }
+                const lat = isFinite(userLat) ? userLat : 37.5665, lon = isFinite(userLon) ? userLon : 126.978;
+                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day&timezone=auto`, { signal: ctl.signal, cache: 'no-store' });
+                const d = await res.json(), c = d && d.current;
+                if (!c || c.temperature_2m == null) throw new Error((d && d.reason) || 'no data');
+                return { temperature: c.temperature_2m, weathercode: c.weather_code, is_day: c.is_day };
+            } finally { clearTimeout(tm); }
         }
+        async function initWeather() {
+            if (weatherBusy) return; weatherBusy = true;
+            if (!weatherAt) updateWeatherDisplay(null); // 처음에만 로딩 표시
+            try {
+                let cw; try { cw = await weatherFetchOnce(); } catch (e) { await new Promise(r => setTimeout(r, 1500)); cw = await weatherFetchOnce(); }
+                updateWeatherDisplay(cw); weatherAt = Date.now();
+            } catch(e) {
+                if (!weatherAt) {
+                    document.getElementById('weather-icon').textContent = '↻';
+                    document.getElementById('weather-temp').textContent = '';
+                    document.getElementById('weather-desc').textContent = '날씨 다시 시도';
+                }
+            } finally { weatherBusy = false; }
+        }
+        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && Date.now() - weatherAt > 30 * 60e3) initWeather(); });
+        window.addEventListener('online', () => { if (!weatherAt) initWeather(); });
 
         function getWeatherEmoji(code, isDay) {
             if (code === 0) return isDay ? '☀️' : '🌙';

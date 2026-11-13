@@ -75,9 +75,25 @@
     // 🔄 새 버전 알림
     // ═══════════════════════════════════════════════════════════
     const FAM_VER = (document.querySelector('.footer-info')?.textContent.match(/v([\d.]+)/) || [])[1] || '';
-    let famVerLast = 0;
+    let famVerLast = 0, famSwBase = '';
+    // sw.js의 캐시 이름(seolyeon-vNN)으로 배포 변경을 감지 — 안드로이드 앱은 화면을 며칠씩 다시 읽지 않으므로
+    // 앱으로 돌아왔을 때 새 배포가 있으면 입력 중이 아닐 때 바로 새로 읽음 (브라우저는 안내만)
+    async function famSwVer() {
+        const r = await fetch('/sulyeon-family-/sw.js?vc=' + Date.now(), { cache: 'no-store' });
+        return r.ok ? (((await r.text()).match(/CACHE_NAME\s*=\s*'([^']+)'/) || [])[1] || '') : '';
+    }
     async function famVerCheck() {
-        if (!FAM_VER || Date.now() - famVerLast < 10 * 60e3) return; famVerLast = Date.now();
+        if (Date.now() - famVerLast < 10 * 60e3) return; famVerLast = Date.now();
+        try {
+            const sv = await famSwVer();
+            if (sv && !famSwBase) famSwBase = sv;
+            else if (sv && sv !== famSwBase) {
+                const typing = document.documentElement.classList.contains('kb-open');
+                if (window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform() && !typing) return famVerApply();
+                return famVerShow(sv.replace(/^\D+/, ''));
+            }
+        } catch (e) {}
+        if (!FAM_VER) return;
         try {
             const r = await fetch(location.pathname + '?vc=' + Date.now(), { cache: 'no-store' }); if (!r.ok) return;
             const v = ((await r.text()).match(/Family Shared v([\d.]+)/) || [])[1];
