@@ -86,3 +86,6 @@
         .ct-dots{display:inline-flex;gap:3px;margin-left:2px}
         .ct-dots i{width:5px;height:5px;border-radius:50%;background:#94a3b8;animation:aiDot 1.2s infinite ease-in-out}
         .ct-dots i:nth-child(2){animation-delay:.2s}.ct-dots i:nth-child(3){animation-delay:.4s}
+        /* 여러 줄 입력: 높이 자동(최대 6줄), 버튼은 아래쪽 정렬 */
+        .home-cmd-in{align-items:flex-end}
+        .home-cmd-in textarea{max-height:132px;overflow-y:auto}

@@ -92,6 +92,7 @@
     ];
     let famSuggIdx = 0;
     function famCmdInput(el) {
+        el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 132) + 'px';   // 여러 줄이면 높이 늘림
         const v = el.value, box = document.getElementById('home-sugg');
         if (!v.startsWith('/') || v.includes(' ')) { box.style.display = 'none'; return; }
         const list = CMDS.filter(c => c[0].startsWith(v.toLowerCase()) || c[0].startsWith(v));
@@ -107,7 +108,11 @@
     }
     function famCmdKey(e) {
         const box = document.getElementById('home-sugg');
-        if (e.key === 'Enter') { e.preventDefault(); if (box.style.display === 'block') { const b = box.querySelectorAll('button')[famSuggIdx]; if (b) { b.click(); return; } } famSubmit(); }
+        if (e.key === 'Enter') {
+            if (box.style.display === 'block') { e.preventDefault(); const b = box.querySelectorAll('button')[famSuggIdx]; if (b) { b.click(); return; } }
+            if (e.shiftKey || e.isComposing || matchMedia('(pointer:coarse)').matches) return;   // 휴대폰: 엔터는 줄바꿈, 보내기는 버튼
+            e.preventDefault(); famSubmit();
+        }
         else if (box.style.display === 'block' && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
             e.preventDefault(); const bs = box.querySelectorAll('button'); famSuggIdx = (famSuggIdx + (e.key === 'ArrowDown' ? 1 : bs.length - 1)) % bs.length; bs.forEach((b, i) => b.classList.toggle('on', i === famSuggIdx));
         }
@@ -115,7 +120,7 @@
     function famCmdFocus() { setTimeout(() => { const sc = document.getElementById('home-scroll'); if (sc) sc.scrollTop = sc.scrollHeight; }, 350); }
     // 키보드가 올라와 화면이 줄어들면 최근 대화가 보이게
     window.addEventListener('resize', () => { if (document.activeElement && document.activeElement.id === 'home-cmd-input') famCmdFocus(); });
-    function famSubmit() { const el = document.getElementById('home-cmd-input'); const v = el.value.trim(); if (!v) return; el.value = ''; document.getElementById('home-sugg').style.display = 'none'; famMicSwap(); famRun(v); }
+    function famSubmit() { const el = document.getElementById('home-cmd-input'); const v = el.value.trim(); if (!v) return; el.value = ''; el.style.height = ''; document.getElementById('home-sugg').style.display = 'none'; famMicSwap(); famRun(v); }
     // ── 🎤 음성 입력 (크롬 내장) : 입력창이 비면 ➤ 자리에 🎤 ──
     const FamSR = window.SpeechRecognition || window.webkitSpeechRecognition;
     let famRec = null;
@@ -259,6 +264,10 @@
         if (m) return famFeedAdd(`"/${famEsc(cmd)}"는 없는 명령입니다. <b>/도움말</b>을 입력해 보세요.`);
         // 슬래시 없음 → 말하듯 쓴 문장 해석 → 자동 분류
         if (famIntent(raw)) return;
+        // 알아봐 달라·추천·비교 같은 '물어보는 말'이나 긴 문장은 기록 카드로 보내지 않고 AI 답변으로
+        const famAskLike = /[?？]|알아\s*봐|알아봐|찾아\s*봐|추천|좋을지|좋을까|나을까|어때|어떨까|어떤\s*게|알려\s*줘|비교|방법|뭐가|할까|하려는데|하려고|가려는데|갈까|계획|정보|후기|가볼\s*만|맛집|숙소/.test(raw);
+        if (famAskLike) return famAsk(raw);
+        if (raw.length > 40) return famAIRoute(raw);
         if (typeof famParseForeign === 'function' && famParseForeign(raw)) return famAssetCard(raw);
         const a = famParseAmount(raw);
         if (a.amt >= 100) return famAssetCard(raw);
@@ -380,7 +389,8 @@
 {"a":"chat","text":"보낼 말"}  가족 채팅 보내기
 {"a":"list_schedule","text":"기간"}  일정 조회
 {"a":"money","text":"기간 항목"}  지출·수입 조회
-{"a":"web","q":"질문"}  일반 질문·최신 정보
+{"a":"web","q":"질문"}  일반 질문·최신 정보·조사·추천·비교 ("알아봐 줘", "어디가 좋을까" 등)
+규칙: asset·schedule은 이미 쓴 돈이나 정해진 약속을 '기록'하라는 말일 때만 고른다. 예산·계획·추천을 묻는 문장은 web이다.
 {"a":"find","q":"검색어"}  앱 안의 기록 찾기
 문장: ${raw}`, { maxTokens: 300 });
             const tx = r.text || '', i = tx.indexOf('{'), k = tx.lastIndexOf('}'); const j = i >= 0 ? JSON.parse(tx.slice(i, k + 1)) : {};
