@@ -235,14 +235,12 @@
                 const isMedia = ['image','video','location'].includes(msgType);
                 const canEdit = isMe && !isMedia && !isAI;
 
-                html += `<div class="chat-bubble-wrap ${side}${highlight}" data-id="${m.id}"${isMe ? ` onclick="chatToggleAct(this,event)"` : ''}>
+                html += `<div class="chat-bubble-wrap ${side}${highlight}" data-id="${m.id}">
                     ${(!isMe||isAI) ? `<div class="chat-sender" style="display:flex;align-items:center;gap:5px;">${typeof famAvatarHtml==='function' ? famAvatarHtml(isAI?(m.aiName||'AI'):m.sender, 22, true) : ''}${isAI?escHtml(m.aiName||'AI'):escHtml(m.sender||'')}</div>` : ''}
+                    ${typeof chatReplyHtml === 'function' ? chatReplyHtml(m) : ''}
                     <div class="${(isMedia||isAI)?'':'chat-bubble'}">${renderMsgContent(m)}</div>
+                    ${typeof chatRxHtml === 'function' ? chatRxHtml(m) : ''}
                     <div class="chat-meta"><span>${timeStr}</span>${readMark}</div>
-                    ${isMe ? `<div class="chat-actions">
-                        ${canEdit ? `<button class="chat-act-btn" onclick="event.stopPropagation();editChatMessage('${m.id}')">&#9999;&#65039; 수정</button>` : ''}
-                        <button class="chat-act-btn" style="color:#ef4444;" onclick="event.stopPropagation();deleteChatMessage('${m.id}')">&#128465; 삭제</button>
-                    </div>` : ''}
                 </div>`;
             });
 
@@ -345,7 +343,7 @@
                             type: 'location', location: pendingLoc,
                             text: '', sender: chatUser,
                             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                            isRead: false
+                            isRead: false, ...(chatReplyTo ? { replyTo: chatReplyTo } : {})
                         });
                     } else {
                         const url = await uploadAndSendMedia();
@@ -353,9 +351,10 @@
                             type: pendingType, mediaUrl: url,
                             text: text || '', sender: chatUser,
                             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                            isRead: false
+                            isRead: false, ...(chatReplyTo ? { replyTo: chatReplyTo } : {})
                         });
                     }
+                    if (typeof chatClearReply === 'function') chatClearReply();
                     cancelChatMedia();
                     if (input) input.focus();
                     return;
@@ -370,10 +369,12 @@
                     cancelChatEdit();
                     if (input) { input.value = ''; input.style.height = '44px'; input.focus(); }
                 } else {
+                    const rp = (typeof chatReplyTo !== 'undefined' && chatReplyTo) ? { replyTo: chatReplyTo } : {};
+                    if (typeof chatClearReply === 'function') chatClearReply();
                     await db.collection('messages').add({
                         type: 'text', text, sender: chatUser,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        isRead: false
+                        isRead: false, ...rp
                     });
                     if (input) input.focus();
                 }
@@ -419,8 +420,8 @@
         }
 
         /* ── 삭제 (Storage 파일 포함) ── */
-        async function deleteChatMessage(id) {
-            if (!confirm('이 메시지를 삭제할까요?')) return;
+        async function deleteChatMessage(id, sure) {
+            if (!sure && !confirm('이 메시지를 삭제할까요?')) return;
             const msg = chatMessages.find(m => m.id === id);
             if (msg?.mediaUrl) {
                 try { await storage.refFromURL(msg.mediaUrl).delete(); } catch(e) {}

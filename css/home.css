@@ -89,3 +89,7 @@
         /* 여러 줄 입력: 높이 자동(최대 6줄), 버튼은 아래쪽 정렬 */
         .home-cmd-in{align-items:flex-end}
         .home-cmd-in textarea{max-height:132px;overflow-y:auto}
+        /* AI 답변 아래 버튼: 복사 · 공유 · 채팅에 보내기 */
+        .ff-ai-acts{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+        .ff-ai-acts button{border:1px solid #e2e8f0;background:#fff;border-radius:16px;padding:5px 12px;font-size:12px;font-weight:600;color:#475569;cursor:pointer;font-family:inherit}
+

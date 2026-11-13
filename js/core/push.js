@@ -182,7 +182,7 @@
             famBackBind.done = true;
             let waiting = false;
             window.addEventListener('popstate', () => { waiting = false; });
-            const overlayOpen = () => ['fam-av-zoom', 'fam-sheet', 'map-ov', 'tk-big', 'fam-settings', 'tk-face', 'master-modal', 'gemini-window', 'profile-modal']
+            const overlayOpen = () => ['chat-mpop-dim', 'fam-av-zoom', 'fam-sheet', 'map-ov', 'tk-big', 'fam-settings', 'tk-face', 'master-modal', 'gemini-window', 'profile-modal']
                 .some(id => { const el = document.getElementById(id); return el && el.style.display === 'flex'; })
                 || ['sch-detail-modal', 'sch-action-sheet', 'travel-detail-modal', 'asset-day-modal'].some(id => { const el = document.getElementById(id); return el && !el.classList.contains('hidden'); })
                 || (() => { const lb = document.getElementById('lightbox'); return lb && lb.style.display && lb.style.display !== 'none'; })()

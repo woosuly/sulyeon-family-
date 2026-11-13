@@ -230,4 +230,18 @@ public class SeolyeonNativePlugin extends Plugin {
             } catch (Exception e) { call.reject(String.valueOf(e.getMessage())); }
         });
     }
+
+    /** 안드로이드 공유창 (카톡·문자 등으로 글 보내기) */
+    @PluginMethod
+    public void share(PluginCall call) {
+        try {
+            Intent i = new Intent(Intent.ACTION_SEND);
+            i.setType("text/plain");
+            i.putExtra(Intent.EXTRA_TEXT, call.getString("text", ""));
+            Intent c = Intent.createChooser(i, "공유");
+            c.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(c);
+            call.resolve();
+        } catch (Exception e) { call.reject(String.valueOf(e.getMessage())); }
+    }
 }

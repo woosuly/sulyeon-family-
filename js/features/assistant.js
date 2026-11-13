@@ -338,7 +338,7 @@
     }
     function famChatConfirm(msg) {
         const id = 'cm' + Date.now();
-        famFeedAdd(`<h5>🫧 가족 채팅으로 보낼까요?</h5><div class="ff-form"><div class="full"><input id="${id}" value="${famEsc(msg)}"></div></div>
+        famFeedAdd(`<h5>🫧 가족 채팅으로 보낼까요?</h5><div class="ff-form"><div class="full"><textarea id="${id}" rows="${Math.min(8, String(msg).split('\n').length + 1)}" style="width:100%;box-sizing:border-box;font-family:inherit;font-size:14px;border:1px solid #e2e8f0;border-radius:10px;padding:8px">${famEsc(msg)}</textarea></div></div>
             <div class="fam-btns"><button class="fam-btn pri" onclick="const v=document.getElementById('${id}').value.trim();if(v){this.closest('.ff-card').remove();famChatSend(v);}">보내기</button></div>`);
     }
     function famIntent(raw) {
@@ -476,6 +476,13 @@
         } catch (e) { btn.disabled = false; famToast('저장 실패: ' + e.message); }
     }
 
+    // AI 답변 원문 (마크다운 기호 정리)
+    function famAiText(btn) { const c = btn.closest('.ff-card'); return String((c && c.dataset.raw) || '').replace(/\*\*|__|`/g, '').replace(/^#+\s*/gm, '').trim(); }
+    function famAiToChat(btn) {
+        const t = famAiText(btn); if (!t) return;
+        const q = (famAskHist[famAskHist.length - 1] || {}).q || '';
+        famChatConfirm((q ? `[AI에게 물어본 내용: ${q}]\n` : '') + t);
+    }
     // ── 채팅 보내기 ──
     async function famChatSend(text) {
         if (!text) return famFeedAdd('예) <b>/채팅 오늘 늦어요</b>');
@@ -522,7 +529,8 @@
             famAskHist.push({ q, a: r.text || '' }); famAskAt = Date.now();
             const seen = new Set(), src = (r.sources || []).filter(s => /^https?:/.test(s.url) && !seen.has(s.url) && seen.add(s.url)).slice(0, 5);
             const oid = 'ai' + Date.now(); c.dataset.raw = r.text || '';
-            c.innerHTML = `<div class="fam-ai" id="${oid}">${famMd(r.text || '(응답 없음)')}</div>${src.length ? `<div style="margin-top:8px;border-top:1px solid #e2e8f0;padding-top:6px">${src.map(s => `<a href="${famEsc(s.url)}" target="_blank" rel="noopener" style="display:block;font-size:11.5px;color:#2563eb;padding:2px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">↗ ${famEsc(s.title)}</a>`).join('')}</div>` : ''}<div class="fam-note" style="display:flex;align-items:center;gap:6px">${famEsc(FAM_NAMES[famProv()])} · 웹 검색<button onclick="famSpeak(this,'${oid}','ko-KR')" style="margin-left:auto;border:none;background:none;font-size:15px;cursor:pointer;padding:2px 4px">🔊</button></div>`;
+            c.innerHTML = `<div class="fam-ai" id="${oid}">${famMd(r.text || '(응답 없음)')}</div>${src.length ? `<div style="margin-top:8px;border-top:1px solid #e2e8f0;padding-top:6px">${src.map(s => `<a href="${famEsc(s.url)}" target="_blank" rel="noopener" style="display:block;font-size:11.5px;color:#2563eb;padding:2px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">↗ ${famEsc(s.title)}</a>`).join('')}</div>` : ''}<div class="fam-note" style="display:flex;align-items:center;gap:6px">${famEsc(FAM_NAMES[famProv()])} · 웹 검색<button onclick="famSpeak(this,'${oid}','ko-KR')" style="margin-left:auto;border:none;background:none;font-size:15px;cursor:pointer;padding:2px 4px">🔊</button></div>
+                <div class="ff-ai-acts"><button onclick="famCopy(famAiText(this))">복사</button><button onclick="famShare(famAiText(this))">공유</button><button onclick="famAiToChat(this)">채팅에 보내기</button></div>`;
         } catch (e) { c.innerHTML = '⚠️ ' + famEsc(e.message); }
     }
 
