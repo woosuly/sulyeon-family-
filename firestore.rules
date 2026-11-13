@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isFamily() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email in [
+          'woosuly@gmail.com',
+          'hmy200500750@gmail.com'
+        ];
+    }
+    // 로그인한 계정의 채팅 이름
+    function myName() {
+      return request.auth.token.email == 'woosuly@gmail.com' ? '정우설' : '한미연';
+    }
+    function isAI(d) { return d.get('isAI', false) == true; }
+
+    // 채팅 메시지
+    //  - 보내기: 내 이름으로만 (AI 답변은 예외)
+    //  - 고치기: 보낸 사람(sender)은 못 바꿈. 내 메시지·AI 메시지는 자유롭게, 상대 메시지는 공감(rx)·읽음(isRead)만
+    //  - 지우기: 내 메시지와 AI 메시지만
+    match /messages/{id} {
+      allow read: if isFamily();
+      allow create: if isFamily()
+        && (request.resource.data.sender == myName() || isAI(request.resource.data));
+      allow update: if isFamily()
+        && request.resource.data.sender == resource.data.sender
+        && (resource.data.sender == myName()
+            || isAI(resource.data)
+            || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rx', 'isRead']));
+      allow delete: if isFamily() && (resource.data.sender == myName() || isAI(resource.data));
+    }
+
+    // 나머지 모든 데이터: 가족 두 사람만 읽고 쓰기 (기존과 같음)
+    match /{col}/{doc=**} {
+      allow read, write: if isFamily() && col != 'messages';
+    }
+  }
+}
