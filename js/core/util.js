@@ -38,7 +38,7 @@
             o.style.cssText = 'position:fixed;inset:0;z-index:99999;background:var(--month-bg,#f8fafc);display:flex;align-items:center;justify-content:center;padding:24px';
             o.innerHTML = `<div style="text-align:center;max-width:320px;width:100%">
                 <img src="icon-192.png" style="width:84px;height:84px;border-radius:22px;box-shadow:0 8px 24px rgba(0,0,0,.12)" onerror="this.style.display='none'">
-                <div style="font-size:22px;font-weight:800;color:#1e293b;margin:16px 0 4px">정한</div>
+                <div style="font-size:22px;font-weight:800;color:#1e293b;margin:16px 0 4px">설연 Family</div>
                 <div style="font-size:13px;color:#64748b;margin-bottom:22px">가족 계정으로 로그인하세요</div>
                 <button onclick="famLogin()" style="width:100%;padding:13px;border-radius:14px;border:1.5px solid #e2e8f0;background:#fff;font-size:15px;font-weight:700;color:#1e293b;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-family:inherit"><span style="font-weight:900;color:#4285f4">G</span> Google로 로그인</button>
                 <div id="fam-login-msg" style="font-size:12px;color:#dc2626;margin-top:12px;min-height:16px"></div></div>`;
