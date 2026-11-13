@@ -511,7 +511,14 @@
         try {
             const ctx = famAskHist.slice(-6).map(h => `사용자: ${h.q}\nAI: ${h.a.slice(0, 1500)}`).join('\n\n');
             const prompt = ctx ? `[앞선 대화]\n${ctx}\n\n[이번 질문] ${q}\n(앞선 대화의 조건·장소·날짜를 이어서 반영해 답한다. 이미 들은 정보를 다시 묻지 않는다.)` : q;
-            const r = await famCallAI('너는 가족이 함께 쓰는 앱의 AI 비서다. 필요하면 웹 검색으로 최신 정보를 확인하고, 한국어로 짧고 정확하게 답한다. 정보가 조금 부족해도 가정을 밝히고 먼저 구체적으로 답한다. 모르면 모른다고 한다.', prompt, { search: true, maxTokens: 6000 });
+            const r = await famCallAI(`너는 가족이 함께 쓰는 앱의 AI 비서다. 필요하면 웹 검색으로 최신 정보를 확인하고 한국어로 답한다.
+답하는 방식:
+- 결론을 첫 줄에 먼저 쓴다.
+- 추천·판단에는 반드시 이유(왜 그런지)를 2~3가지 붙인다. 거리, 시간, 비용, 혼잡도처럼 확인 가능한 근거를 쓴다.
+- 장소·숙소·식당을 추천할 때는 이름, 위치(역·동네), 대략 가격대, 고른 이유를 함께 쓴다. 2~4곳 비교로 제시한다.
+- 마지막에 알아두면 좋은 점(예약 시점, 주의할 점)을 1~2줄 덧붙인다.
+- 정보가 조금 부족해도 가정을 밝히고 먼저 구체적으로 답한다. 이미 들은 조건을 다시 묻지 않는다.
+- 과장하지 말고, 확실하지 않은 가격·운영 정보는 '확인 필요'라고 표시한다. 모르면 모른다고 한다.`, prompt, { search: true, maxTokens: 6000 });
             famAskHist.push({ q, a: r.text || '' }); famAskAt = Date.now();
             const seen = new Set(), src = (r.sources || []).filter(s => /^https?:/.test(s.url) && !seen.has(s.url) && seen.add(s.url)).slice(0, 5);
             const oid = 'ai' + Date.now(); c.dataset.raw = r.text || '';
