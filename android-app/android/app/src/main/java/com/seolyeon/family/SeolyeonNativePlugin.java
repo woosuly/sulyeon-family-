@@ -105,7 +105,7 @@ public class SeolyeonNativePlugin extends Plugin {
     public void testNotify(PluginCall call) {
         Map<String, String> d = new HashMap<>();
         d.put("k", "test");
-        d.put("title", "설연");
+        d.put("title", "정한");
         d.put("body", "알림 시험입니다. 화면 위에 이렇게 뜨면 정상이에요.");
         d.put("tag", "test");
         Notify.show(getContext(), d);

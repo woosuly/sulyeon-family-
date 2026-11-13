@@ -47,7 +47,7 @@ public class Notify {
         NotificationCompat.Builder b = new NotificationCompat.Builder(c, sos ? CH_SOS : CH_FAMILY)
                 .setSmallIcon(R.drawable.ic_stat_notify)
                 .setColor(0xFF2B3A55)
-                .setContentTitle(val(d, "title").isEmpty() ? "설연" : val(d, "title"))
+                .setContentTitle(val(d, "title").isEmpty() ? "정한" : val(d, "title"))
                 .setContentText(val(d, "body"))
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(val(d, "body")))
                 .setAutoCancel(true)

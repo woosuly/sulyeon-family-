@@ -150,7 +150,7 @@
                 const r = await famPushRegister(true);
                 if (r !== 'granted') {
                     msg.textContent = r === 'denied'
-                        ? (famNative() ? '알림이 차단됨 → 휴대폰 설정 > 애플리케이션 > 설연에서 알림 허용' : '브라우저에서 알림이 차단됨 → 사이트 권한에서 허용 필요')
+                        ? (famNative() ? '알림이 차단됨 → 휴대폰 설정 > 애플리케이션 > 정한에서 알림 허용' : '브라우저에서 알림이 차단됨 → 사이트 권한에서 허용 필요')
                         : r === 'default' ? '권한 요청이 막힘 → 설정에서 알림 허용 필요' : '알림 등록 실패';
                     return;
                 }
@@ -207,7 +207,7 @@
                 const latest = +String(rel.tag_name || '').replace(/^v1\./, '') || 0, cur = +info.build || 0;
                 if (!latest || latest <= cur) return;
                 localStorage.setItem('famApkAsk', Date.now());
-                if (confirm('설연 앱 새 버전이 있습니다. 설치 파일을 받을까요?\n(덮어 설치하면 됩니다. 데이터는 그대로 남습니다)')) location.href = APK_URL;
+                if (confirm('정한 앱 새 버전이 있습니다. 설치 파일을 받을까요?\n(덮어 설치하면 됩니다. 데이터는 그대로 남습니다)')) location.href = APK_URL;
             } catch (e) {}
         }
 

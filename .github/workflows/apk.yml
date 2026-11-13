@@ -53,7 +53,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.${{ github.run_number }}
-          name: 설연 앱 1.${{ github.run_number }}
-          body: 설연 가족 앱 안드로이드 설치 파일
+          name: 정한 앱 1.${{ github.run_number }}
+          body: 정한 앱 안드로이드 설치 파일
           files: seolyeon.apk
           make_latest: true
