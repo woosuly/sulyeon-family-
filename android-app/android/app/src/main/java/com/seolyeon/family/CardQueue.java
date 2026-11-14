@@ -76,7 +76,7 @@ public class CardQueue {
             JSONArray a = new JSONArray(p.getString("seen", "[]")), b = new JSONArray();
             JSONObject me = new JSONObject(); me.put("room", room); me.put("group", group); me.put("ts", System.currentTimeMillis());
             b.put(me);
-            for (int i = 0; i < a.length() && b.length() < 40; i++) if (!room.equals(a.getJSONObject(i).optString("room"))) b.put(a.getJSONObject(i));
+            for (int i = 0; i < a.length() && b.length() < 100; i++) if (!room.equals(a.getJSONObject(i).optString("room"))) b.put(a.getJSONObject(i));
             p.edit().putString("seen", b.toString()).apply();
         } catch (Exception ignored) { }
     }
