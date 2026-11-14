@@ -896,3 +896,6 @@ header button .fi { color:#fff; }
 [data-theme="dark"] .yt-item{background:#1e293b}[data-theme="dark"] .yt-item b{color:#e2e8f0}
 /* 3열 버튼 칸: 들어 있는 버튼을 같은 너비로 나눔 */
 .pg-c3>*{flex:1 1 0!important;width:auto!important;min-width:0!important}
+
+.br-done{margin-top:8px;padding:8px 10px;background:#f0fdf4;border-radius:10px;font-size:12.5px;color:#166534;line-height:1.6}
+[data-theme=dark] .br-done{background:rgba(22,101,52,.25);color:#bbf7d0}

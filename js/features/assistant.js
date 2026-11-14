@@ -277,19 +277,17 @@
         if (typeof agRoute === 'function' && agRoute(raw)) return;
         // 말하듯 쓴 문장 해석 → 자동 분류
         if (famIntent(raw)) return;
-        // AI와 대화 중(15분 이내)이면 짧은 기록 문장('점심 12000')이 아닌 한 이어서 답변
-        if (famAskHist.length && Date.now() - famAskAt < 15 * 60 * 1000 && !(raw.length <= 20 && famParseAmount(raw).amt >= 100)) return famAsk(raw);
-        // 알아봐 달라·추천·비교 같은 '물어보는 말'이나 긴 문장은 기록 카드로 보내지 않고 AI 답변으로
-        const famAskLike = /[?？]|알아\s*봐|알아봐|찾아\s*봐|추천|좋을지|좋을까|나을까|어때|어떨까|어떤\s*게|알려\s*줘|비교|방법|뭐가|할까|하려는데|하려고|가려는데|갈까|계획|정보|후기|가볼\s*만|맛집|숙소/.test(raw);
-        if (famAskLike) return famAsk(raw);
-        if (raw.length > 40) return famAIRoute(raw);
+        // 나머지는 비서 두뇌(brain.js)가 도구를 골라 여러 단계로 처리. 짧은 기록 문장('점심 12000', '내일 3시 치과')만 바로 카드로
+        const AG = typeof famAgent === 'function' ? famAgent : famAsk;
+        if (famAskHist.length && Date.now() - famAskAt < 15 * 60 * 1000 && !(raw.length <= 20 && famParseAmount(raw).amt >= 100)) return AG(raw);
+        const famAskLike = /[?？]|알아\s*봐|알아봐|찾아\s*봐|추천|좋을지|좋을까|나을까|어때|어떨까|어떤\s*게|알려\s*줘|비교|방법|뭐가|할까|하려는데|하려고|가려는데|갈까|계획|정보|후기|가볼\s*만|맛집|숙소|잡아|짜\s*줘|정리해|챙겨/.test(raw);
+        if (famAskLike || raw.length > 30) return AG(raw);
         if (typeof famParseForeign === 'function' && famParseForeign(raw)) return famAssetCard(raw);
         const a = famParseAmount(raw);
         if (a.amt >= 100) return famAssetCard(raw);
         const s = famParseSch(raw);
         if (s._found) return famSchCard(raw);
-        if (/[?？]\s*$/.test(raw) || /^(뭐|무엇|어떻게|왜|언제|어디|누가|추천|알려|비교|설명)/.test(raw)) return famAsk(raw);
-        return famAIRoute(raw);
+        return AG(raw);
     }
 
     // ═══════════════════════════════════════════════════════════

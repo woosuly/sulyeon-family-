@@ -133,6 +133,9 @@ function agSetHtml() {
         <span class="fam-lbl">또는 tracker.delivery 키 (Client ID:Secret)</span>
         <input class="fam-in" type="text" style="-webkit-text-security:disc" value="${famEsc((typeof famKeys === 'function' && famKeys().trackerdelivery) || '')}" placeholder="console.tracker.delivery 의 ID:Secret" autocomplete="off" onchange="famSetKey('trackerdelivery',this.value.trim());famToast('저장했습니다')">
         <div class="fam-note" style="margin:4px 0 0">둘 중 하나만 있으면 됩니다. 키가 없어도 택배 목록의 [조회]로 네이버 택배 조회를 열 수 있습니다.</div>
+        <span class="fam-lbl">비서 실행 기록</span>
+        <div class="fam-note" style="margin:0 0 6px">비서가 실패했거나 👎를 누른 요청을 모아 봅니다. 복사해서 Claude에게 보내면 고칠 곳을 찾기 쉽습니다.</div>
+        <div class="fam-btns" style="margin-top:0"><button class="fam-btn" onclick="brRunsOpen()">실행 기록 보기</button></div>
         <span class="fam-lbl">예정된 알림 ${rems.length}건</span>
         ${rems.length ? rems.map(r => `<div class="ag-li"><span>${famEsc(agFmt(r.at))}</span><b>${famEsc(r.title)}</b><button class="fam-x" onclick="agRemindDel('${r.id}').then(()=>famRenderSettings())">✕</button></div>`).join('') : '<div class="fam-note" style="margin:0">홈에서 "내일 8시에 ○○ 알려줘"라고 입력하세요.</div>'}
         <span class="fam-lbl">기억 노트 ${agNotes.length}건</span>

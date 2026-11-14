@@ -148,6 +148,9 @@ async function morning(u, day, cfg) {
   lines.push(sch.length ? '오늘 일정\n' + sch.map(e => '- ' + schLine(e)).join('\n') : '오늘 일정 없음');
   if (soon.length) lines.push('3일 안 알림\n' + soon.sort((a, b) => a.at - b.at).map(r => `- ${md(ymd(kst(r.at)))} ${r.title || r.text}`).join('\n'));
   if (pend) lines.push(`확인 대기 ${pend}건 (가계부·문자)`);
+  // 후속 확인: 답장 초안을 만든 지 반나절 넘게 처리 안 한 메시지
+  const late = (await db().collection('inbox').where('owner', '==', u).where('status', '==', 'pending').get()).docs.map(d => d.data()).filter(x => x.reply && Date.now() - (x.at || 0) > 12 * 3600e3).slice(0, 4);
+  if (late.length) lines.push('답장 안 한 메시지\n' + late.map(x => `- ${x.name || x.room || x.from || ''}: ${x.summary || ''}`).join('\n'));
   // 연락한 지 오래된 가족 (careList: every일 주기)
   const care = (await db().collection('careList').get()).docs.map(d => d.data()).map(c => ({...c, d: Math.floor((Date.now() - (c.last || 0)) / 864e5)})).filter(c => c.d > (+c.every || 14)).sort((a, b) => b.d - a.d).slice(0, 3);
   if (care.length) lines.push('안부 연락\n' + care.map(c => `- ${c.name}${c.rel ? '(' + c.rel + ')' : ''} ${c.d}일째 연락 없음`).join('\n'));
@@ -224,8 +227,13 @@ async function weekly(u, day) {
   const next = [];
   for (let i = 1; i <= 7; i++) { const d = addDays(day, i); (await schedulesOn(d)).filter(e => mine(e, u)).forEach(e => next.push(`- ${md(d)} ${schLine(e)}`)); }
   const breaks = longBreaks(addDays(day, 1));
+  // 후속 확인: 이번 주말 산행 추천·등산 일정이 있었는데 산행 기록이 없으면 기록 권유
+  const sat = addDays(day, -1), hikeBrief = (await db().collection('briefs').doc(`hike_${addDays(day, -2)}_${u}`).get()).exists || (await db().collection('briefs').where('owner', '==', u).where('type', '==', 'hike').get()).docs.some(d => (d.data().date || '') >= addDays(day, -6));
+  const hikePlan = (await db().collection('plans').where('start', '>=', sat).get().catch(() => ({docs: []}))).docs.some(d => d.data().subType === '등산' && d.data().start <= day);
+  const logged = (await db().collection('hikeLogs').where('date', '>=', sat).get().catch(() => ({docs: []}))).docs.length;
   const lines = [`이번 주 지출 ${won(sum)}${cats ? '\n' + cats : ''}`, next.length ? '다음 주 일정\n' + next.join('\n') : '다음 주 일정 없음'];
   if (breaks.length) lines.push('떠날 수 있는 연휴 (4개월 안)\n' + breaks.join('\n'));
+  if ((hikeBrief || hikePlan) && !logged) lines.push('이번 주말 산행을 다녀오셨으면 산행 기록에 남겨 주세요 (100대 명산 진행률에 반영됩니다).');
   await saveBrief('weekly', u, day, `주간 요약 (${md(from)}~${md(day)})`, lines.join('\n\n'));
 }
 
@@ -341,7 +349,7 @@ exports.agentTick = onSchedule({schedule: 'every 5 minutes', timeZone: 'Asia/Seo
   if (k.getUTCMinutes() < 5 && hm >= 7 * 60 && hm < 23 * 60 && await once('parcel_' + day + '_' + k.getUTCHours())) await runParcels().catch(e => console.error('parcels', e));
   // 하루 한 번 정리: 14일 지난 브리핑·기록, 처리 끝난 30일 지난 확인 대기
   if (hm >= 3 * 60 && hm < 3 * 60 + 15 && await once('cleanup_' + day)) {
-    for (const [col, field, ms] of [['briefs', 'at', 14 * 864e5], ['agentLog', 'at', 14 * 864e5], ['briefReq', 'at', 7 * 864e5]]) {
+    for (const [col, field, ms] of [['briefs', 'at', 14 * 864e5], ['agentLog', 'at', 14 * 864e5], ['briefReq', 'at', 7 * 864e5], ['agentRuns', 'at', 60 * 864e5]]) {
       const old = await db().collection(col).where(field, '<', now - ms).limit(300).get().catch(() => ({docs: []}));
       await Promise.all(old.docs.map(d => d.ref.delete()));
     }
