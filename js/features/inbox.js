@@ -288,7 +288,7 @@ function ibSetHtml() {
         <div class="fam-note" style="margin:0 0 10px">이 폰의 문자를 읽어 카드 결제는 가계부 반영 대기로, 택배·예약 등은 요약·일정·답장 초안으로 올립니다. 반영은 확인을 눌러야 됩니다. 인증번호 문자는 저장하지 않습니다.</div>
         <div id="ib-state" class="fam-note" style="margin:0 0 8px">상태 확인 중…</div>
         <div class="fam-btns" style="margin-top:0"><button class="fam-btn" onclick="ibN().openCardListenerSettings()">알림 읽기 허용</button><button class="fam-btn" onclick="ibAskSms()">문자함 읽기 허용</button>${ibN().lookupContacts ? '<button class="fam-btn" onclick="ibAskContacts()">연락처 허용</button>' : ''}</div>
-        ${ibN().kakaoRooms ? `<span class="fam-lbl">카톡: 받을 대화방</span><div id="ib-rooms" class="fam-note" style="margin:0">불러오는 중…</div><div class="fam-note">예약·택배 같은 업체 알림톡은 방을 고르지 않아도 받습니다. 목록에는 최근 알림이 온 방 이름만 보입니다.</div>` : ''}
+        ${ibN().kakaoRooms ? `<span class="fam-lbl">카톡: 받을 대화방</span><div id="ib-rooms" class="fam-note" style="margin:0">불러오는 중…</div><div class="fam-note">예약·택배 같은 업체 알림톡은 방을 고르지 않아도 받습니다. 목록에는 설연 설치 뒤 알림이 온 방만 보입니다(폰이 카톡 방 목록을 앱에 주지 않음). 안 보이는 방은 이름을 직접 추가하세요. 카톡에서 <b>알림을 꺼 둔 방</b>은 알림이 오지 않아 받을 수 없으니, 받을 방은 알림을 켜 두세요(소리만 끄는 '무음'은 괜찮습니다).</div>` : ''}
         <span class="fam-lbl">가계부에 넣을 카드 (끝 4자리 · 사용자)</span>
         <input class="fam-in" value="${famEsc(Object.entries(ibCards).map(([k, v]) => k + ' ' + v).join(', '))}" placeholder="예: 1089 정우설" onchange="ibSetCards(this.value)">
         <div class="fam-note">허용 버튼이 회색으로 막혀 있으면: 설정 → 애플리케이션 → 설연 → 오른쪽 위 ⋮ → '제한된 설정 허용' 후 다시 누르세요.</div>
@@ -311,9 +311,16 @@ async function ibAskContacts() { try { await ibN().lookupContacts({ numbers: [],
 async function ibRoomsRender() {
     const el = document.getElementById('ib-rooms'), N = ibN(); if (!el || !N || !N.kakaoRooms) return;
     try {
-        const r = await N.kakaoRooms(), allow = new Set(r.allow || []), seen = r.seen || [];
-        el.innerHTML = seen.length ? seen.map(x => `<label class="fam-chk ib-room"><input type="checkbox" ${allow.has(x.room) ? 'checked' : ''} onchange="ibRoomToggle(this.dataset.r,this.checked)" data-r="${famEsc(x.room)}"> ${famEsc(x.room)}${x.group ? ' <em class="ib-tag">단체</em>' : ''}</label>`).join('') : '아직 카톡 알림을 받은 방이 없습니다. 카톡이 몇 개 온 뒤 다시 열어 주세요.';
+        const r = await N.kakaoRooms(), allow = new Set(r.allow || []), seen = [...(r.seen || [])];
+        // 직접 추가했지만 아직 알림이 안 온 방도 목록에 보이게
+        allow.forEach(a => { if (!seen.some(x => x.room === a)) seen.push({ room: a, group: false, added: true }); });
+        const add = `<div style="display:flex;gap:6px;margin-top:8px"><input id="ib-room-add" class="fam-in" style="flex:1;margin:0" placeholder="방 이름 직접 추가 (카톡 방 이름 그대로)"><button class="fam-btn" onclick="ibRoomAdd()">추가</button></div>`;
+        el.innerHTML = (seen.length ? seen.map(x => `<label class="fam-chk ib-room"><input type="checkbox" ${allow.has(x.room) ? 'checked' : ''} onchange="ibRoomToggle(this.dataset.r,this.checked)" data-r="${famEsc(x.room)}"> ${famEsc(x.room)}${x.group ? ' <em class="ib-tag">단체</em>' : ''}${x.added ? ' <em class="ib-tag">직접 추가</em>' : ''}</label>`).join('') : '아직 카톡 알림을 받은 방이 없습니다.') + add;
     } catch (e) { el.textContent = '불러오지 못했습니다'; }
+}
+async function ibRoomAdd() {
+    const v = (document.getElementById('ib-room-add') || {}).value || ''; if (!v.trim()) return;
+    await ibRoomToggle(v.trim(), true); ibRoomsRender();
 }
 async function ibRoomToggle(room, on) {
     const N = ibN(); const r = await N.kakaoRooms(); const a = new Set(r.allow || []);
