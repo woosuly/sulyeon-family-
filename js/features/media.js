@@ -38,15 +38,22 @@ const YTM_SPECIAL = [
     [/보관함|라이브러리|내\s*음악/, 'https://music.youtube.com/library', '보관함'],
 ];
 async function musicPlay(raw) {
-    const q = String(raw || '').replace(/(을|를)?\s*(좀\s*)?(틀어\s*(줘|줄래|주세요)|들려\s*(줘|줄래|주세요)|재생\s*해?\s*(줘|주세요)?|켜\s*줘|플레이\s*해?\s*줘?)[.!]?$/, '').replace(/^(음악|노래)\s*/, '').trim();
+    const q = String(raw || '').replace(/(을|를)?\s*(좀\s*)?(틀어|들려|재생\s*해?|켜|플레이\s*해?)\s*(줘|줄래|주세요|봐|주라|라)?[.!~?]*$/, '').replace(/(노래|음악)\s*(좀\s*)?(듣자|듣고\s*싶어?|들을래|들어\s*(줘|봐)?)[.!~]*$/, '').replace(/^(음악|노래)\s*/, '').trim();
     for (const [re, url, name] of YTM_SPECIAL) if (re.test(q)) { famFeedAdd(`🎵 유튜브 뮤직 <b>${name}</b>을 엽니다.`); return ytOpen(url, YTM_PKG); }
     if (!q) { famFeedAdd('🎵 유튜브 뮤직을 엽니다.'); return ytOpen('https://music.youtube.com/', YTM_PKG); }
     const c = famFeedAdd(`<span class="fam-spin"></span>"${famEsc(q)}" 찾는 중…`);
     try {
-        // 곡 이름이면 곡, 분위기·장르면 플레이리스트
-        const mood = /(잔잔|신나|조용|감성|드라이브|운동|카페|공부|잠|수면|재즈|클래식|팝|발라드|플레이리스트|모음|노동요|아침|저녁|비\s*오는)/.test(q) && !/[-–]/.test(q);
-        let list = mood ? await ytSearch(q + ' 플레이리스트', { type: 'playlist', n: 5 }) : await ytSearch(q, { music: true, n: 5 });
-        if (!list.length && mood) list = await ytSearch(q, { music: true, n: 5 });
+        // 곡 이름이면 곡, 분위기·장르·문장이면 AI가 검색어로 바꿔 플레이리스트
+        let sq = q, mood = /(잔잔|신나|조용|감성|드라이브|운동|카페|공부|잠|수면|재즈|클래식|팝|발라드|플레이리스트|모음|노동요|아침|저녁|비\s*오는|여유|기분|분위기|좋은|어울리는|느낌|같은)/.test(q) && !/[-–]/.test(q);
+        if (mood || q.length > 18 || /(이런|지금|오늘|우리)/.test(q)) {
+            try {
+                const r = await famCallAI('사용자의 음악 요청을 유튜브 뮤직 검색어로 바꾼다. JSON만: {"q":"검색어(한국어 또는 영어, 6단어 이내)","type":"song|playlist"}. 특정 곡·가수를 말하면 song, 분위기·상황이면 playlist. 지금은 ' + new Date().toLocaleString('ko-KR', { weekday: 'long', hour: 'numeric' }) + '.', q, { maxTokens: 150 });
+                const j = JSON.parse((String(r.text).match(/\{[\s\S]*\}/) || ['{}'])[0]);
+                if (j.q) { sq = j.q; mood = j.type !== 'song'; }
+            } catch (e) {}
+        }
+        let list = mood ? await ytSearch(sq + (/플레이리스트|playlist/i.test(sq) ? '' : ' 플레이리스트'), { type: 'playlist', n: 5 }) : await ytSearch(sq, { music: true, n: 5 });
+        if (!list.length && mood) list = await ytSearch(sq, { music: true, n: 5 });
         if (!list.length) throw new Error('찾지 못했습니다');
         const top = list[0], url = top.kind === 'youtube#playlist' ? `https://music.youtube.com/playlist?list=${top.id}` : `https://music.youtube.com/watch?v=${top.id}`;
         ytOpen(url, YTM_PKG);
@@ -54,7 +61,7 @@ async function musicPlay(raw) {
             ${list.length > 1 ? `<div class="yt-alt">다른 곡: ${list.slice(1, 4).map(x => `<button onclick="ytOpen('${x.kind === 'youtube#playlist' ? 'https://music.youtube.com/playlist?list=' : 'https://music.youtube.com/watch?v='}${x.id}','${YTM_PKG}')">${famEsc(x.title.slice(0, 28))}</button>`).join('')}</div>` : ''}`;
     } catch (e) {
         c.innerHTML = `🎵 ${famEsc(e.message)} — 유튜브 뮤직 검색 화면으로 엽니다.`;
-        ytOpen('https://music.youtube.com/search?q=' + encodeURIComponent(q), YTM_PKG);
+        ytOpen('https://music.youtube.com/search?q=' + encodeURIComponent(q.slice(0, 40)), YTM_PKG);
     }
 }
 
@@ -82,6 +89,9 @@ function videoPlay(id, title) {
 // 말로 하는 요청 판단 (agent.js agRoute에서 먼저 호출)
 function mediaRoute(t) {
     if (/(영상|동영상|유튜브)/.test(t) && /(찾아|보여|검색|틀어|볼래|보고\s*싶)/.test(t)) { videoSearch(t); return true; }
-    if (/(틀어\s*(줘|줄래|주세요)|들려\s*(줘|줄래|주세요)|재생\s*해?\s*(줘|주세요)|노래\s*켜\s*줘|음악\s*켜\s*줘)[.!]?$/.test(t)) { musicPlay(t); return true; }
+    // '틀어줘'로 끝나거나, 노래·음악 + 틀어/들려/재생/켜 (줘 없이 말해도)
+    const playEnd = /(틀어|들려|재생\s*해?|켜)\s*(줘|줄래|주세요|봐|주라|라)?[.!~?]*$/.test(t);
+    const musicWord = /(노래|음악|곡|플리|플레이리스트|재즈|발라드|팝|클래식|트로트|ost|OST|BGM|bgm)/.test(t);
+    if (/(틀어\s*(줘|줄래|주세요)|들려\s*(줘|줄래|주세요))[.!~]?$/.test(t) || (playEnd && musicWord) || /(노래|음악)\s*(좀\s*)?(듣자|듣고\s*싶|들을래)/.test(t) || /(노래|음악|곡)\s*(좀\s*)?들어\s*(줘|봐)?[.!~]*$/.test(t)) { musicPlay(t); return true; }
     return false;
 }
