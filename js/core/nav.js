@@ -68,7 +68,7 @@
         window.addEventListener('popstate', e => {
             // 맨 위에 떠 있는 것부터 하나만 닫음 (하단 시트·설정·프로필 확대·통역 크게 보기/마주보기)
             const top = [['fam-av-zoom', () => famAvatarZoomClose()], ['fam-sheet', () => famSheetClose()], ['map-ov', () => mapClose()], ['tk-big', () => talkBigClose()],
-                         ['fam-settings', () => famCloseSettings()], ['tk-face', () => talkFaceClose()], ['chat-mpop-dim', () => chatMenuClose()], ['ib-modal', () => ibClose()]];
+                         ['fam-settings', () => famCloseSettings()], ['tk-face', () => talkFaceClose()], ['chat-mpop-dim', () => chatMenuClose()], ['ib-modal', () => ibClose()], ['ag-brief', () => document.getElementById('ag-brief').remove()]];
             for (const [id, close] of top) { const el = document.getElementById(id); if (el && el.style.display === 'flex') { close(); return; } }
         
             const state = e.state || {};

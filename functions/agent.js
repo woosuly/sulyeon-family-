@@ -102,12 +102,13 @@ async function once(key) {   // 같은 브리핑을 하루 한 번만
 
 // ① 리마인더
 async function runReminders(now) {
-  const s = await db().collection('reminders').where('done', '==', false).where('at', '<=', now).limit(50).get();
+  // at 하나로만 조회 (복합 색인 불필요), 보낸 알림은 지움
+  const s = await db().collection('reminders').where('at', '<=', now).limit(50).get();
   for (const d of s.docs) {
     const r = d.data();
-    await pushTo(r.owner, {k: 'remind', id: d.id, title: '⏰ ' + (r.title || '알림'), body: r.text || '', tag: 'remind-' + d.id});
-    await d.ref.update({done: true, sentAt: Date.now()});
-    if (r.repeat === 'yearly') await db().collection('reminders').add({...r, at: r.at + 365 * 864e5, done: false});
+    await pushTo(r.owner, {k: 'remind', id: d.id, title: '⏰ ' + (r.title || '알림'), body: r.text && r.text !== r.title ? r.text : '', tag: 'remind-' + d.id});
+    await d.ref.delete();
+    if (r.repeat === 'yearly') { const nid = d.id + '_y'; await db().collection('reminders').doc(nid).set({...r, id: nid, at: r.at + 365 * 864e5}); }
   }
 }
 
@@ -116,7 +117,7 @@ async function morning(u, day, cfg) {
   const sch = (await schedulesOn(day)).filter(e => mine(e, u));
   const w = await weather(cfg.lat, cfg.lon, day);
   const pend = (await db().collection('inbox').where('owner', '==', u).where('status', '==', 'pending').get()).size;
-  const soon = (await db().collection('reminders').where('owner', '==', u).where('done', '==', false).where('at', '<=', Date.now() + 3 * 864e5).get()).docs.map(d => d.data());
+  const soon = (await db().collection('reminders').where('owner', '==', u).get()).docs.map(d => d.data()).filter(r => r.at <= Date.now() + 3 * 864e5);
   const lines = [];
   lines.push(`날씨(${cfg.city}): ${w || '정보 없음'}`);
   lines.push(sch.length ? '오늘 일정\n' + sch.map(e => '- ' + schLine(e)).join('\n') : '오늘 일정 없음');
@@ -183,6 +184,13 @@ exports.agentTick = onSchedule({schedule: 'every 5 minutes', timeZone: 'Asia/Seo
   const now = Date.now(), k = kst(now), day = ymd(k), hm = k.getUTCHours() * 60 + k.getUTCMinutes(), wd = k.getUTCDay();
   const cfg = {users: ['정우설', '한미연'], lat: 36.6424, lon: 127.489, city: '청주', off: {}, ...((await db().collection('config').doc('agent').get()).data() || {})};
   await runReminders(now).catch(e => console.error('reminders', e));
+  // 하루 한 번 정리: 14일 지난 브리핑·기록, 처리 끝난 30일 지난 확인 대기
+  if (hm >= 3 * 60 && hm < 3 * 60 + 15 && await once('cleanup_' + day)) {
+    for (const [col, field, ms] of [['briefs', 'at', 14 * 864e5], ['agentLog', 'at', 14 * 864e5], ['briefReq', 'at', 7 * 864e5]]) {
+      const old = await db().collection(col).where(field, '<', now - ms).limit(300).get().catch(() => ({docs: []}));
+      await Promise.all(old.docs.map(d => d.ref.delete()));
+    }
+  }
   const at = (h, m) => hm >= h * 60 + m && hm < h * 60 + m + 15;   // 늦게 실행돼도 15분 안이면 처리
   for (const u of cfg.users) {
     const job = async (name, fn) => { if (cfg.off[name] || (cfg.offBy && cfg.offBy[u] && cfg.offBy[u][name])) return; if (await once(`${name}_${day}_${u}`)) await fn().catch(e => console.error(name, u, e)); };

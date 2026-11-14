@@ -29,15 +29,15 @@ public class Notify {
         fam.setVibrationPattern(new long[]{0, 200, 100, 200});
         fam.setLockscreenVisibility(NotificationCompat.VISIBILITY_PUBLIC);
         nm.createNotificationChannel(fam);
-        NotificationChannel led = new NotificationChannel(CH_LEDGER, "가계부 확인", NotificationManager.IMPORTANCE_DEFAULT);
-        led.setDescription("카드 결제 문자를 가계부에 반영할지 확인");
+        NotificationChannel led = new NotificationChannel(CH_LEDGER, "비서 알림", NotificationManager.IMPORTANCE_DEFAULT);
+        led.setDescription("가계부 확인 대기, 아침·주간 브리핑");
         nm.createNotificationChannel(led);
     }
 
     public static void show(Context c, Map<String, String> d) {
         createChannels(c);
         String k = val(d, "k"), id = val(d, "id");
-        boolean sos = "sos".equals(k), card = "card".equals(k);
+        boolean sos = "sos".equals(k), card = "card".equals(k) || "brief".equals(k);
         String tag = val(d, "tag").isEmpty() ? k + "-" + id : val(d, "tag");
 
         Intent open = new Intent(c, MainActivity.class);

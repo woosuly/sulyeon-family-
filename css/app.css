@@ -824,3 +824,7 @@ header button .fi { color:#fff; }
 .as-amt-in{font-size:22px!important;font-weight:800;text-align:right;letter-spacing:.3px}
 .as-quick{display:flex;gap:6px;margin:6px 0 2px;flex-wrap:wrap}.as-quick button{flex:1;min-width:52px;padding:7px 0;border-radius:10px;border:1px solid #e2e8f0;background:#f8fafc;font-size:12px;font-weight:700;color:#475569}
 .as-date-in{width:100%;padding:9px 10px;border-radius:10px;border:1.5px solid #e2e8f0;font-size:14px;background:#fff}
+/* 비서: 설정의 알림·노트 목록, 브리핑 본문 */
+.ag-li{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f1f5f9;font-size:13px}.ag-li span{flex:0 0 auto;color:#64748b;font-size:12px}.ag-li b{flex:1;font-weight:600;word-break:keep-all}.ag-li .fam-x{width:26px;height:26px;font-size:13px}
+.ag-brief-body{font-size:14px;line-height:1.65;color:#1e293b}.ag-brief-body ul{padding-left:18px;margin:4px 0}
+[data-theme="dark"] .ag-brief-body{color:#e2e8f0}

@@ -263,7 +263,12 @@
         if (cmd === '고정지출' || cmd === '저축' || cmd === '정기이체') { famFeedClose(); return showSection('save-section'); }
         if (cmd === '예산') { showSection('asset-section'); return setTimeout(budgetForm, 300); }
         if (m) return famFeedAdd(`"/${famEsc(cmd)}"는 없는 명령입니다. <b>/도움말</b>을 입력해 보세요.`);
-        // 슬래시 없음 → 말하듯 쓴 문장 해석 → 자동 분류
+        if (cmd === '알림' || cmd === '리마인더') return agRemind(arg);
+        if (cmd === '기억' || cmd === '메모') return agNoteSave(arg);
+        if (cmd === '브리핑') return agBriefNow(arg);
+        // 슬래시 없음 → '기억해줘', '~시에 알려줘'는 비서 기능으로
+        if (typeof agRoute === 'function' && agRoute(raw)) return;
+        // 말하듯 쓴 문장 해석 → 자동 분류
         if (famIntent(raw)) return;
         // AI와 대화 중(15분 이내)이면 짧은 기록 문장('점심 12000')이 아닌 한 이어서 답변
         if (famAskHist.length && Date.now() - famAskAt < 15 * 60 * 1000 && !(raw.length <= 20 && famParseAmount(raw).amt >= 100)) return famAsk(raw);
@@ -517,7 +522,8 @@
         const c = famFeedAdd('<span class="fam-spin"></span>AI가 웹을 검색하는 중…');
         try {
             const ctx = famAskHist.slice(-6).map(h => `사용자: ${h.q}\nAI: ${h.a.slice(0, 1500)}`).join('\n\n');
-            const prompt = ctx ? `[앞선 대화]\n${ctx}\n\n[이번 질문] ${q}\n(앞선 대화의 조건·장소·날짜를 이어서 반영해 답한다. 이미 들은 정보를 다시 묻지 않는다.)` : q;
+            const notes = typeof agNotesCtx === 'function' ? agNotesCtx() : '';
+            const prompt = notes + (ctx ? `[앞선 대화]\n${ctx}\n\n[이번 질문] ${q}\n(앞선 대화의 조건·장소·날짜를 이어서 반영해 답한다. 이미 들은 정보를 다시 묻지 않는다.)` : q);
             const r = await famCallAI(`너는 가족이 함께 쓰는 앱의 AI 비서다. 필요하면 웹 검색으로 최신 정보를 확인하고 한국어로 답한다.
 답하는 방식:
 - 결론을 첫 줄에 먼저 쓴다.
