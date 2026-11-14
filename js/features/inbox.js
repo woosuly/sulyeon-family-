@@ -105,11 +105,12 @@ async function ibDrain(opt) {
 async function ibAskAI(list) {
     const today = typeof famYmd === 'function' ? famYmd(new Date()) : new Date().toISOString().slice(0, 10);
     const sys = `너는 정우설의 문자 비서다. 오늘은 ${today}. 받은 문자 목록을 보고 JSON 배열만 출력한다 (설명·코드블록 없이).
-각 문자마다 {"i":번호,"skip":true|false,"type":"택배|예약|병원|고지서|일정|개인|기타","summary":"한 줄 요약(누가·무엇·언제)","schedule":{"date":"YYYY-MM-DD","time":"HH:MM 또는 빈칸","title":"일정 제목","place":"장소 또는 빈칸"} 또는 null,"reply":"답장 초안 또는 빈칸"}
+각 문자마다 {"i":번호,"skip":true|false,"type":"주의|택배|예약|병원|고지서|일정|개인|기타","summary":"한 줄 요약(누가·무엇·언제)","schedule":{"date":"YYYY-MM-DD","time":"HH:MM 또는 빈칸","title":"일정 제목","place":"장소 또는 빈칸"} 또는 null,"reply":"답장 초안 또는 빈칸"}
 규칙:
+- 스미싱·피싱 의심(모르는 번호가 링크만 보냄, 국제발신의 계정·연락처 등록/결제/택배 주소 확인 요구, 가족·지인 사칭, 단축 URL 클릭 유도 등)은 type:"주의", summary는 "스미싱 의심 — 링크 누르지 말 것"처럼 쓰고 reply는 반드시 빈칸.
 - 광고·홍보·단순 결제/배송완료 안내·스팸처럼 할 일이 없는 문자는 skip:true.
 - 날짜·시간이 정해진 방문·예약·진료·약속·납부기한이 있으면 schedule을 채운다. 연도가 없으면 오늘 이후 가장 가까운 날짜.
-- 답장이 필요한 문자(질문, 확인 요청, 택배기사 문의 등)에만 reply를 쓴다. 정우설이 보내는 짧고 공손한 존댓말 1~2문장.
+- 답장이 필요한 문자(아는 사람·업체의 질문, 확인 요청, 택배기사 문의 등)에만 reply를 쓴다. 정체가 불분명한 번호에는 쓰지 않는다. 정우설이 보내는 짧고 공손한 존댓말 1~2문장.
 - 문자에 없는 내용은 지어내지 않는다.`;
     const user = list.map((s, i) => `[${i}] 보낸사람: ${s.from || '알 수 없음'} | 받은시각: ${new Date(s.ts).toLocaleString('ko-KR')}\n${s.raw}`).join('\n\n');
     const r = await famCallAI(sys, user, { maxTokens: 3000 });
@@ -166,7 +167,7 @@ function ibRender() {
         h += smss.map(s => {
             const sc = s.schedule;
             return `<div class="ib-item">
-            <div class="ib-row"><em class="ib-tag">${famEsc(s.type || '문자')}</em><span class="ib-name">${famEsc(s.summary || s.raw.slice(0, 60))}</span></div>
+            <div class="ib-row"><em class="ib-tag${s.type === '주의' ? ' warn' : ''}">${famEsc(s.type || '문자')}</em><span class="ib-name">${famEsc(s.summary || s.raw.slice(0, 60))}</span></div>
             <div class="ib-sub">${famEsc(s.from || '')} · ${new Date(s.ts).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
             <details class="ib-raw"><summary>원문</summary>${famEsc(s.raw)}</details>
             ${sc ? `<div class="ib-sch">${fi('calendar')}<span>${ibMD(sc.date)}${sc.time ? ' ' + famEsc(sc.time) : ''} ${famEsc(sc.title || '')}${sc.place ? ' · ' + famEsc(sc.place) : ''}</span><button class="fam-btn pri" onclick="ibSchOk('${s.id}')">일정 등록</button></div>` : ''}

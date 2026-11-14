@@ -811,6 +811,7 @@ header button .fi { color:#fff; }
 .ib-tag{font-style:normal;font-size:11px;padding:1px 7px;border-radius:10px;background:#eef2ff;color:#3730a3;white-space:nowrap}
 .ib-item .fam-sel.ib-cat{flex:0 0 96px;width:96px;min-width:0;padding:5px 6px;font-size:13px}.ib-sub{flex:1;min-width:0;font-size:12px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ib-item .fam-btn{flex:0 0 auto;white-space:nowrap;padding:6px 12px}
+.ib-tag.warn{background:#fee2e2;color:#b91c1c}
 .ib-raw{margin-top:6px;font-size:12px;color:#64748b}.ib-raw summary{cursor:pointer;color:#94a3b8}
 .ib-sch{display:flex;align-items:center;gap:6px;margin-top:8px;padding:8px 10px;border-radius:10px;background:#f1f5f9;font-size:13px}.ib-sch span{flex:1}.ib-sch .fi{width:16px;height:16px}
 .ib-reply{margin-top:8px;font-size:13px;resize:vertical}.ib-acts{justify-content:flex-end}
