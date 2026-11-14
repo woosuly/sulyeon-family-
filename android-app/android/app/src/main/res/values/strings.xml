@@ -4,4 +4,5 @@
     <string name="title_activity_main">설연</string>
     <string name="package_name">com.seolyeon.family</string>
     <string name="custom_url_scheme">com.seolyeon.family</string>
+    <string name="sc_voice">말로 하기</string>
 </resources>

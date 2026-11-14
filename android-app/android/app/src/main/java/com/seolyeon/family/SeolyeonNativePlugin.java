@@ -69,6 +69,10 @@ public class SeolyeonNativePlugin extends Plugin {
     /** 알림을 눌러 앱이 열렸을 때 어떤 화면인지 기억 */
     static void takeIntent(Intent i) {
         if (i == null) return;
+        String act = i.getAction();
+        if (Intent.ACTION_ASSIST.equals(act) || Intent.ACTION_VOICE_COMMAND.equals(act) || "com.seolyeon.family.VOICE".equals(act)) {
+            pendK = "voice"; pendId = ""; i.setAction(Intent.ACTION_MAIN); return;
+        }
         String k = i.getStringExtra("push_k");
         if (k == null || k.isEmpty()) return;
         pendK = k;
@@ -487,6 +491,16 @@ public class SeolyeonNativePlugin extends Plugin {
             }
             JSObject r = new JSObject(); r.put("uri", String.valueOf(uri)); call.resolve(r);
         } catch (Exception e) { call.reject(String.valueOf(e.getMessage())); }
+    }
+
+    /** 기본 디지털 어시스턴트 앱 고르는 화면 (설연을 고르면 홈 버튼 길게 → 설연) */
+    @PluginMethod
+    public void openAssistantSettings(PluginCall call) {
+        String[] acts = { "android.settings.MANAGE_DEFAULT_APPS_SETTINGS", Settings.ACTION_VOICE_INPUT_SETTINGS, Settings.ACTION_SETTINGS };
+        for (String a : acts) {
+            try { Intent i = new Intent(a); i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); getContext().startActivity(i); call.resolve(); return; } catch (Exception ignored) { }
+        }
+        call.reject("no settings");
     }
 
     /** 다른 앱으로 열기 (유튜브 뮤직·유튜브 등) — {url, pkg}: pkg 앱이 없으면 기본 앱·브라우저 */

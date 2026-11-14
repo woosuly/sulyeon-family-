@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 앱 아이콘을 길게 누르면 나오는 바로가기 -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="voice" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/sc_voice" android:shortcutLongLabel="@string/sc_voice">
+        <intent android:action="com.seolyeon.family.VOICE" android:targetPackage="com.seolyeon.family" android:targetClass="com.seolyeon.family.MainActivity" />
+    </shortcut>
+</shortcuts>

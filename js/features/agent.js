@@ -116,6 +116,9 @@ function agSetHtml() {
     return `<div class="fam-box" id="ag-set"><h4>🤖 비서</h4>
         <div class="fam-note" style="margin:0 0 10px">아침 07:00 브리핑, 19:00 내일 일정 준비(장소가 있는 일정), 목 19:30 주말 제안, 일 20:00 주간 요약이 자동으로 옵니다.</div>
         <div class="fam-btns" style="margin-top:0">${Object.entries(AG_TYPES).map(([k, n]) => `<button class="fam-btn" onclick="agBriefNow('${k}')">${n}</button>`).join('')}</div>
+        ${window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.SeolyeonNative && Capacitor.Plugins.SeolyeonNative.openAssistantSettings ? `<span class="fam-lbl">홈 버튼 길게 누르면 설연</span>
+        <div class="fam-note" style="margin:0 0 6px">① 아래 버튼 → <b>디지털 어시스턴트 앱</b> → <b>설연</b> 선택<br>② 홈 버튼을 길게 눌러 '서클 투 서치'가 뜨면: 설정 → 디스플레이 → 내비게이션 바 → <b>서클 투 서치</b> 끄기<br>앱 아이콘을 길게 누르면 <b>말로 하기</b> 바로가기도 있습니다.</div>
+        <div class="fam-btns" style="margin-top:0"><button class="fam-btn" onclick="Capacitor.Plugins.SeolyeonNative.openAssistantSettings()">기본 어시스턴트 앱 설정 열기</button></div>` : ''}
         <span class="fam-lbl">예정된 알림 ${rems.length}건</span>
         ${rems.length ? rems.map(r => `<div class="ag-li"><span>${famEsc(agFmt(r.at))}</span><b>${famEsc(r.title)}</b><button class="fam-x" onclick="agRemindDel('${r.id}').then(()=>famRenderSettings())">✕</button></div>`).join('') : '<div class="fam-note" style="margin:0">홈에서 "내일 8시에 ○○ 알려줘"라고 입력하세요.</div>'}
         <span class="fam-lbl">기억 노트 ${agNotes.length}건</span>
