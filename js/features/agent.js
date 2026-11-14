@@ -16,6 +16,12 @@ function agRoute(raw) {
     if (typeof iotRoute === 'function' && iotRoute(t)) return true;       // 집 기기(스마트싱스) — '에어컨 틀어줘'가 음악으로 가지 않게 먼저
     if (typeof mediaRoute === 'function' && mediaRoute(t)) return true;   // 음악·영상
     if (typeof lifeRoute === 'function' && lifeRoute(t)) return true;     // 길찾기·차·택배
+    // 산행: '주말에 어느 산 갈까', '등산 추천해줘' → 서버 산행 추천 / '100대 명산' → 진행 현황
+    if (/(항공권|비행기\s*표|항공\s*가격)/.test(t) && typeof flOpen === 'function') { flOpen(); return true; }
+    if (/(관리비|공과금|전기\s*요금|가스\s*요금)/.test(t) && /(얼마|추이|보여|비교|현황|나왔)/.test(t)) { showSection('save-section'); setTimeout(() => document.getElementById('bill-box')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300); return true; }
+    if (/(여권|면허|건강\s*검진|서류)/.test(t) && /(만료|언제|갱신|기한|남았)/.test(t)) { showSection('save-section'); setTimeout(() => document.getElementById('doc-box')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300); return true; }
+    if (/100\s*대\s*명산|명산\s*(현황|몇)/.test(t) && typeof hikeM100Sheet === 'function') { hikeM100Sheet(); return true; }
+    if (/(등산|산행|어느\s*산|무슨\s*산|어떤\s*산)/.test(t) && /(추천|갈까|가볼까|어디|좋을까)/.test(t)) { agBriefNow('hike'); famFeedAdd('⛰️ 이번 주말 날씨·미세먼지·일몰을 보고 안 가 본 산 위주로 추천을 만드는 중입니다. 완료되면 알림이 옵니다.'); return true; }
     if (/(기억\s*해\s*(줘|둬|놔)|기억해|메모\s*해\s*(줘|둬)|적어\s*(줘|둬))[.!]?$/.test(t)) { agNoteSave(t); return true; }
     // 알림 요청: '~에 알려줘'(시각 + 에) 또는 할 일 동사가 있을 때만. '주말 날씨 알려줘' 같은 정보 요청은 AI 답변으로
     const askEnd = /(알려\s*줘|알림\s*(줘|해\s*줘)|리마인드|깨워\s*줘|말해\s*줘)[.!]?$/.test(t);
@@ -98,9 +104,9 @@ function agBriefOpen(id) {
 }
 const agBriefText = id => { const b = agBriefs.find(x => x.id === id); return b ? b.title + '\n\n' + b.body : ''; };
 function agAskMore(id) { const el = document.getElementById('home-cmd-input'), b = agBriefs.find(x => x.id === id); if (typeof showSection === 'function') showSection('main-section'); famAskHist.push({ q: b.title, a: b.body }); famAskAt = Date.now(); if (el) { el.focus(); el.placeholder = '브리핑에 이어서 물어보세요'; } }
-const AG_TYPES = { morning: '아침 브리핑', eve: '내일 일정 준비', weekend: '주말 제안', weekly: '주간 요약' };
+const AG_TYPES = { morning: '아침 브리핑', eve: '내일 일정 준비', weekend: '주말 제안', weekly: '주간 요약', hike: '주말 산행 추천' };
 async function agBriefNow(type) {
-    type = { 아침: 'morning', 내일: 'eve', 주말: 'weekend', 주간: 'weekly' }[String(type || '').trim()] || (AG_TYPES[type] ? type : 'morning');
+    type = { 아침: 'morning', 내일: 'eve', 주말: 'weekend', 주간: 'weekly', 산행: 'hike' }[String(type || '').trim()] || (AG_TYPES[type] ? type : 'morning');
     await db.collection('briefReq').add({ owner: agMe(), type, at: Date.now() });
     famToast(AG_TYPES[type] + ' 만드는 중… 완료되면 알림이 옵니다');
 }

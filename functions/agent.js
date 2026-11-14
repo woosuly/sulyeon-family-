@@ -81,6 +81,31 @@ async function weather(lat, lon, day) {
   } catch (e) { return ''; }
 }
 
+// ── 산행 판단용: 일몰 · 미세먼지 (Open-Meteo, 9~17시 평균, 한국 기준 등급) ──
+async function outdoor(lat, lon, day) {
+  const out = [];
+  try {
+    const j = await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=sunset&timezone=Asia%2FSeoul&forecast_days=10`)).json();
+    const i = j.daily.time.indexOf(day); if (i >= 0) out.push('일몰 ' + String(j.daily.sunset[i]).slice(11, 16));
+  } catch (e) {}
+  try {
+    const j = await (await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm10,pm2_5&timezone=Asia%2FSeoul&forecast_days=5`)).json();
+    const h = j.hourly, idx = h.time.map((t, k) => t.startsWith(day) && +t.slice(11, 13) >= 9 && +t.slice(11, 13) <= 17 ? k : -1).filter(k => k >= 0);
+    if (idx.length) {
+      const avg = a => Math.round(idx.reduce((x, k) => x + (a[k] || 0), 0) / idx.length), p10 = avg(h.pm10), p25 = avg(h.pm2_5);
+      const g = Math.max(p10 <= 30 ? 0 : p10 <= 80 ? 1 : p10 <= 150 ? 2 : 3, p25 <= 15 ? 0 : p25 <= 35 ? 1 : p25 <= 75 ? 2 : 3);
+      out.push(`미세먼지 ${['좋음', '보통', '나쁨', '매우 나쁨'][g]}(PM10 ${p10}·PM2.5 ${p25})`);
+    }
+  } catch (e) {}
+  return out.join(', ');
+}
+// 산림청 100대 명산 (앱 js/features/hike.js 와 같은 목록)
+const M100 = '가리산 가리왕산 가야산 가지산 감악산 강천산 계룡산 계방산 공작산 관악산 구병산 금산 금수산 금오산 금정산 깃대봉 남산 내연산 내장산 대둔산 대암산 대야산 덕숭산 덕유산 덕항산 도락산 도봉산 두륜산 두타산 마니산 마이산 명성산 명지산 모악산 무등산 무학산 미륵산 민주지산 방장산 방태산 백덕산 백암산 백운산(광양) 백운산(포천) 백운산(정선) 변산 북한산 비슬산 삼악산 서대산 선운산 설악산 성인봉 소백산 소요산 속리산 신불산 연화산 오대산 오봉산 용문산 용화산 운문산 운악산 운장산 월악산 월출산 유명산 응봉산 장안산 재약산 적상산 점봉산 조계산 주왕산 주흘산 지리산 지리산(통영) 천관산 천마산 천성산 천태산 청량산 추월산 축령산 치악산 칠갑산 태백산 태화산 팔공산 팔봉산 팔영산 한라산 화악산 화왕산 황매산 황석산 황악산 황장산 희양산'.split(' ');
+async function visitedMts() {
+  const logs = (await db().collection('hikeLogs').get()).docs.map(d => d.data());
+  return [...new Set(logs.map(h => (String(h.place || '').match(/[가-힣]{1,8}산/) || [''])[0]).filter(Boolean))];
+}
+
 // ── 데이터 ───────────────────────────────────────────────
 const mine = (e, u) => !e.member || e.member === u || e.member === '공통';
 async function schedulesOn(day) {
@@ -146,11 +171,33 @@ async function weekend(u, day, cfg) {
   const [w1, w2] = [await weather(cfg.lat, cfg.lon, sat), await weather(cfg.lat, cfg.lon, sun)];
   const busy = [...await schedulesOn(sat), ...await schedulesOn(sun)].filter(e => mine(e, u)).map(schLine);
   const wish = (await db().collection('wishes').get()).docs.map(d => d.data()).filter(x => !x.done).map(x => x.name).slice(0, 15);
-  const text = await ai(AI_SYS, `이번 주말 ${md(sat)}~${md(sun)} 청주 날씨: 토 ${w1 || '?'}, 일 ${w2 || '?'}.
+  const [o1, o2, been] = [await outdoor(cfg.lat, cfg.lon, sat), await outdoor(cfg.lat, cfg.lon, sun), await visitedMts()];
+  const text = await ai(AI_SYS, `이번 주말 ${md(sat)}~${md(sun)} 청주 날씨: 토 ${w1 || '?'}${o1 ? ', ' + o1 : ''} / 일 ${w2 || '?'}${o2 ? ', ' + o2 : ''}.
+다녀온 산: ${been.length ? been.join(', ') : '기록 없음'} (등산 코스는 안 가 본 산 우선).
 주말 일정: ${busy.length ? busy.join(', ') : '없음'}. 가고 싶은 곳 목록: ${wish.length ? wish.join(', ') : '없음'}.
 청주에서 2시간 이내로 다녀올 만한 곳 3가지를 제안해줘 (등산 코스 1곳 이상, 지금 시기의 단풍·꽃·축제 등 제철 요소, 가고 싶은 곳 목록에 맞는 게 있으면 우선).
 각 제안: 이름, 왜 지금인지, 이동 시간, 함께 들를 식당 1곳, 1박이면 숙소 후보 1곳. 일정이 이미 있으면 남는 시간에 맞춰줘.`, true).catch(e => '제안을 만들지 못했습니다: ' + e.message);
   if (text) await saveBrief('weekend', u, day, `이번 주말 제안 (${md(sat)}~)`, text);
+}
+
+// ④-2 주말 산행 추천 (앱에서 요청) — 날씨·미세먼지·일몰, 안 가 본 100대 명산 우선
+async function hikeSuggest(u, day, cfg) {
+  const wd = new Date(day + 'T00:00:00Z').getUTCDay();
+  const sat = wd === 0 ? addDays(day, -1) : addDays(day, (6 - wd + 7) % 7), sun = addDays(sat, 1);
+  const info = [];
+  for (const d of [sat, sun]) if (d >= day) { const o = await outdoor(cfg.lat, cfg.lon, d); info.push(`${md(d)}: ${await weather(cfg.lat, cfg.lon, d) || '날씨 ?'}${o ? ', ' + o : ''}`); }
+  const busy = [...await schedulesOn(sat), ...await schedulesOn(sun)].filter(e => mine(e, u)).map(schLine);
+  const been = await visitedMts(), left = M100.filter(m => !been.some(b => m.startsWith(b)));
+  const text = await ai(AI_SYS, `주말 산행 추천. 출발지 청주, 부부 2명, 4~6시간 코스 선호.
+${info.join('\n')}
+주말 일정: ${busy.length ? busy.join(', ') : '없음'}
+다녀온 산: ${been.length ? been.join(', ') : '기록 없음'}
+아직 안 간 100대 명산: ${left.join(', ')}
+
+청주에서 차로 2시간 이내 산 3곳을 추천해줘. 안 간 100대 명산을 우선하되, 지금 시기(${md(day)})에 좋은 곳.
+각 곳: 산 이름(100대 명산이면 표시), 추천 코스(들머리→정상→날머리), 거리·소요 시간·난이도, 청주에서 이동 시간, 들머리 주차, 일몰 전에 내려오려면 늦어도 몇 시 출발, 하산 후 식당 1곳.
+날씨·미세먼지가 나쁜 날이면 다른 날을 권하거나 짧은 코스로 바꿔줘. 일정이 있으면 남는 날에 맞춰줘.`, true).catch(e => '추천을 만들지 못했습니다: ' + e.message);
+  if (text) await saveBrief('hike', u, day, `주말 산행 추천 (${md(sat)}~)`, text);
 }
 
 // ⑤ 주간 요약 + 떠날 수 있는 연휴
@@ -262,6 +309,30 @@ async function runParcels() {
   }
 }
 
+// ⑦ 항공권 가격 지켜보기 — flightWatch/{id} {dest, from, when, nights, pax, target, by, last, hist}
+//    월 09:00 주 1회 + 앱에서 '지금 확인'. AI 웹검색 기준 참고 가격 (실시간 최저가 아님)
+async function flightCheck(w) {
+  const r = await ai('너는 항공권 가격 조사원이다. 웹검색 결과에 실제로 나온 가격만 쓰고, 못 찾으면 low를 0으로 한다. JSON만 출력.',
+    `${w.from || '인천'} → ${w.dest} 왕복 항공권, 여행 시기 ${w.when || '미정'}${w.nights ? ', ' + w.nights + '박' : ''}, 성인 ${w.pax || 2}명.
+지금 검색되는 1인 왕복 최저가 수준을 찾아 JSON만: {"low":원 단위 숫자(1인 왕복),"airline":"항공사·직항/경유","note":"한 줄 조언 (지금 살지, 더 볼지, 특가 시기)","src":"가격을 본 사이트"}`, true);
+  const j = JSON.parse((String(r).match(/\{[\s\S]*\}/) || ['{}'])[0]);
+  return {low: Math.round(+j.low || 0), airline: String(j.airline || '').slice(0, 60), note: String(j.note || '').slice(0, 200), src: String(j.src || '').slice(0, 80), at: Date.now()};
+}
+async function runFlights(owner, fid) {
+  const docs = fid ? [await db().collection('flightWatch').doc(fid).get()].filter(d => d.exists) : (await db().collection('flightWatch').get()).docs;
+  for (const d of docs) {
+    const w = d.data(); if (w.off) continue;
+    try {
+      const c = await flightCheck(w), prev = w.last && w.last.low;
+      await d.ref.update({last: c, hist: [...(w.hist || []), {at: c.at, low: c.low}].slice(-12)});
+      if (!c.low) { if (owner) await pushTo(owner, {k: 'remind', id: 'fl' + d.id, title: `✈️ ${w.dest} 항공권`, body: '가격을 찾지 못했습니다. 시기·출발지를 구체적으로 적어 보세요', tag: 'flight-' + d.id}); continue; }
+      const drop = prev && c.low <= prev * 0.9, hit = w.target && c.low <= w.target;
+      if (owner || drop || hit) await pushTo(owner || w.by || '정우설', {k: 'remind', id: 'fl' + d.id, tag: 'flight-' + d.id,
+        title: `✈️ ${w.dest} 왕복 1인 약 ${won(c.low)}${hit ? ' · 목표가 도달' : drop ? ' · 지난주보다 ' + Math.round((1 - c.low / prev) * 100) + '% 내림' : ''}`, body: `${c.airline} ${c.note}`.trim()});
+    } catch (e) { console.error('flight', d.id, e.message); }
+  }
+}
+
 // ── 5분마다 ──────────────────────────────────────────────
 exports.agentTick = onSchedule({schedule: 'every 5 minutes', timeZone: 'Asia/Seoul', region: 'asia-northeast3', timeoutSeconds: 300, memory: '512MiB'}, async () => {
   const now = Date.now(), k = kst(now), day = ymd(k), hm = k.getUTCHours() * 60 + k.getUTCMinutes(), wd = k.getUTCDay();
@@ -276,6 +347,7 @@ exports.agentTick = onSchedule({schedule: 'every 5 minutes', timeZone: 'Asia/Seo
     }
   }
   const at = (h, m) => hm >= h * 60 + m && hm < h * 60 + m + 15;   // 늦게 실행돼도 15분 안이면 처리
+  if (wd === 1 && at(9, 0) && await once('flight_' + day)) await runFlights('', '').catch(e => console.error('flights', e));
   for (const u of cfg.users) {
     const job = async (name, fn) => { if (cfg.off[name] || (cfg.offBy && cfg.offBy[u] && cfg.offBy[u][name])) return; if (await once(`${name}_${day}_${u}`)) await fn().catch(e => console.error(name, u, e)); };
     if (at(7, 0)) await job('morning', () => morning(u, day, cfg));
@@ -295,6 +367,8 @@ exports.briefNow = onDocumentCreated({document: 'briefReq/{id}', region: 'asia-n
   try {
     if (r.type === 'eve') await eveRegional(r.owner, day);
     else if (r.type === 'weekend') await weekend(r.owner, day, cfg);
+    else if (r.type === 'hike') await hikeSuggest(r.owner, day, cfg);
+    else if (r.type === 'flight') await runFlights(r.owner, r.fid || '');
     else if (r.type === 'weekly') await weekly(r.owner, day);
     else await morning(r.owner, day, cfg);
     await ev.data.ref.update({done: true});

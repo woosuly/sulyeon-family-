@@ -44,7 +44,7 @@
 .trip-sec.recap{background:#fffbeb;border-color:#fde68a}
 .recap-text{font-size:13.5px;line-height:1.7;color:#1e293b}
 /* ── 산행 기록 ── */
-.hk-stat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.hk-stat{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .hk-stat div{background:#ecfdf5;border-radius:12px;padding:10px;text-align:center}
 .hk-stat b{display:block;font-size:17px;color:#065f46}
 .hk-stat span{font-size:11px;color:#047857}

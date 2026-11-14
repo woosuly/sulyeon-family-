@@ -58,6 +58,7 @@
             <div class="drawer-item" id="di-save"              onclick="drawerGo('save-section')"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg><span>저축 · 정기이체</span></div>
             <div class="drawer-item" id="di-family" onclick="closeDrawer();fmOpen()"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M15 14.5c2.8 0 5 2 5 5"/></svg><span>가족 챙기기</span></div>
             <div class="drawer-item" id="di-iot" onclick="closeDrawer();stOpen()"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/></svg><span>집 기기</span></div>
+            <div class="drawer-item" id="di-flight" onclick="closeDrawer();flOpen()"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 13.5 3 11l1.5-1.5 7.5 1 4-4.5c.8-.8 2.2-.9 3-.1s.7 2.2-.1 3l-4.5 4 1 7.5L14 22l-2.5-7.5L8 18v3l-1.5 1L5 19l-3-1.5L3 16h3l3.5-3.5"/></svg><span>항공권 지켜보기</span></div>
             <div style="height:1px;background:#e2e8f0;margin:6px 4px;"></div>
             <div class="drawer-item drawer-item-accent" id="di-news" onclick="drawerGo('news-section')"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg><span>NEWS</span></div>
         </nav>
@@ -905,6 +906,14 @@
                     <div id="sub-list"></div>
                 </div>
                 <div class="fam-box">
+                    <h4 style="display:flex;align-items:center">생활 서류 <small style="margin-left:6px;color:#94a3b8;font-weight:600">만료 알림</small><button class="fam-btn" style="margin-left:auto;padding:4px 10px;font-size:11px" onclick="docForm()">＋ 추가</button></h4>
+                    <div id="doc-box"></div>
+                </div>
+                <div class="fam-box">
+                    <h4 style="display:flex;align-items:center">관리비 · 공과금<button class="fam-btn" style="margin-left:auto;padding:4px 10px;font-size:11px" onclick="billForm()">＋ 추가</button></h4>
+                    <div id="bill-box"></div>
+                </div>
+                <div class="fam-box">
                     <h4 style="display:flex;align-items:center">차량<button class="fam-btn" style="margin-left:auto;padding:4px 10px;font-size:11px" onclick="carForm()">수정</button></h4>
                     <div id="car-box"></div>
                 </div>
@@ -1260,6 +1269,9 @@
     <script src="js/features/trip.js"></script>
     <script src="js/features/trip-extra.js"></script>
     <script src="js/features/hike.js"></script>
+    <script src="js/features/docs.js"></script>
+    <script src="js/features/bills.js"></script>
+    <script src="js/features/flight.js"></script>
     <script src="js/features/notices.js"></script>
     <script src="js/features/map.js"></script>
     <script src="js/core/wide.js"></script>

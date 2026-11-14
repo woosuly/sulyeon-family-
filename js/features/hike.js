@@ -106,6 +106,15 @@ function hikeNotify(title, body) {
 // ── ⛰️ 산행 기록 (hikeLogs/{id}: place, by, date, mins, note, planId) ──
 const hikeDur = m => m >= 60 ? `${Math.floor(m / 60)}시간${m % 60 ? ' ' + (m % 60) + '분' : ''}` : `${m}분`;
 const hikeMt = place => (String(place || '').match(/[가-힣]{1,8}산/) || [String(place || '').split(/\s/)[0]])[0];
+// 산림청 100대 명산 (서버 functions/agent.js 와 같은 목록) — 기록의 'OO산'과 맞춰 진행률 표시
+const HIKE_M100 = '가리산 가리왕산 가야산 가지산 감악산 강천산 계룡산 계방산 공작산 관악산 구병산 금산 금수산 금오산 금정산 깃대봉 남산 내연산 내장산 대둔산 대암산 대야산 덕숭산 덕유산 덕항산 도락산 도봉산 두륜산 두타산 마니산 마이산 명성산 명지산 모악산 무등산 무학산 미륵산 민주지산 방장산 방태산 백덕산 백암산 백운산(광양) 백운산(포천) 백운산(정선) 변산 북한산 비슬산 삼악산 서대산 선운산 설악산 성인봉 소백산 소요산 속리산 신불산 연화산 오대산 오봉산 용문산 용화산 운문산 운악산 운장산 월악산 월출산 유명산 응봉산 장안산 재약산 적상산 점봉산 조계산 주왕산 주흘산 지리산 지리산(통영) 천관산 천마산 천성산 천태산 청량산 추월산 축령산 치악산 칠갑산 태백산 태화산 팔공산 팔봉산 팔영산 한라산 화악산 화왕산 황매산 황석산 황악산 황장산 희양산'.split(' ');
+function hikeM100Done() { const been = new Set(hikeLogs.map(h => hikeMt(h.place))); return HIKE_M100.filter(m => been.has(m.replace(/\(.+\)/, ''))); }
+function hikeM100Sheet() {
+    const done = new Set(hikeM100Done());
+    famSheet(`<div class="fam-h"><b>100대 명산 ${done.size}/100</b><button class="fam-x" onclick="hikeLogSheet()">✕</button></div>
+        <div class="fam-note" style="margin:0 0 8px">산림청 선정 목록입니다. 산행 기록의 산 이름으로 자동 표시됩니다 (같은 이름의 백운산·지리산은 함께 표시).</div>
+        <div class="hk-mts">${HIKE_M100.map(m => `<span style="${done.has(m) ? 'background:#059669;color:#fff' : 'opacity:.55'}">${famEsc(m)}</span>`).join('')}</div>`);
+}
 function hikeLogListen() { try { db.collection('hikeLogs').onSnapshot(s => { hikeLogs = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => String(b.date).localeCompare(String(a.date))); }, () => {}); } catch (e) {} }
 async function hikeLogSave(o) { const id = 'hl_' + Date.now(); await db.collection('hikeLogs').doc(id).set({ id, ...o, at: Date.now() }); return id; }
 function hikeLogSheet() {
@@ -113,10 +122,10 @@ function hikeLogSheet() {
     const mts = {}; hikeLogs.forEach(h => { const k = hikeMt(h.place); mts[k] = (mts[k] || 0) + 1; });
     const mins = thisY.reduce((a, h) => a + (+h.mins || 0), 0);
     famSheet(`<div class="fam-h"><b>⛰️ 산행 기록</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
-        <div class="hk-stat"><div><b>${thisY.length}</b><span>${y}년 산행</span></div><div><b>${hikeDur(mins) || '0분'}</b><span>올해 걸은 시간</span></div><div><b>${Object.keys(mts).length}</b><span>다녀온 산</span></div></div>
+        <div class="hk-stat"><div><b>${thisY.length}</b><span>${y}년 산행</span></div><div><b>${hikeDur(mins) || '0분'}</b><span>올해 걸은 시간</span></div><div><b>${Object.keys(mts).length}</b><span>다녀온 산</span></div><div onclick="hikeM100Sheet()" style="cursor:pointer"><b>${hikeM100Done().length}<small style="font-size:11px;color:#94a3b8">/100</small></b><span>100대 명산 ›</span></div></div>
         ${Object.keys(mts).length ? `<div class="hk-mts">${Object.entries(mts).sort((a, b) => b[1] - a[1]).map(([k, n]) => `<span>${famEsc(k)}${n > 1 ? ` <b>${n}</b>` : ''}</span>`).join('')}</div>` : ''}
         <div class="fam-box" style="margin-top:10px">${hikeLogs.length ? hikeLogs.map(h => `<div class="fam-row"><span style="flex:none;width:72px;color:#94a3b8;font-size:11.5px">${famEsc(String(h.date).slice(2).replace(/-/g, '.'))}</span><span style="flex:1;min-width:0"><b>${famEsc(h.place)}</b><br><small style="color:#94a3b8">${famEsc(h.by || '')}${h.note ? ' · ' + famEsc(h.note) : ''}</small></span><b style="flex:none;font-size:12.5px">${hikeDur(+h.mins || 0)}</b><button class="fam-x" style="width:24px;height:24px;font-size:10px;flex:none" onclick="hikeLogDel('${h.id}')">✕</button></div>`).join('') : '<div class="fam-note">아직 기록이 없습니다. 하산 체크인을 완료하면 자동으로 남습니다.</div>'}</div>
-        <div class="fam-btns"><button class="fam-btn" onclick="hikeLogForm()">＋ 지난 산행 추가</button><button class="fam-btn pri" onclick="hikeForm()">⛰️ 산행 시작</button></div>`);
+        <div class="fam-btns"><button class="fam-btn" onclick="hikeLogForm()">＋ 지난 산행 추가</button><button class="fam-btn" onclick="agBriefNow('hike')">주말 산행 추천</button><button class="fam-btn pri" onclick="hikeForm()">⛰️ 산행 시작</button></div>`);
 }
 function hikeLogForm() {
     famSheet(`<div class="fam-h"><b>＋ 지난 산행 추가</b><button class="fam-x" onclick="hikeLogSheet()">✕</button></div>
