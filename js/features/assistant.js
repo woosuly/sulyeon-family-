@@ -134,7 +134,7 @@
         if (el.value.trim() || !FamSR) return famSubmit();
         const r = new FamSR(); famRec = r; r.lang = 'ko-KR'; r.interimResults = true; r.continuous = false;
         r.onresult = e => { let t = ''; for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript; el.value = t; };
-        r.onerror = e => { if (e.error === 'not-allowed') famToast('마이크 권한을 허용해 주세요'); else if (e.error !== 'no-speech' && e.error !== 'aborted') famToast('음성 인식 오류: ' + e.error); };
+        r.onerror = e => { if (e.error === 'not-allowed') famToast('마이크 권한을 허용해 주세요'); else if (e.error === 'no-speech') famToast('말소리를 듣지 못했습니다. 다시 눌러 말씀해 주세요'); else if (e.error !== 'aborted') famToast('음성 인식 오류: ' + e.error); };
         r.onend = () => { famRec = null; el.placeholder = '무엇이든 입력하세요'; famMicSwap(); if (el.value.trim()) el.focus(); };
         el.placeholder = '듣고 있어요…'; famMicSwap();
         try { r.start(); } catch (e) { famRec = null; famMicSwap(); famToast('음성 입력을 시작하지 못했습니다'); }

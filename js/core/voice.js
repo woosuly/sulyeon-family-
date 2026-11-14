@@ -14,40 +14,44 @@
     // ── 음성 인식 ──
     const SR = P.SpeechRecognition;
     if (SR) {
+        // 폰 음성 인식: 말을 다 하면 최종 결과를 한 번에 받는 방식 (갤럭시 기본 인식은 중간 결과를 안 주는 경우가 있음)
+        // 응답이 없어도 반드시 꺼지도록 시간 제한과 중지 처리
         class NativeSR {
-            constructor() { this.lang = 'ko-KR'; this.interimResults = true; this.continuous = false; this._subs = []; this._last = ''; this._done = false; }
+            constructor() { this.lang = 'ko-KR'; this.interimResults = true; this.continuous = false; this._done = true; this._t = null; this._sub = null; }
             _fire(text, final) {
-                if (!this.onresult) return;
+                if (!this.onresult || !text) return;
                 const alt = { transcript: text, confidence: 1 }, res = [alt]; res.isFinal = final;
                 this.onresult({ results: [res], resultIndex: 0 });
             }
             _end(err) {
                 if (this._done) return; this._done = true;
-                this._subs.forEach(s => { try { s.remove(); } catch (e) {} }); this._subs = [];
+                clearTimeout(this._t); if (this._sub) { try { this._sub.remove(); } catch (e) {} this._sub = null; }
                 if (err && this.onerror) this.onerror({ error: err });
-                if (this._last) this._fire(this._last, true);
                 if (this.onend) this.onend();
             }
             async start() {
-                this._done = false; this._last = '';
+                if (!this._done) return;
+                this._done = false;
                 try {
-                    const av = await SR.available().catch(() => ({ available: true }));
-                    if (av && av.available === false) return this._end('not-supported');
                     let pm = await SR.checkPermissions().catch(() => ({}));
                     if (pm.speechRecognition !== 'granted') pm = await SR.requestPermissions().catch(() => ({}));
                     if (pm.speechRecognition !== 'granted') return this._end('not-allowed');
-                    this._subs.push(await SR.addListener('partialResults', d => { const t = (d.matches || [])[0] || ''; if (t) { this._last = t; if (this.interimResults) this._fire(t, false); } }));
-                    this._subs.push(await SR.addListener('listeningState', d => { if (d.status === 'stopped') this._end(); }));
+                    // 중간 결과가 오면 입력창에 미리 보여 줌 (안 와도 동작)
+                    try { this._sub = await SR.addListener('partialResults', d => { const t = (d.matches || [])[0]; if (t && this.interimResults) this._fire(t, false); }); } catch (e) {}
                     if (this.onstart) this.onstart();
-                    const r = await SR.start({ language: this.lang || 'ko-KR', maxResults: 1, partialResults: true, popup: false });
-                    if (r && r.matches && r.matches[0]) this._last = r.matches[0];
+                    this._t = setTimeout(() => { SR.stop().catch(() => {}); this._end('no-speech'); }, 15000);   // 15초 안에 결과가 없으면 끔
+                    const r = await SR.start({ language: this.lang || 'ko-KR', maxResults: 1, partialResults: false, popup: false });
+                    const t = r && r.matches && r.matches[0];
+                    if (t) this._fire(t, true);
+                    this._end(t ? null : 'no-speech');
                 } catch (e) {
                     const m = String(e && e.message || e);
-                    this._end(/permission/i.test(m) ? 'not-allowed' : /no match|no-speech|7/i.test(m) ? 'no-speech' : 'network');
+                    this._end(/permission|denied/i.test(m) ? 'not-allowed' : /match|speech|7|6/i.test(m) ? 'no-speech' : 'network');
                 }
             }
-            stop() { SR.stop().catch(() => {}).finally(() => setTimeout(() => this._end(), 300)); }
-            abort() { this.stop(); }
+            // 중지: 폰 응답을 기다리지 않고 바로 끔 (마지막 결과가 오면 그것까지 반영)
+            stop() { SR.stop().catch(() => {}); clearTimeout(this._t); this._t = setTimeout(() => this._end(), 1200); }
+            abort() { SR.stop().catch(() => {}); this._end(); }
         }
         window.SpeechRecognition = NativeSR;
         window.webkitSpeechRecognition = NativeSR;
