@@ -818,3 +818,4 @@ header button .fi { color:#fff; }
 .ib-empty{padding:30px 0;text-align:center;color:#94a3b8;font-size:14px}
 [data-theme="dark"] .ib-bar,[data-theme="dark"] .ib-item{background:#1e293b;border-color:#334155;color:#e2e8f0}
 [data-theme="dark"] .ib-sheet{background:#0f172a}[data-theme="dark"] .ib-name,[data-theme="dark"] .ib-amt{color:#e2e8f0}[data-theme="dark"] .ib-sch{background:#334155}
+.ib-wrap{flex-wrap:wrap}.ib-room{display:flex;align-items:center;gap:6px;padding:6px 0;border:none;background:none}

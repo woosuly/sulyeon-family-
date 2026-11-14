@@ -23,6 +23,7 @@ import android.Manifest;
 import android.content.ComponentName;
 import android.database.Cursor;
 import android.provider.Telephony;
+import android.provider.ContactsContract;
 import androidx.core.app.NotificationManagerCompat;
 import org.json.JSONArray;
 import androidx.core.content.ContextCompat;
@@ -42,7 +43,8 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 
 /** 알림이 잘 오도록 휴대폰 설정 화면을 열어 주는 기능 */
 @CapacitorPlugin(name = "SeolyeonNative",
-    permissions = { @Permission(alias = "sms", strings = { Manifest.permission.READ_SMS }) })
+    permissions = { @Permission(alias = "sms", strings = { Manifest.permission.READ_SMS }),
+                    @Permission(alias = "contacts", strings = { Manifest.permission.READ_CONTACTS }) })
 public class SeolyeonNativePlugin extends Plugin {
     private static SeolyeonNativePlugin instance;
     private static String pendK = null, pendId = null;
@@ -351,5 +353,102 @@ public class SeolyeonNativePlugin extends Plugin {
         JSObject r = new JSObject();
         r.put("items", a);
         call.resolve(r);
+    }
+
+    // ═══ 연락처 · 전화 · 문자 · 카톡 보내기 ═══
+
+    /** 번호들을 연락처 이름으로 바꿈 {numbers:[...]} → {names:{번호:이름}} (ask:true면 권한 요청) */
+    @PluginMethod
+    public void lookupContacts(PluginCall call) {
+        if (getPermissionState("contacts") != PermissionState.GRANTED) {
+            if (Boolean.TRUE.equals(call.getBoolean("ask", false))) requestPermissionForAlias("contacts", call, "contactsPermCb");
+            else call.reject("no-permission");
+            return;
+        }
+        doLookup(call);
+    }
+
+    @PermissionCallback
+    private void contactsPermCb(PluginCall call) {
+        if (getPermissionState("contacts") == PermissionState.GRANTED) doLookup(call);
+        else call.reject("denied");
+    }
+
+    private void doLookup(PluginCall call) {
+        JSObject names = new JSObject();
+        try {
+            JSArray nums = call.getArray("numbers", new JSArray());
+            for (int i = 0; i < nums.length() && i < 200; i++) {
+                String n = nums.getString(i);
+                if (n == null || n.replaceAll("\\D", "").length() < 7) continue;
+                Uri u = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(n));
+                try (Cursor c = getContext().getContentResolver().query(u, new String[]{ ContactsContract.PhoneLookup.DISPLAY_NAME }, null, null, null)) {
+                    if (c != null && c.moveToFirst()) names.put(n, c.getString(0));
+                }
+            }
+        } catch (Exception ignored) { }
+        JSObject r = new JSObject();
+        r.put("names", names);
+        call.resolve(r);
+    }
+
+    /** 전화 앱에 번호를 넣어 열기 (통화는 직접 누름) */
+    @PluginMethod
+    public void dial(PluginCall call) {
+        try {
+            Intent i = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + call.getString("number", "")));
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(i);
+            call.resolve();
+        } catch (Exception e) { call.reject(String.valueOf(e.getMessage())); }
+    }
+
+    /** 문자 앱에 받는 사람·내용을 채워 열기 (전송은 직접 누름) */
+    @PluginMethod
+    public void smsTo(PluginCall call) {
+        try {
+            Intent i = new Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:" + call.getString("number", "")));
+            i.putExtra("sms_body", call.getString("text", ""));
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(i);
+            call.resolve();
+        } catch (Exception e) { call.reject(String.valueOf(e.getMessage())); }
+    }
+
+    /** 카톡 친구 선택 화면으로 바로 (내용이 들어간 상태, 받는 사람만 고르면 됨) */
+    @PluginMethod
+    public void kakaoShare(PluginCall call) {
+        Intent i = new Intent(Intent.ACTION_SEND);
+        i.setType("text/plain");
+        i.putExtra(Intent.EXTRA_TEXT, call.getString("text", ""));
+        i.setPackage("com.kakao.talk");
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        try {
+            getContext().startActivity(i);
+        } catch (Exception e) {
+            i.setPackage(null);
+            Intent c = Intent.createChooser(i, "보내기");
+            c.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(c);
+        }
+        call.resolve();
+    }
+
+    /** 카톡: 최근 본 대화방 목록과 받을 대화방 */
+    @PluginMethod
+    public void kakaoRooms(PluginCall call) {
+        JSObject r = new JSObject();
+        try {
+            r.put("seen", new JSArray(CardQueue.kakaoSeenList(getContext()).toString()));
+            r.put("allow", new JSArray(CardQueue.kakaoAllow(getContext()).toString()));
+            r.put("contacts", getPermissionState("contacts") == PermissionState.GRANTED);
+        } catch (Exception ignored) { }
+        call.resolve(r);
+    }
+
+    @PluginMethod
+    public void setKakaoRooms(PluginCall call) {
+        try { CardQueue.setKakaoAllow(getContext(), new JSONArray(call.getArray("rooms", new JSArray()).toString())); } catch (Exception ignored) { }
+        call.resolve();
     }
 }

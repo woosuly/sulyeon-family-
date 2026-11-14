@@ -68,7 +68,7 @@ async function ibDrain(opt) {
             const key = c ? c.key : 's_' + ibHash(raw);
             if (seen.has(key) || keys.has(key)) continue; keys.add(key);
             if (c) { if (ibCards[c.card]) cards.push({ ...c, raw, ts: it.ts || Date.now() }); else seen.add(key); }   // 지정 안 된 카드는 무시
-            else smss.push({ key, raw, from: it.from || '', ts: it.ts || Date.now() });
+            else smss.push({ key, raw, from: it.from || '', ts: it.ts || Date.now(), kind: it.kind === 'kakao' ? 'kakao' : 'sms', room: it.room || '' });
         }
 
         // 3) 카드 → 가계부 확인 대기
@@ -81,7 +81,11 @@ async function ibDrain(opt) {
             seen.add(c.key);
         }
 
-        // 4) 그 밖의 문자 → AI가 정리 (광고·단순 안내는 버림)
+        // 4) 그 밖의 문자·카톡 → 보낸 번호를 연락처 이름으로 바꾼 뒤 AI가 정리 (광고·단순 안내는 버림)
+        const nums = [...new Set(smss.map(s => s.from).filter(f => /^[\d+\-\s()]{7,}$/.test(f)))];
+        let names = {};
+        if (nums.length && N.lookupContacts) { try { names = (await N.lookupContacts({ numbers: nums })).names || {}; } catch (e) {} }
+        smss.forEach(s => { const isNum = /^[\d+\-\s()]{7,}$/.test(s.from); s.number = isNum ? s.from.replace(/[^\d+]/g, '') : ''; s.name = isNum ? (names[s.from] || '') : s.from; });
         for (let i = 0; i < smss.length; i += 15) {
             const part = smss.slice(i, i + 15);
             let out = null;
@@ -89,8 +93,9 @@ async function ibDrain(opt) {
             for (let k = 0; k < part.length; k++) {
                 const s = part[k], a = out ? (out.find(o => +o.i === k) || { skip: true }) : { type: '문자', summary: s.raw.slice(0, 80) };
                 if (!a.skip) await db.collection('inbox').doc(s.key).set({
-                    id: s.key, kind: 'sms', owner: me, status: 'pending', at: Date.now(), ts: s.ts, from: s.from, raw: s.raw,
-                    type: a.type || '문자', summary: a.summary || '', schedule: a.schedule && a.schedule.date ? a.schedule : null, reply: a.reply || ''
+                    id: s.key, kind: s.kind, owner: me, status: 'pending', at: Date.now(), ts: s.ts, from: s.from, name: s.name || '', number: s.number || '', room: s.room || '', raw: s.raw,
+                    type: a.type || '문자', summary: a.summary || '', schedule: a.schedule && a.schedule.date ? a.schedule : null, reply: a.reply || '',
+                    shop: Array.isArray(a.shop) ? a.shop.filter(x => typeof x === 'string' && x.trim()).slice(0, 10) : []
                 });
                 seen.add(s.key);
             }
@@ -104,15 +109,18 @@ async function ibDrain(opt) {
 
 async function ibAskAI(list) {
     const today = typeof famYmd === 'function' ? famYmd(new Date()) : new Date().toISOString().slice(0, 10);
-    const sys = `너는 정우설의 문자 비서다. 오늘은 ${today}. 받은 문자 목록을 보고 JSON 배열만 출력한다 (설명·코드블록 없이).
-각 문자마다 {"i":번호,"skip":true|false,"type":"주의|택배|예약|병원|고지서|일정|개인|기타","summary":"한 줄 요약(누가·무엇·언제)","schedule":{"date":"YYYY-MM-DD","time":"HH:MM 또는 빈칸","title":"일정 제목","place":"장소 또는 빈칸"} 또는 null,"reply":"답장 초안 또는 빈칸"}
+    const sys = `너는 정우설의 문자·카톡 비서다. 오늘은 ${today}. 받은 문자·카톡 목록을 보고 JSON 배열만 출력한다 (설명·코드블록 없이).
+각 문자마다 {"i":번호,"skip":true|false,"type":"주의|택배|예약|병원|고지서|일정|개인|기타","summary":"한 줄 요약(누가·무엇·언제)","schedule":{"date":"YYYY-MM-DD","time":"HH:MM 또는 빈칸","title":"일정 제목","place":"장소 또는 빈칸"} 또는 null,"reply":"답장 초안 또는 빈칸","shop":["장볼 물건"] 또는 []}
 규칙:
 - 스미싱·피싱 의심(모르는 번호가 링크만 보냄, 국제발신의 계정·연락처 등록/결제/택배 주소 확인 요구, 가족·지인 사칭, 단축 URL 클릭 유도 등)은 type:"주의", summary는 "스미싱 의심 — 링크 누르지 말 것"처럼 쓰고 reply는 반드시 빈칸.
 - 광고·홍보·단순 결제/배송완료 안내·스팸처럼 할 일이 없는 문자는 skip:true.
 - 날짜·시간이 정해진 방문·예약·진료·약속·납부기한이 있으면 schedule을 채운다. 연도가 없으면 오늘 이후 가장 가까운 날짜.
 - 답장이 필요한 문자(아는 사람·업체의 질문, 확인 요청, 택배기사 문의 등)에만 reply를 쓴다. 정체가 불분명한 번호에는 쓰지 않는다. 정우설이 보내는 짧고 공손한 존댓말 1~2문장.
+- '연락처 등록됨'으로 표시된 보낸 사람은 아는 사람이다(가족·지인). 아는 사람의 문자는 스미싱으로 보지 않는다.
+- 카톡 대화방 메시지는 일정·약속, 장보기 부탁("올 때 우유", "휴지 사와")만 뽑고 잡담은 skip:true. 장볼 물건은 shop에 물건 이름만.
 - 문자에 없는 내용은 지어내지 않는다.`;
-    const user = list.map((s, i) => `[${i}] 보낸사람: ${s.from || '알 수 없음'} | 받은시각: ${new Date(s.ts).toLocaleString('ko-KR')}\n${s.raw}`).join('\n\n');
+    const who = s => s.name ? `${s.name}${s.number ? ' (연락처 등록됨)' : ''}` : (s.from || '알 수 없음');
+    const user = list.map((s, i) => `[${i}] ${s.kind === 'kakao' ? '카톡 · 대화방: ' + (s.room || '') + ' · ' : '문자 · '}보낸사람: ${who(s)} | 받은시각: ${new Date(s.ts).toLocaleString('ko-KR')}\n${s.raw}`).join('\n\n');
     const r = await famCallAI(sys, user, { maxTokens: 3000 });
     const m = String(r.text || '').match(/\[[\s\S]*\]/);
     return m ? JSON.parse(m[0]) : null;
@@ -131,7 +139,7 @@ function ibListen() {
 function ibRenderBar() {
     const el = document.getElementById('ib-bar'); if (!el) return;
     if (!ibItems.length) { el.innerHTML = ''; return; }
-    const nc = ibItems.filter(x => x.kind === 'card').length, ns = ibItems.filter(x => x.kind === 'sms' && x.schedule).length, nr = ibItems.filter(x => x.reply).length;
+    const nc = ibItems.filter(x => x.kind === 'card').length, ns = ibItems.filter(x => x.kind !== 'card' && x.schedule).length, nr = ibItems.filter(x => x.reply).length;
     const parts = [nc && `가계부 ${nc}`, ns && `일정 ${ns}`, nr && `답장 ${nr}`].filter(Boolean);
     el.innerHTML = `<button class="ib-bar" onclick="ibOpen()">${fi('list')}<span>확인 대기 <b>${ibItems.length}</b>건${parts.length ? ' · ' + parts.join(' · ') : ''}</span>${fi('expand')}</button>`;
 }
@@ -152,7 +160,7 @@ const ibMD = d => { const p = String(d || '').split('-'); return p.length === 3 
 function ibRender() {
     const b = document.getElementById('ib-body'); if (!b) return;
     if (!ibItems.length) { b.innerHTML = '<div class="ib-empty">확인할 항목이 없습니다.</div>'; return; }
-    const cards = ibItems.filter(x => x.kind === 'card'), smss = ibItems.filter(x => x.kind === 'sms');
+    const cards = ibItems.filter(x => x.kind === 'card'), smss = ibItems.filter(x => x.kind !== 'card');
     const cats = c => EXP_CATS.map(x => `<option ${x === c ? 'selected' : ''}>${x}</option>`).join('');
     let h = '';
     if (cards.length) {
@@ -163,21 +171,42 @@ function ibRender() {
             <button class="fam-btn" onclick="ibSkip('${c.id}')">제외</button><button class="fam-btn pri" onclick="ibCardOk('${c.id}')">반영</button></div></div>`).join('');
     }
     if (smss.length) {
-        h += `<div class="ib-sec"><span>문자 ${smss.length}건</span></div>`;
+        h += `<div class="ib-sec"><span>문자·카톡 ${smss.length}건</span></div>`;
         h += smss.map(s => {
             const sc = s.schedule;
             return `<div class="ib-item">
             <div class="ib-row"><em class="ib-tag${s.type === '주의' ? ' warn' : ''}">${famEsc(s.type || '문자')}</em><span class="ib-name">${famEsc(s.summary || s.raw.slice(0, 60))}</span></div>
-            <div class="ib-sub">${famEsc(s.from || '')} · ${new Date(s.ts).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+            <div class="ib-sub">${s.kind === 'kakao' ? '카톡 · ' + famEsc(s.room && s.room !== s.from ? s.room + ' · ' : '') : ''}${famEsc(s.name || s.from || '')} · ${new Date(s.ts).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
             <details class="ib-raw"><summary>원문</summary>${famEsc(s.raw)}</details>
             ${sc ? `<div class="ib-sch">${fi('calendar')}<span>${ibMD(sc.date)}${sc.time ? ' ' + famEsc(sc.time) : ''} ${famEsc(sc.title || '')}${sc.place ? ' · ' + famEsc(sc.place) : ''}</span><button class="fam-btn pri" onclick="ibSchOk('${s.id}')">일정 등록</button></div>` : ''}
             ${s.reply ? `<textarea id="ibr-${s.id}" class="fam-in ib-reply" rows="2">${famEsc(s.reply)}</textarea>` : ''}
-            <div class="ib-row ib-acts">${s.reply ? `<button class="fam-btn" onclick="famCopy(document.getElementById('ibr-${s.id}').value)">답장 복사</button><button class="fam-btn" onclick="famShare(document.getElementById('ibr-${s.id}').value)">답장 보내기</button>` : ''}<button class="fam-btn" onclick="ibSkip('${s.id}')">확인 완료</button></div></div>`;
+            ${s.shop && s.shop.length ? `<div class="ib-sch">${fi('cart')}<span>장보기: ${s.shop.map(famEsc).join(', ')}</span><button class="fam-btn pri" onclick="ibShopOk('${s.id}')">장보기 추가</button></div>` : ''}
+            <div class="ib-row ib-acts ib-wrap">${s.reply ? ibSendBtns(s) : ''}${s.number && !s.reply ? `<button class="fam-btn" onclick="ibN().dial({number:'${s.number}'})">전화</button>` : ''}<button class="fam-btn" onclick="ibSkip('${s.id}')">확인 완료</button></div></div>`;
         }).join('');
     }
     b.innerHTML = h;
 }
 const ibGet = id => ibItems.find(x => x.id === id);
+// 답장 보내기: 문자는 받은 번호로 문자 앱, 카톡은 카톡 친구 선택 화면으로 (전송은 직접)
+const ibReplyText = id => (document.getElementById('ibr-' + id) || {}).value || '';
+function ibSendBtns(s) {
+    const N = ibN(), b = [];
+    if (s.number && N && N.smsTo) b.push(`<button class="fam-btn" onclick="ibN().smsTo({number:'${s.number}',text:ibReplyText('${s.id}')})">문자로</button>`);
+    if (N && N.kakaoShare) b.push(`<button class="fam-btn" onclick="ibN().kakaoShare({text:ibReplyText('${s.id}')})">카톡으로</button>`);
+    if (s.number && N && N.dial) b.push(`<button class="fam-btn" onclick="ibN().dial({number:'${s.number}'})">전화</button>`);
+    b.push(`<button class="fam-btn" onclick="famCopy(ibReplyText('${s.id}'))">복사</button>`);
+    if (!N) b.push(`<button class="fam-btn" onclick="famShare(ibReplyText('${s.id}'))">보내기</button>`);
+    return b.join('');
+}
+async function ibShopOk(id) {
+    const s = ibGet(id); if (!s || !s.shop || !s.shop.length) return;
+    try {
+        const b = db.batch(); s.shop.forEach((t, i) => { const sid = 'shop_' + Date.now() + '_' + i; b.set(db.collection('shoppingList').doc(sid), { id: sid, text: t, done: false, by: famUser(), createdAt: Date.now() + i, src: s.kind }); });
+        await b.commit();
+        await db.collection('inbox').doc(id).update(s.reply || s.schedule ? { shop: [] } : { status: 'done', doneAt: Date.now() });
+        famToast('장보기에 ' + s.shop.length + '개 추가했습니다');
+    } catch (e) { famToast('추가 실패: ' + e.message); }
+}
 async function ibSkip(id) { await db.collection('inbox').doc(id).update({ status: 'skip', doneAt: Date.now() }); }
 async function ibCardSave(c, cat) {
     const aid = 'as_' + c.id;
@@ -199,7 +228,7 @@ async function ibSchOk(id) {
     const sc = s.schedule, sid = 'sch_' + Date.now(), time = /^\d{1,2}:\d{2}$/.test(sc.time || '') ? sc.time : '';
     try {
         await db.collection('schedules').doc(sid).set({ id: sid, date: sc.date, priority: '일반', member: s.owner, category: '개인', timeType: time ? 'timed' : 'allday', startTime: time, endTime: '', place: sc.place || '', memo: sc.title || s.summary, repeat: null, src: 'sms' });
-        await db.collection('inbox').doc(id).update(s.reply ? { schedule: null, schDone: sid } : { status: 'done', doneAt: Date.now(), schDone: sid });
+        await db.collection('inbox').doc(id).update(s.reply || (s.shop && s.shop.length) ? { schedule: null, schDone: sid } : { status: 'done', doneAt: Date.now(), schDone: sid });
         famToast(`${ibMD(sc.date)} 일정에 등록했습니다`);
     } catch (e) { famToast('등록 실패: ' + e.message); }
 }
@@ -210,7 +239,8 @@ function ibSetHtml() {
     return `<div class="fam-box"><h4>📥 문자 비서</h4>
         <div class="fam-note" style="margin:0 0 10px">이 폰의 문자를 읽어 카드 결제는 가계부 반영 대기로, 택배·예약 등은 요약·일정·답장 초안으로 올립니다. 반영은 확인을 눌러야 됩니다. 인증번호 문자는 저장하지 않습니다.</div>
         <div id="ib-state" class="fam-note" style="margin:0 0 8px">상태 확인 중…</div>
-        <div class="fam-btns" style="margin-top:0"><button class="fam-btn" onclick="ibN().openCardListenerSettings()">알림 읽기 허용</button><button class="fam-btn" onclick="ibAskSms()">문자함 읽기 허용</button></div>
+        <div class="fam-btns" style="margin-top:0"><button class="fam-btn" onclick="ibN().openCardListenerSettings()">알림 읽기 허용</button><button class="fam-btn" onclick="ibAskSms()">문자함 읽기 허용</button>${ibN().lookupContacts ? '<button class="fam-btn" onclick="ibAskContacts()">연락처 허용</button>' : ''}</div>
+        ${ibN().kakaoRooms ? `<span class="fam-lbl">카톡: 받을 대화방</span><div id="ib-rooms" class="fam-note" style="margin:0">불러오는 중…</div><div class="fam-note">예약·택배 같은 업체 알림톡은 방을 고르지 않아도 받습니다. 목록에는 최근 알림이 온 방 이름만 보입니다.</div>` : ''}
         <span class="fam-lbl">가계부에 넣을 카드 (끝 4자리 · 사용자)</span>
         <input class="fam-in" value="${famEsc(Object.entries(ibCards).map(([k, v]) => k + ' ' + v).join(', '))}" placeholder="예: 1089 정우설" onchange="ibSetCards(this.value)">
         <div class="fam-note">허용 버튼이 회색으로 막혀 있으면: 설정 → 애플리케이션 → 설연 → 오른쪽 위 ⋮ → '제한된 설정 허용' 후 다시 누르세요.</div>
@@ -219,11 +249,27 @@ function ibSetHtml() {
 }
 async function ibStateRefresh() {
     const el = document.getElementById('ib-state'), N = ibN(); if (!el || !N) return;
-    try { const s = await N.cardState(); el.innerHTML = `알림 읽기: <b>${s.listener ? '허용됨' : '꺼짐'}</b> · 문자함 읽기: <b>${s.sms ? '허용됨' : '꺼짐'}</b>`; } catch (e) { el.textContent = '새 버전 앱(APK)이 필요합니다'; }
+    try {
+        const s = await N.cardState(), k = N.kakaoRooms ? await N.kakaoRooms().catch(() => ({})) : {};
+        el.innerHTML = `알림 읽기: <b>${s.listener ? '허용됨' : '꺼짐'}</b> · 문자함 읽기: <b>${s.sms ? '허용됨' : '꺼짐'}</b>${N.kakaoRooms ? ` · 연락처: <b>${k.contacts ? '허용됨' : '꺼짐'}</b>` : ''}`;
+    } catch (e) { el.textContent = '새 버전 앱(APK)이 필요합니다'; }
+    ibRoomsRender();
 }
 function ibSetCards(v) {
     const o = {}; String(v).split(/[,\n]/).forEach(p => { const m = p.trim().match(/^(\d{4})\s*(.*)$/); if (m) o[m[1]] = m[2].trim() || famUser(); });
     ibCards = Object.keys(o).length ? o : IB_CARD_DEFAULT; ibLS('ibCards', ibCards); famToast('카드: ' + Object.keys(ibCards).join(', '));
+}
+async function ibAskContacts() { try { await ibN().lookupContacts({ numbers: [], ask: true }); famToast('연락처를 허용했습니다'); } catch (e) { famToast('연락처가 허용되지 않았습니다'); } ibStateRefresh(); }
+async function ibRoomsRender() {
+    const el = document.getElementById('ib-rooms'), N = ibN(); if (!el || !N || !N.kakaoRooms) return;
+    try {
+        const r = await N.kakaoRooms(), allow = new Set(r.allow || []), seen = r.seen || [];
+        el.innerHTML = seen.length ? seen.map(x => `<label class="fam-chk ib-room"><input type="checkbox" ${allow.has(x.room) ? 'checked' : ''} onchange="ibRoomToggle(this.dataset.r,this.checked)" data-r="${famEsc(x.room)}"> ${famEsc(x.room)}${x.group ? ' <em class="ib-tag">단체</em>' : ''}</label>`).join('') : '아직 카톡 알림을 받은 방이 없습니다. 카톡이 몇 개 온 뒤 다시 열어 주세요.';
+    } catch (e) { el.textContent = '불러오지 못했습니다'; }
+}
+async function ibRoomToggle(room, on) {
+    const N = ibN(); const r = await N.kakaoRooms(); const a = new Set(r.allow || []);
+    on ? a.add(room) : a.delete(room); await N.setKakaoRooms({ rooms: [...a] }); famToast(on ? room + ' 받기' : room + ' 안 받기');
 }
 async function ibAskSms() { try { await ibN().readCardSms({ days: 1, ask: true }); famToast('문자함 읽기를 허용했습니다'); } catch (e) { famToast('문자함 읽기가 허용되지 않았습니다'); } ibStateRefresh(); }
 async function ibCheckNow(btn) {

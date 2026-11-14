@@ -45,6 +45,24 @@ public class CardNotifListener extends NotificationListenerService {
                 if (m instanceof Bundle) addCs(texts, ((Bundle) m).getCharSequence("text"));
             }
 
+            // 카톡: 허용한 대화방, 또는 1:1 대화의 예약·택배 같은 알림톡만 받음
+            if ("com.kakao.talk".equals(sbn.getPackageName())) {
+                CharSequence sub = x.getCharSequence(Notification.EXTRA_SUB_TEXT);
+                CharSequence conv = android.os.Build.VERSION.SDK_INT >= 28 ? x.getCharSequence(Notification.EXTRA_CONVERSATION_TITLE) : null;
+                String room = conv != null ? conv.toString() : sub != null ? sub.toString() : from;
+                boolean group = conv != null || sub != null;
+                if (room == null || room.isEmpty()) return;
+                CardQueue.kakaoSeen(this, room, group);
+                boolean allow = CardQueue.kakaoAllowed(this, room);
+                CharSequence body = x.getCharSequence(Notification.EXTRA_TEXT);
+                if (body == null) return;
+                String t = body.toString();
+                if (allow || (!group && CardQueue.ALIMTALK.matcher(t).find() && CardQueue.HAS_WHEN.matcher(t).find())) {
+                    CardQueue.add(this, t, sbn.getPostTime(), from, "kakao", room);
+                }
+                return;
+            }
+
             int added = 0;
             for (String t : texts) {
                 if (CardQueue.looksCard(t)) {
