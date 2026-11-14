@@ -46,8 +46,27 @@ function docForm(id) {
             <div class="full"><label>만료·갱신 기한</label><input type="date" id="doc-expire" value="${d.expire || ''}"></div>
             <div class="full"><label>메모 (선택)</label><input id="doc-note" value="${famEsc(d.note || '')}" placeholder="예: 여권번호 끝 4자리, 보험사, 검진 병원"></div>
         </div>
+        <div class="fam-btns" style="margin-top:4px"><label class="fam-btn" style="cursor:pointer">📷 사진·캡처로 채우기<input type="file" accept="image/*" style="display:none" onchange="docFromImg(this)"></label></div>
+        <div class="fam-note">여권 사진면, 면허증 뒷면, 검진 안내문, 보험 갱신 안내 캡처를 올리면 종류·기한을 읽어 채웁니다. 여권·면허 번호는 저장하지 않습니다.</div>
         <div class="fam-note">국가건강검진은 출생 연도 짝·홀수에 맞는 해의 12월 31일까지입니다. 운전면허는 면허증 뒷면 '적성검사(갱신) 기간' 끝 날짜를 넣으세요.</div>
         <div class="fam-btns">${id ? `<button class="fam-btn" onclick="docDel('${id}')">삭제</button>` : ''}<button class="fam-btn pri" onclick="docSave('${id || ''}',this)">저장 (알림 함께)</button></div>`);
+}
+// 사진·캡처 → 종류·기한·누구 읽어서 양식 채움 (번호 같은 식별정보는 메모에 넣지 않음)
+async function docFromImg(input) {
+    const f = (input.files || [])[0]; input.value = ''; if (!f) return;
+    const lbl = input.parentElement, old = lbl.firstChild.textContent; lbl.firstChild.textContent = '읽는 중… ';
+    try {
+        const data = await famImgToB64(f, 1600);
+        const r = await famCallAI('너는 신분증·서류·안내문 이미지에서 만료일·갱신 기한을 읽는 도우미다. 이미지에 보이는 내용만 쓴다. JSON만 출력.',
+            `오늘은 ${famYmd(new Date())}. 가족: 정우설(JEONG WOO SEOL), 한미연(HAN MI YEON).
+{"name":"${DOC_KINDS.join('|')} 중 하나 (맞는 게 없으면 짧은 이름)","expire":"YYYY-MM-DD (여권은 기간만료일, 운전면허는 적성검사·갱신 기간의 마지막 날, 검진은 수검 기한, 보험은 만기·갱신일)","owner":"정우설|한미연|공통 (이미지의 이름으로 판단, 모르면 빈칸)","note":"짧은 메모 (발급기관·보험사·병원 등). 여권번호·면허번호·주민번호 등 번호는 절대 쓰지 않음"}`,
+            { image: { mime: 'image/jpeg', data }, maxTokens: 400 });
+        const t = r.text || '', j = JSON.parse(t.slice(t.indexOf('{'), t.lastIndexOf('}') + 1));
+        const set = (k, v) => { const el = document.getElementById('doc-' + k); if (!el || !v) return; if (el.tagName === 'SELECT' && ![...el.options].some(o => o.value === v)) el.add(new Option(v, v)); el.value = v; };
+        set('name', j.name); if (/^\d{4}-\d{2}-\d{2}$/.test(j.expire || '')) set('expire', j.expire); set('owner', j.owner); set('note', String(j.note || '').replace(/[A-Z]{1,2}\d{6,}|\d{2}-\d{2}-\d{6}-\d{2}|\d{6}-\d{7}/g, '').trim());
+        famToast(j.expire ? '읽었습니다. 확인 후 저장하세요' : '기한을 찾지 못했습니다. 직접 넣어 주세요');
+    } catch (e) { famToast('읽지 못했습니다: ' + e.message); }
+    lbl.firstChild.textContent = old;
 }
 async function docSave(id, btn) {
     const g = k => document.getElementById('doc-' + k).value.trim();
