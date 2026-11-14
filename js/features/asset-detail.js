@@ -216,8 +216,9 @@
                         showAssetDetail(box.dataset.kind || 'expense');
                     }
                 },
-                plugins: { legend: { position: 'top', labels: { font: { size: 11 } } } },
-                scales: { x: { ticks: { font: { size: 11 } } }, y: { ticks: { font: { size: 10 } } } }
+                plugins: { legend: { position: 'top', align: 'end', labels: { font: { size: 11 }, boxWidth: 10, boxHeight: 10, usePointStyle: true, pointStyle: 'rectRounded' } } },
+                scales: { x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#64748b' } },
+                          y: { grid: { color: 'rgba(148,163,184,.18)' }, border: { display: false }, ticks: { font: { size: 10 }, color: '#94a3b8', callback: v => v >= 1e4 ? (v / 1e4).toLocaleString('ko-KR') + '만' : v } } }
             };
 
             if (assetPeriod === 'month') {
@@ -236,8 +237,8 @@
                 assetSelectedKey   = _periodMeta[5].key;
                 assetSelectedLabel = _periodMeta[5].label;
                 aChart = new Chart(ctx, { data:{ labels, datasets:[
-                    {type:'bar',label:'수입',data:incData,backgroundColor:'rgba(16,185,129,0.6)',borderRadius:5},
-                    {type:'bar',label:'지출',data:expData,backgroundColor:'rgba(239,68,68,0.5)',borderRadius:5}
+                    {type:'bar',label:'수입',data:incData,backgroundColor:famChartColor('inc'),borderRadius:6,maxBarThickness:22},
+                    {type:'bar',label:'지출',data:expData,backgroundColor:famChartColor('exp'),borderRadius:6,maxBarThickness:22}
                 ]}, options: chartOpts });
 
             } else {
@@ -261,8 +262,8 @@
                 assetSelectedKey   = _periodMeta[5].key;
                 assetSelectedLabel = _periodMeta[5].label;
                 aChart = new Chart(ctx, { data:{ labels, datasets:[
-                    {type:'bar',label:'수입',data:incData,backgroundColor:'rgba(16,185,129,0.6)',borderRadius:5},
-                    {type:'bar',label:'지출',data:expData,backgroundColor:'rgba(239,68,68,0.5)',borderRadius:5}
+                    {type:'bar',label:'수입',data:incData,backgroundColor:famChartColor('inc'),borderRadius:6,maxBarThickness:22},
+                    {type:'bar',label:'지출',data:expData,backgroundColor:famChartColor('exp'),borderRadius:6,maxBarThickness:22}
                 ]}, options: chartOpts });
             }
 

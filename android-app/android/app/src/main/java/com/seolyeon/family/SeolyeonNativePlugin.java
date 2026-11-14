@@ -54,7 +54,16 @@ public class SeolyeonNativePlugin extends Plugin {
     @Override
     public void load() {
         instance = this;
-        tts = new TextToSpeech(getContext(), status -> ttsReady = status == TextToSpeech.SUCCESS);
+        tts = new TextToSpeech(getContext(), status -> {
+            ttsReady = status == TextToSpeech.SUCCESS;
+            if (!ttsReady) return;
+            // 읽기가 끝나면 웹화면에 알려 스피커 버튼을 원래대로
+            tts.setOnUtteranceProgressListener(new android.speech.tts.UtteranceProgressListener() {
+                @Override public void onStart(String id) { }
+                @Override public void onDone(String id) { JSObject r = new JSObject(); r.put("id", id); notifyListeners("ttsDone", r); }
+                @Override public void onError(String id) { JSObject r = new JSObject(); r.put("id", id); notifyListeners("ttsDone", r); }
+            });
+        });
     }
 
     /** 알림을 눌러 앱이 열렸을 때 어떤 화면인지 기억 */
@@ -103,7 +112,7 @@ public class SeolyeonNativePlugin extends Plugin {
         }
         tts.setLanguage(Locale.forLanguageTag(lang));
         tts.setSpeechRate(rate);
-        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "hs");
+        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, call.getString("id", "hs"));
         call.resolve();
     }
 

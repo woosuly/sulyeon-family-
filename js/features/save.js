@@ -165,7 +165,7 @@
     function budgetRender() {
         const el = document.getElementById('budget-card'); if (!el) return;
         const ym = famYmd(new Date()).slice(0, 7), sp = budgetSpent(ym), cats = EXP_CATS.filter(c => +famBudget[c] > 0), tot = budgetTotal();
-        if (!cats.length) { el.innerHTML = `<div class="bd-wrap" style="display:flex;align-items:center;gap:8px"><span style="font-size:13px;color:#64748b;flex:1">📊 항목별 월 예산을 정하면 이번 달 진행률이 보입니다.</span><button class="fam-btn" style="padding:5px 12px;font-size:12px" onclick="budgetForm()">예산 설정</button></div>`; return; }
+        if (!cats.length) { el.innerHTML = ''; return; }   // 예산 설정은 가계부 ⋯ 메뉴에서
         const used = cats.reduce((a, c) => a + (sp[c] || 0), 0), tp = Math.round(used / tot * 100), day = new Date().getDate(), dim = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate(), pace = Math.round(day / dim * 100);
         el.innerHTML = `<div class="bd-wrap">
             <div style="display:flex;align-items:center"><b style="font-size:13px;color:#1e293b;white-space:nowrap">📊 ${+ym.slice(5)}월 예산</b><span style="margin-left:8px;font-size:13px;color:${budgetColor(tp)};font-weight:800">${tp}%</span><button class="fam-btn" style="margin-left:auto;padding:3px 10px;font-size:11px;white-space:nowrap" onclick="budgetForm()">설정</button></div>

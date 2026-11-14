@@ -1,6 +1,6 @@
 // 설연 Family — Service Worker v7
 // v6: 앱 파일을 폰에 저장 → 인터넷이 없어도 앱이 열림 (문장집·지난 데이터 사용)
-const CACHE_NAME = 'seolyeon-v48';
+const CACHE_NAME = 'seolyeon-v49';
 const BASE = '/sulyeon-family-/';
 // 앱 파일 (폴더 구조 변경 시 함께 수정)
 const APP_FILES = [
@@ -25,6 +25,7 @@ const APP_FILES = [
     'js/core/sync.js',
     'js/core/ui.js',
     'js/core/util.js',
+    'js/core/voice.js',
     'js/core/wide.js',
     'js/features/album-select.js',
     'js/features/agent.js',

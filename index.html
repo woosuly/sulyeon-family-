@@ -28,6 +28,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="css/app.css">
 
+    <script src="js/core/voice.js"></script>
     <script src="js/core/icons.js"></script>
     <script src="js/core/push.js"></script>
 </head>
@@ -254,33 +255,29 @@
         <!-- 가계부 -->
         <section id="asset-section" class="page-section">
             <div class="card" style="padding:clamp(12px,2vw,20px);">
-                <div class="sch-header">
-                    <div style="display:flex;align-items:center;gap:8px;">
-                        <span class="fi-title"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h12v4"/><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M16 13.5h2"/></svg></span>
-                        <h3 style="margin:0;font-size:clamp(15px,2vw,18px);font-weight:800;">가계부</h3>
+                <div class="sch-header pg-head">
+                    <div class="pg-title"><span class="fi-title"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h12v4"/><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M16 13.5h2"/></svg></span><h3>가계부</h3></div>
+                    <div class="pg-acts">
+                        <select class="pg-sel" onchange="switchAssetPeriod({classList:{add(){}},dataset:{period:this.value}})"><option value="month">월별</option><option value="week">주차별</option></select>
+                        <button class="pg-btn" onclick="showSection('asset-cal-section')">일별</button>
+                        <button class="pg-more" aria-label="더보기" onclick="famMenu(this,[['집계 · AI 분석',()=>showSection('asset-analysis-section')],['예산 설정',()=>budgetForm()],['고정지출 · 저축',()=>showSection('save-section')],['가계부 엑셀(CSV) 받기',()=>famBackupCSV()]])">⋯</button>
+                        <button onclick="showSection('main-section')" class="btn-home"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>홈</button>
                     </div>
-                    <button onclick="showSection('main-section')" class="btn-home"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>홈</button>
-                </div>
-
-                <!-- 기간 탭 -->
-                <div style="display:flex;gap:6px;margin-bottom:14px;">
-                    <button class="asset-period-tab active" data-period="month" onclick="switchAssetPeriod(this)">월별</button>
-                    <button class="asset-period-tab" data-period="week" onclick="switchAssetPeriod(this)">주차별</button>
                 </div>
 
                 <!-- 요약 카드 -->
                 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">
-                    <div style="background:#f0fdf4;border-radius:12px;padding:10px 12px;cursor:pointer;" onclick="showAssetDetail('income')">
-                        <div style="font-size:9px;color:#166534;font-weight:700;">수입</div>
-                        <div id="asset-total-income" style="font-size:14px;font-weight:800;color:#166534;margin-top:2px;">–</div>
+                    <div class="sum-box inc" onclick="showAssetDetail('income')">
+                        <small>수입</small>
+                        <div id="asset-total-income">–</div>
                     </div>
-                    <div style="background:#fef2f2;border-radius:12px;padding:10px 12px;cursor:pointer;" onclick="showAssetDetail('expense')">
-                        <div style="font-size:9px;color:#991b1b;font-weight:700;">지출</div>
-                        <div id="asset-total-expense" style="font-size:14px;font-weight:800;color:#991b1b;margin-top:2px;">–</div>
+                    <div class="sum-box exp" onclick="showAssetDetail('expense')">
+                        <small>지출</small>
+                        <div id="asset-total-expense">–</div>
                     </div>
-                    <div id="asset-balance-card" style="background:#eff6ff;border-radius:12px;padding:10px 12px;">
-                        <div style="font-size:9px;color:#1e40af;font-weight:700;">손익</div>
-                        <div id="asset-balance" style="font-size:14px;font-weight:800;color:#1e40af;margin-top:2px;">–</div>
+                    <div id="asset-balance-card" class="sum-box bal">
+                        <small>손익</small>
+                        <div id="asset-balance">–</div>
                     </div>
                 </div>
 
@@ -299,13 +296,7 @@
                     <div id="asset-detail-list"></div>
                 </div>
 
-                <!-- 집계·AI 분석 버튼 -->
-                <button class="btn-action" style="width:100%;height:48px;font-size:14px;margin-bottom:8px;background:white;border:1.5px solid var(--month-header);color:var(--month-header);font-weight:800;border-radius:12px;cursor:pointer;" onclick="showSection('asset-analysis-section')">구성원·항목별 집계 · AI 트렌드 분석
-                </button>
-                <!-- 일별 가계부 캘린더 버튼 -->
-                <button class="btn-action btn-primary" style="width:100%;height:48px;font-size:14px;" onclick="showSection('asset-cal-section')">일별 가계부 보기
-                </button>
-            </div>
+                </div>
         </section>
 
         <!-- 앨범 -->

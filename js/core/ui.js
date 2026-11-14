@@ -90,3 +90,23 @@
 
         // ── 메인 대시보드 렌더 ──────────────────────────────────────────
 
+
+// ── 공통: 테마 색 (차트·요약 칸이 같은 색을 쓰도록) ──
+function famThemeHex() { return (getComputedStyle(document.documentElement).getPropertyValue('--month-header') || '#2b3a55').trim() || '#2b3a55'; }
+function famChartColor(kind, a) {
+    if (kind === 'exp') return `rgba(225,86,107,${a ?? .7})`;
+    const h = famThemeHex().replace('#', ''), f = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+    const n = parseInt(f, 16); if (isNaN(n)) return `rgba(43,58,85,${a ?? .75})`;
+    return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a ?? .75})`;
+}
+// ── 공통: 작은 드롭다운 메뉴 (버튼 여러 줄 대신) — famMenu(버튼, [['이름', 함수], ...]) ──
+function famMenu(anchor, items) {
+    document.querySelectorAll('.fam-menu').forEach(m => m.remove());
+    const m = document.createElement('div'); m.className = 'fam-menu';
+    items.forEach(([label, fn]) => { const b = document.createElement('button'); b.textContent = label; b.onclick = e => { e.stopPropagation(); m.remove(); fn(); }; m.appendChild(b); });
+    document.body.appendChild(m);
+    const r = anchor.getBoundingClientRect(), w = m.offsetWidth;
+    m.style.top = Math.min(r.bottom + 6, innerHeight - m.offsetHeight - 10) + 'px';
+    m.style.left = Math.max(10, Math.min(r.right - w, innerWidth - w - 10)) + 'px';
+    setTimeout(() => document.addEventListener('click', function off(e) { if (!m.contains(e.target)) { m.remove(); document.removeEventListener('click', off, true); } }, true), 0);
+}
