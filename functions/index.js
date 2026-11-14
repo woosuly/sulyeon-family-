@@ -50,3 +50,9 @@ exports.sendChatNotif = onDocumentCreated(
 const agent = require('./agent');
 exports.agentTick = agent.agentTick;
 exports.briefNow = agent.briefNow;
+
+// 스마트싱스 연동 — smartthings.js
+const stx = require('./smartthings');
+exports.stSetup = stx.stSetup;
+exports.stCallback = stx.stCallback;
+exports.stApi = stx.stApi;

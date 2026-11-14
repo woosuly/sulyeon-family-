@@ -95,7 +95,7 @@
     // ⚙️ 설정 (테마 + AI)
     // ═══════════════════════════════════════════════════════════
     let famShowKey = false, famCustomModel = false;
-    function famOpenSettings() { famCustomModel = false; famRenderSettings(); if (typeof ibStateRefresh === 'function') setTimeout(ibStateRefresh, 50); document.getElementById('fam-settings').style.display = 'flex'; history.pushState({ famSettings: 1 }, '', ''); }
+    function famOpenSettings() { famCustomModel = false; famRenderSettings(); if (typeof ibStateRefresh === 'function') setTimeout(ibStateRefresh, 50); if (typeof stStateRefresh === 'function') setTimeout(stStateRefresh, 80); document.getElementById('fam-settings').style.display = 'flex'; history.pushState({ famSettings: 1 }, '', ''); }
     function famCloseSettings() { document.getElementById('fam-settings').style.display = 'none'; }
     function famThemeMode() { try { return localStorage.getItem('famThemeMode') || 'light'; } catch (e) { return 'light'; } }
     function famApplyTheme() {

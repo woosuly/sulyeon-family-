@@ -33,7 +33,7 @@ service cloud.firestore {
 
     // 나머지 모든 데이터: 가족 두 사람만 읽고 쓰기 (기존과 같음)
     match /{col}/{doc=**} {
-      allow read, write: if isFamily() && col != 'messages';
+      allow read, write: if isFamily() && col != 'messages' && col != 'secrets';   // secrets: 스마트싱스 토큰 등 서버 전용
     }
   }
 }
