@@ -134,3 +134,43 @@ async function famSaveFile(name, b64, mime) {
     const wait = () => { if (window.firebase && firebase.auth) firebase.auth().onAuthStateChanged(u => { if (u) setTimeout(carListen, 1500); }); else setTimeout(wait, 1000); };
     window.addEventListener('load', () => setTimeout(wait, 700));
 })();
+
+// ── 월간 자산 현황: 한 달에 한 번 계좌·투자·연금·부채를 적어 순자산 흐름을 봄 ──
+//   assetSnaps/{YYYY-MM} {ym, items:[{name, kind, amt}], total, at, by}  (부채는 빼서 합계)
+let snaps = [];
+const SNAP_KINDS = ['예금·적금', '투자', '연금', '부동산', '기타', '부채'];
+function snapListen() { try { db.collection('assetSnaps').onSnapshot(s => { snaps = s.docs.map(d => d.data()).sort((a, b) => a.ym.localeCompare(b.ym)); snapRender(); }, () => {}); } catch (e) {} }
+const snapTotal = items => items.reduce((a, x) => a + (x.kind === '부채' ? -1 : 1) * (Number(x.amt) || 0), 0);
+function snapRender() {
+    const el = document.getElementById('snap-box'); if (!el) return;
+    if (!snaps.length) { el.innerHTML = '<div class="fam-note" style="margin:0">매달 1일에 예금·투자·연금·부채 잔액을 적어 두면 순자산이 어떻게 변하는지 보입니다. 1일 아침에 알려 드립니다.</div>'; return; }
+    const last = snaps[snaps.length - 1], prev = snaps[snaps.length - 2], diff = prev ? last.total - prev.total : 0;
+    const recent = snaps.slice(-6), max = Math.max(...recent.map(s => Math.abs(s.total)), 1);
+    const byKind = SNAP_KINDS.map(k => [k, last.items.filter(x => x.kind === k).reduce((a, x) => a + (+x.amt || 0), 0)]).filter(([, v]) => v);
+    el.innerHTML = `<div style="display:flex;align-items:baseline;gap:8px"><b style="font-size:18px;color:var(--month-header)">${mnW(last.total)}</b><span class="ib-sub" style="flex:none">${last.ym.replace('-', '.')} 기준</span>${prev ? `<span style="margin-left:auto;font-weight:700;color:${diff < 0 ? '#d9465c' : 'var(--month-header)'}">${diff >= 0 ? '+' : ''}${mnW(diff)}</span>` : ''}</div>
+        <div class="snap-bars">${recent.map(s => `<div><i style="height:${Math.max(6, Math.round(Math.abs(s.total) / max * 52))}px"></i><small>${+s.ym.slice(5)}월</small></div>`).join('')}</div>
+        ${byKind.map(([k, v]) => `<div class="ag-li"><span>${k}</span><b></b><span>${k === '부채' ? '-' : ''}${mnW(v)}</span></div>`).join('')}`;
+}
+function snapForm() {
+    const ym = mnYmd(new Date()).slice(0, 7), cur = snaps.find(s => s.ym === ym), base = cur || snaps[snaps.length - 1];
+    const items = base ? base.items.map(x => ({ ...x, amt: cur ? x.amt : x.amt })) : [{ name: '주거래 통장', kind: '예금·적금', amt: '' }, { name: '연금', kind: '연금', amt: '' }];
+    window._snapItems = items;
+    snapFormDraw(ym, !!cur, !!base && !cur);
+}
+function snapFormDraw(ym, isCur, fromPrev) {
+    const items = window._snapItems;
+    famSheet(`<div class="fam-h"><b>${ym.replace('-', '년 ')}월 자산 현황</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
+        ${fromPrev ? '<div class="fam-note" style="margin:0 0 8px">지난달 값을 불러왔습니다. 바뀐 금액만 고치세요.</div>' : ''}
+        ${items.map((x, i) => `<div class="snap-row"><input value="${famEsc(x.name)}" placeholder="이름" onchange="_snapItems[${i}].name=this.value"><select onchange="_snapItems[${i}].kind=this.value">${SNAP_KINDS.map(k => `<option ${k === x.kind ? 'selected' : ''}>${k}</option>`).join('')}</select><input inputmode="numeric" value="${x.amt ? (+x.amt).toLocaleString('ko-KR') : ''}" placeholder="금액" oninput="asAmtFmt(this);_snapItems[${i}].amt=+this.value.replace(/[^\\d]/g,'')||0"><button class="fam-x" onclick="_snapItems.splice(${i},1);snapFormDraw('${ym}',${isCur},false)">✕</button></div>`).join('')}
+        <div class="fam-btns"><button class="fam-btn" onclick="_snapItems.push({name:'',kind:'예금·적금',amt:0});snapFormDraw('${ym}',${isCur},false)">＋ 항목</button><button class="fam-btn pri" onclick="snapSave('${ym}')">저장</button></div>`);
+}
+async function snapSave(ym) {
+    const items = window._snapItems.filter(x => x.name && x.name.trim()).map(x => ({ name: x.name.trim(), kind: x.kind, amt: +x.amt || 0 }));
+    if (!items.length) return famToast('항목을 넣어 주세요');
+    await db.collection('assetSnaps').doc(ym).set({ ym, items, total: snapTotal(items), at: Date.now(), by: famUser() });
+    famSheetClose(); famToast('자산 현황을 저장했습니다');
+}
+(function snapBoot() {
+    const wait = () => { if (window.firebase && firebase.auth) firebase.auth().onAuthStateChanged(u => { if (u) setTimeout(snapListen, 1600); }); else setTimeout(wait, 1000); };
+    window.addEventListener('load', () => setTimeout(wait, 700));
+})();

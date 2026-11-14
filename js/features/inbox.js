@@ -109,6 +109,7 @@ async function ibDrain(opt) {
                     id: s.key, kind: s.kind, owner: me, status: 'pending', at: Date.now(), ts: s.ts, from: s.from, name: s.name || '', number: s.number || '', room: s.room || '', raw: s.raw,
                     type: a.type || '문자', summary: a.summary || '', schedule: a.schedule && a.schedule.date ? a.schedule : null, reply: a.reply || '',
                     shop: Array.isArray(a.shop) ? a.shop.filter(x => typeof x === 'string' && x.trim()).slice(0, 10) : [],
+                    gj: a.gj && a.gj.person ? { person: String(a.gj.person).slice(0, 20), event: a.gj.event || '기타' } : null,
                     due: a.due && /^\d{4}-\d{2}-\d{2}$/.test(a.due.date || '') ? { date: a.due.date, time: /^\d{1,2}:\d{2}$/.test(a.due.time || '') ? a.due.time : '', kind: a.due.kind || '기타', what: a.due.what || '' } : null
                 });
                 seen.add(s.key);
@@ -124,7 +125,7 @@ async function ibDrain(opt) {
 async function ibAskAI(list) {
     const today = typeof famYmd === 'function' ? famYmd(new Date()) : new Date().toISOString().slice(0, 10);
     const sys = `너는 정우설의 문자·카톡 비서다. 오늘은 ${today}. 받은 문자·카톡 목록을 보고 JSON 배열만 출력한다 (설명·코드블록 없이).
-각 문자마다 {"i":번호,"skip":true|false,"type":"주의|택배|예약|병원|고지서|일정|개인|기타","summary":"한 줄 요약(누가·무엇·언제)","schedule":{"date":"YYYY-MM-DD","time":"HH:MM 또는 빈칸","title":"일정 제목","place":"장소 또는 빈칸"} 또는 null,"reply":"답장 초안 또는 빈칸","shop":["장볼 물건"] 또는 [],"due":{"date":"YYYY-MM-DD","time":"HH:MM 또는 빈칸","kind":"기프티콘|납부|무료취소|잔금|반납|만료|기타","what":"짧은 이름"} 또는 null}
+각 문자마다 {"i":번호,"skip":true|false,"type":"주의|택배|예약|병원|고지서|일정|개인|기타","summary":"한 줄 요약(누가·무엇·언제)","schedule":{"date":"YYYY-MM-DD","time":"HH:MM 또는 빈칸","title":"일정 제목","place":"장소 또는 빈칸"} 또는 null,"reply":"답장 초안 또는 빈칸","shop":["장볼 물건"] 또는 [],"gj":{"person":"당사자 이름","event":"결혼|장례|돌·백일|생일·회갑·칠순|병문안|개업·이사|기타"} 또는 null,"due":{"date":"YYYY-MM-DD","time":"HH:MM 또는 빈칸","kind":"기프티콘|납부|무료취소|잔금|반납|만료|기타","what":"짧은 이름"} 또는 null}
 규칙:
 - 스미싱·피싱 의심(모르는 번호가 링크만 보냄, 국제발신의 계정·연락처 등록/결제/택배 주소 확인 요구, 가족·지인 사칭, 단축 URL 클릭 유도 등)은 type:"주의", summary는 "스미싱 의심 — 링크 누르지 말 것"처럼 쓰고 reply는 반드시 빈칸.
 - 광고·홍보·단순 결제/배송완료 안내·스팸처럼 할 일이 없는 문자는 skip:true.
@@ -132,6 +133,7 @@ async function ibAskAI(list) {
 - 답장이 필요한 문자(아는 사람·업체의 질문, 확인 요청, 택배기사 문의 등)에만 reply를 쓴다. 정체가 불분명한 번호에는 쓰지 않는다. 정우설이 보내는 짧고 공손한 존댓말 1~2문장.
 - 기한이 있는 것은 due에 넣는다: 기프티콘·쿠폰·상품권 유효기간(kind 기프티콘, what은 상품명), 고지서·카드대금 납부기한(납부), 예약의 무료취소 기한(무료취소)·잔금일(잔금), 대여 반납일(반납), 포인트·마일리지·멤버십 소멸일(만료).
   기프티콘 선물 문자·카톡은 광고가 아니므로 skip하지 않는다.
+- 청첩장·부고·돌잔치 등 경조사 알림은 type "경조사", gj에 당사자와 종류, 식 날짜는 schedule에 넣는다.
 - '연락처 등록됨'으로 표시된 보낸 사람은 아는 사람이다(가족·지인). 아는 사람의 문자는 스미싱으로 보지 않는다.
 - 카톡 대화방 메시지는 일정·약속, 장보기 부탁("올 때 우유", "휴지 사와")만 뽑고 잡담은 skip:true. 장볼 물건은 shop에 물건 이름만.
 - 문자에 없는 내용은 지어내지 않는다.`;
@@ -196,6 +198,7 @@ function ibRender() {
             <details class="ib-raw"><summary>원문</summary>${famEsc(s.raw)}</details>
             ${sc ? `<div class="ib-sch">${fi('calendar')}<span>${ibMD(sc.date)}${sc.time ? ' ' + famEsc(sc.time) : ''} ${famEsc(sc.title || '')}${sc.place ? ' · ' + famEsc(sc.place) : ''}</span><button class="fam-btn pri" onclick="ibSchOk('${s.id}')">일정 등록</button></div>` : ''}
             ${s.reply ? `<textarea id="ibr-${s.id}" class="fam-in ib-reply" rows="2">${famEsc(s.reply)}</textarea>` : ''}
+            ${s.gj ? (() => { const h = typeof fmGjFor === 'function' ? fmGjFor(s.gj.person + ' ' + (s.summary || '')) : []; return `<div class="ib-sch">${fi('book')}<span>${famEsc(s.gj.person)} ${famEsc(s.gj.event)}${h.length ? '<br><small class="ib-sub">지난 기록: ' + h.map(g => `${String(g.date).slice(0, 7)} ${g.event} ${g.dir} ${(+g.amt).toLocaleString('ko-KR')}원`).map(famEsc).join(' · ') + '</small>' : '<br><small class="ib-sub">주고받은 기록 없음</small>'}</span><button class="fam-btn pri" onclick="fmGjForm(null,{person:${JSON.stringify(s.gj.person).replace(/"/g, '&quot;')},event:${JSON.stringify(s.gj.event).replace(/"/g, '&quot;')}})">장부 기록</button></div>`; })() : ''}
             ${s.due ? `<div class="ib-sch">${fi('clock')}<span>${ibMD(s.due.date)}${s.due.time ? ' ' + famEsc(s.due.time) : ''} ${famEsc(s.due.kind)}${s.due.what ? ' · ' + famEsc(s.due.what) : ''}<br><small class="ib-sub">${famEsc(ibDueWhen(s.due).label)}</small></span><button class="fam-btn pri" onclick="ibDueOk('${s.id}')">알림 받기</button></div>` : ''}
             ${s.shop && s.shop.length ? `<div class="ib-sch">${fi('cart')}<span>장보기: ${s.shop.map(famEsc).join(', ')}</span><button class="fam-btn pri" onclick="ibShopOk('${s.id}')">장보기 추가</button></div>` : ''}
             <div class="ib-row ib-acts ib-wrap">${s.reply ? ibSendBtns(s) : ''}${s.number && !s.reply ? `<button class="fam-btn" onclick="ibN().dial({number:'${s.number}'})">전화</button>` : ''}<button class="fam-btn" onclick="ibSkip('${s.id}')">확인 완료</button></div></div>`;

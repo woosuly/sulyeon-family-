@@ -266,6 +266,11 @@
         if (cmd === '알림' || cmd === '리마인더') return agRemind(arg);
         if (cmd === '기억' || cmd === '메모') return agNoteSave(arg);
         if (cmd === '브리핑') return agBriefNow(arg);
+        if (cmd === '여행초안' || cmd === '초안') { famFeedClose && famFeedClose(); return tpDraftForm(arg); }
+        if (cmd === '연휴' || cmd === '떠날날') { famFeedClose && famFeedClose(); return tpOpen(); }
+        if (cmd === '가족' || cmd === '안부') return fmOpen('care');
+        if (cmd === '경조사') return fmOpen('gj');
+        if (cmd === '자산') return snapForm();
         // 슬래시 없음 → '기억해줘', '~시에 알려줘'는 비서 기능으로
         if (typeof agRoute === 'function' && agRoute(raw)) return;
         // 말하듯 쓴 문장 해석 → 자동 분류

@@ -879,3 +879,10 @@ header button .fi { color:#fff; }
 #asset-cal-section .sch-header{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:center}
 #asset-cal-section .sch-header h3,#asset-section .sch-header h3{white-space:nowrap}
 #asset-cal-section .sch-header>div:first-child{min-width:0}
+/* 여행 비서·자산 현황 */
+.tp-win{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #f1f5f9}.tp-win>div{flex:1;min-width:0;font-size:13.5px}
+.tp-op{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:12px;margin-bottom:10px;font-size:14px}
+.tp-l{font-size:13px;line-height:1.55;color:#334155;margin-top:4px}.tp-l small{display:inline-block;min-width:54px;color:#94a3b8;font-weight:700;margin-right:6px}.tp-l.warn{color:#b45309}
+.snap-bars{display:flex;align-items:flex-end;gap:10px;height:76px;margin:10px 0 6px;padding:0 2px}.snap-bars>div{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}.snap-bars i{display:block;width:100%;max-width:26px;border-radius:6px 6px 2px 2px;background:var(--month-header);opacity:.8}.snap-bars small{font-size:10.5px;color:#94a3b8}
+.snap-row{display:grid;grid-template-columns:1.3fr 1fr 1.2fr 28px;gap:6px;margin-bottom:6px;align-items:center}.snap-row input,.snap-row select{padding:8px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;min-width:0}
+[data-theme="dark"] .tp-op{background:#1e293b;border-color:#334155}[data-theme="dark"] .tp-l{color:#cbd5e1}

@@ -123,6 +123,9 @@ async function morning(u, day, cfg) {
   lines.push(sch.length ? '오늘 일정\n' + sch.map(e => '- ' + schLine(e)).join('\n') : '오늘 일정 없음');
   if (soon.length) lines.push('3일 안 알림\n' + soon.sort((a, b) => a.at - b.at).map(r => `- ${md(ymd(kst(r.at)))} ${r.title || r.text}`).join('\n'));
   if (pend) lines.push(`확인 대기 ${pend}건 (가계부·문자)`);
+  // 연락한 지 오래된 가족 (careList: every일 주기)
+  const care = (await db().collection('careList').get()).docs.map(d => d.data()).map(c => ({...c, d: Math.floor((Date.now() - (c.last || 0)) / 864e5)})).filter(c => c.d > (+c.every || 14)).sort((a, b) => b.d - a.d).slice(0, 3);
+  if (care.length) lines.push('안부 연락\n' + care.map(c => `- ${c.name}${c.rel ? '(' + c.rel + ')' : ''} ${c.d}일째 연락 없음`).join('\n'));
   if (HOLI[day]) lines.unshift(`오늘은 ${HOLI[day]}입니다.`);
   await saveBrief('morning', u, day, `${md(day)} 아침 브리핑`, lines.join('\n\n'));
 }
@@ -198,6 +201,7 @@ exports.agentTick = onSchedule({schedule: 'every 5 minutes', timeZone: 'Asia/Seo
     if (at(19, 0)) await job('eve', () => eveRegional(u, day));
     if (wd === 4 && at(19, 30)) await job('weekend', () => weekend(u, day, cfg));
     if (wd === 0 && at(20, 0)) await job('weekly', () => weekly(u, day));
+    if (day.endsWith('-01') && at(9, 0)) await job('snap', () => pushTo(u, {k: 'remind', id: 'snap', title: '이번 달 자산 현황', body: '예금·투자·연금 잔액을 적어 두면 순자산 흐름이 보입니다. 저축·정기이체 화면에서 입력하세요.', tag: 'snap'}));
   }
 });
 
