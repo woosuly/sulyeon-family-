@@ -83,7 +83,7 @@
         return r.ok ? (((await r.text()).match(/CACHE_NAME\s*=\s*'([^']+)'/) || [])[1] || '') : '';
     }
     async function famVerCheck() {
-        if (Date.now() - famVerLast < 10 * 60e3) return; famVerLast = Date.now();
+        if (Date.now() - famVerLast < 60e3) return; famVerLast = Date.now();
         try {
             const sv = await famSwVer();
             if (sv && !famSwBase) famSwBase = sv;

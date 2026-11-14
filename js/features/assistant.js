@@ -538,7 +538,8 @@
 - 장소·숙소·식당을 추천할 때는 이름, 위치(역·동네), 대략 가격대, 고른 이유를 함께 쓴다. 2~4곳 비교로 제시한다.
 - 마지막에 알아두면 좋은 점(예약 시점, 주의할 점)을 1~2줄 덧붙인다.
 - 정보가 조금 부족해도 가정을 밝히고 먼저 구체적으로 답한다. 이미 들은 조건을 다시 묻지 않는다.
-- 과장하지 말고, 확실하지 않은 가격·운영 정보는 '확인 필요'라고 표시한다. 모르면 모른다고 한다.`, prompt, { search: true, maxTokens: 6000 });
+- 과장하지 말고, 확실하지 않은 가격·운영 정보는 '확인 필요'라고 표시한다. 모르면 모른다고 한다.
+- 이 앱은 유튜브 뮤직으로 음악을 틀 수 있다. 음악을 틀어 달라는 요청이면 "재생할 수 없다"고 하지 말고, 곡을 추천한 뒤 "'○○ 틀어줘'라고 하시면 유튜브 뮤직에서 바로 재생합니다"라고 안내한다.`, prompt, { search: true, maxTokens: 6000 });
             famAskHist.push({ q, a: r.text || '' }); famAskAt = Date.now();
             const seen = new Set(), src = (r.sources || []).filter(s => /^https?:/.test(s.url) && !seen.has(s.url) && seen.add(s.url)).slice(0, 5);
             const oid = 'ai' + Date.now(); c.dataset.raw = r.text || '';
