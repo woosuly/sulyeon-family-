@@ -16,9 +16,25 @@ function kkPopup(room, from, text, n) {
     m.innerHTML = `<div class="kk-card${sms ? ' sms' : ''}"><div class="kk-h">${sms ? '✉️' : '💬'} <b>${famEsc(room)}</b>${n > 1 ? ` <em>${n}개</em>` : ''}</div>
         <div class="kk-t">${room === from || sms ? '' : famEsc(from) + ': '}${famEsc(String(text).slice(0, 80))}${String(text).length > 80 ? '…' : ''}</div>
         <div class="kk-q">${what}가 왔습니다. 읽어드릴까요? <span id="kk-mic" class="kk-mic"></span></div>
-        <div class="kk-b"><button class="fam-btn" onclick="kkNo()">괜찮아요</button><button class="fam-btn pri" onclick="kkYes()">읽어주기</button></div></div>`;
+        <div class="kk-list" id="kk-list" style="display:none"></div>
+        <div class="kk-b"><button class="fam-btn" onclick="kkNo()">괜찮아요</button><button class="fam-btn" onclick="kkView()">보기</button><button class="fam-btn" onclick="kkOpenApp()">${sms ? '문자' : '카톡'} 열기</button><button class="fam-btn pri" onclick="kkYes()">읽어주기</button></div></div>`;
     clearTimeout(kkPopup._t); kkPopup._t = setTimeout(() => kkHide(), 30000);
     if (!same) kkAskVoice();
+}
+// 보기: 쌓인 메시지 전부 펼침 (팝업은 닫히지 않게 시간 연장, 묻는 소리·듣기는 멈춤)
+async function kkView() {
+    const m = document.getElementById('kk-pop'), room = m && m.dataset.room, el = document.getElementById('kk-list'), N = kkN(); if (!room || !el) return;
+    try { kkRec && kkRec.abort(); } catch (e) {} try { window.speechSynthesis && speechSynthesis.cancel(); } catch (e) {}
+    const r = N && N.kakaoAsk ? await N.kakaoAsk({ room }).catch(() => ({})) : {}, list = r.list || [];
+    const sms = room.startsWith('문자 · ');
+    el.innerHTML = list.length ? list.map(x => `<div>${x.from && x.from !== room && !sms ? `<b>${famEsc(x.from)}</b> ` : ''}${famEsc(x.text)}</div>`).join('') : '<div style="color:#94a3b8">이미 읽었거나 지운 메시지입니다.</div>';
+    el.style.display = 'block'; m.querySelector('.kk-t').style.display = 'none';
+    clearTimeout(kkPopup._t); kkPopup._t = setTimeout(() => kkHide(), 120000);
+}
+// 원래 앱(카톡·문자)으로 가서 보기·답장
+function kkOpenApp() {
+    const m = document.getElementById('kk-pop'), sms = m && m.dataset.room && m.dataset.room.startsWith('문자 · '), N = kkN(); kkNo();
+    if (N && N.openApp) N.openApp({ pkg: sms ? 'com.samsung.android.messaging' : 'com.kakao.talk' }).catch(() => {});
 }
 function kkHide() { const m = document.getElementById('kk-pop'); if (m) m.style.display = 'none'; try { kkRec && kkRec.abort(); } catch (e) {} kkRec = null; }
 function kkYes() { const m = document.getElementById('kk-pop'), room = m && m.dataset.room; kkHide(); const N = kkN(); if (room && N && N.kakaoRead) N.kakaoRead({ room }); }

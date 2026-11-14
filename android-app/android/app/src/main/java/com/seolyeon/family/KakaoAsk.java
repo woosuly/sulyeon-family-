@@ -104,6 +104,8 @@ public class KakaoAsk {
         return s.toString();
     }
     static synchronized void clear(String room) { pend.remove(room); }
+    /** 보기용 (지우지 않음) */
+    static synchronized List<String[]> peek(String room) { List<String[]> l = pend.get(room); return l == null ? new ArrayList<>() : new ArrayList<>(l); }
     static synchronized int count(String room) { List<String[]> l = pend.get(room); return l == null ? 0 : l.size(); }
 
     static void read(Context c, String room) {

@@ -908,3 +908,5 @@ header button .fi { color:#fff; }
 .kk-b{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
 [data-theme=dark] .kk-card{background:#1e293b;color:#e2e8f0}[data-theme=dark] .kk-t{color:#94a3b8}
 .kk-card.sms{border-left-color:#3b82f6}
+.kk-list{max-height:40vh;overflow-y:auto;font-size:13.5px;line-height:1.55;margin:6px 0;padding:8px 10px;background:#f8fafc;border-radius:10px}.kk-list div{padding:3px 0;border-bottom:1px solid #eef2f7;white-space:pre-wrap}.kk-list div:last-child{border:0}[data-theme=dark] .kk-list{background:#0f172a}
+.kk-b{flex-wrap:wrap}
