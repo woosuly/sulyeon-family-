@@ -201,14 +201,47 @@ async function stCode(key, company, invoice) {
   try { const r = await fetch(`${ST}/recommend?t_key=${key}&t_invoice=${invoice}`), j = await r.json(); const rc = (j.Recommend || [])[0]; if (rc) return rc.Code; } catch (e) {}
   return '';
 }
+// tracker.delivery (스마트택배 키가 없을 때) — 키 형식 "ClientID:Secret"
+const TD_CARRIERS = [['cj|대한통운', 'kr.cjlogistics'], ['한진', 'kr.hanjin'], ['롯데', 'kr.lotte'], ['우체국|epost', 'kr.epost'], ['로젠', 'kr.logen'],
+  ['쿠팡', 'kr.coupangls'], ['gs|편의점|cvs', 'kr.cvsnet'], ['cu', 'kr.cupost'], ['경동', 'kr.kdexp'], ['대신', 'kr.daesin'], ['일양', 'kr.ilyanglogis'], ['천일', 'kr.chunilps'], ['합동', 'kr.hdexp']];
+async function tdQuery(key, carrierId, trackingNumber) {
+  const r = await fetch('https://apis.tracker.delivery/graphql', {method: 'POST', headers: {'content-type': 'application/json', authorization: 'TRACKQL-API-KEY ' + key},
+    body: JSON.stringify({query: 'query T($c:ID!,$n:String!){track(carrierId:$c,trackingNumber:$n){lastEvent{time status{code name} description location{name}}}}', variables: {c: carrierId, n: trackingNumber}})});
+  const j = await r.json().catch(() => ({}));
+  return j.data && j.data.track && j.data.track.lastEvent ? j.data.track.lastEvent : null;
+}
+async function tdTrack(key, p) {
+  const n = stNorm(p.company);
+  let ids = p.tdCarrier ? [p.tdCarrier] : TD_CARRIERS.filter(([k]) => n && new RegExp(k, 'i').test(n)).map(x => x[1]);
+  if (!ids.length) ids = ['kr.cjlogistics', 'kr.hanjin', 'kr.lotte', 'kr.epost', 'kr.logen'];   // 택배사 모르면 주요 택배사 순서대로
+  for (const id of ids) {
+    const e = await tdQuery(key, id, p.invoice); if (!e) continue;
+    const c = (e.status && e.status.code) || '';
+    const level = c === 'DELIVERED' ? 6 : c === 'OUT_FOR_DELIVERY' ? 5 : c === 'IN_TRANSIT' ? 3 : c ? 2 : 0;
+    return {tdCarrier: id, level, status: (e.status && e.status.name) || e.description || '', where: (e.location && e.location.name) || '', done: level >= 6};
+  }
+  return null;
+}
+async function parcelNotify(p, item, done, level) {
+  const owner = p.by || '정우설';
+  if (done && !p.done) await pushTo(owner, {k: 'remind', id: 'pc' + p.invoice, title: '📦 택배 도착', body: `${item || p.company || '택배'} 배달 완료`, tag: 'parcel-' + p.invoice});
+  else if (level === 5 && (+p.level || 0) < 5) await pushTo(owner, {k: 'remind', id: 'pc' + p.invoice, title: '📦 오늘 도착 예정', body: `${item || p.company || '택배'} 배달 출발`, tag: 'parcel-' + p.invoice});
+}
 async function runParcels() {
-  const key = ((await db().collection('config').doc('aiShared').get()).data() || {}).sweettracker;
-  if (!key) return;
+  const cfg = (await db().collection('config').doc('aiShared').get()).data() || {};
+  const key = cfg.sweettracker, td = String(cfg.trackerdelivery || '').trim();
+  if (!key && !td) return;
   const s = await db().collection('parcels').where('done', '==', false).get();
   for (const d of s.docs) {
     const p = d.data();
     if (Date.now() - (p.at || 0) > 21 * 864e5) { await d.ref.update({done: true, status: p.status || '기간 지남'}); continue; }
     try {
+      if (!key) {
+        const t = await tdTrack(td, p);
+        if (!t) { await d.ref.update({status: '조회 안 됨 (택배사 확인 필요)', checkedAt: Date.now()}); continue; }
+        await d.ref.update({...t, checkedAt: Date.now()});
+        await parcelNotify(p, p.item, t.done, t.level); continue;
+      }
       const code = p.code || await stCode(key, p.company, p.invoice);
       if (!code) { await d.ref.update({status: '택배사 확인 필요', checkedAt: Date.now()}); continue; }
       const r = await fetch(`${ST}/trackingInfo?t_key=${key}&t_code=${code}&t_invoice=${p.invoice}`), j = await r.json();
@@ -216,9 +249,7 @@ async function runParcels() {
       const last = j.lastDetail || (j.trackingDetails || []).slice(-1)[0] || {}, level = +j.level || 0, done = !!j.complete || level >= 6;
       const item = p.item || j.itemName || '';
       await d.ref.update({code, level, status: last.kind || '', where: last.where || '', item, checkedAt: Date.now(), done});
-      const owner = p.by || '정우설';
-      if (done && !p.done) await pushTo(owner, {k: 'remind', id: 'pc' + p.invoice, title: '📦 택배 도착', body: `${item || p.company || '택배'} 배달 완료`, tag: 'parcel-' + p.invoice});
-      else if (level === 5 && (+p.level || 0) < 5) await pushTo(owner, {k: 'remind', id: 'pc' + p.invoice, title: '📦 오늘 도착 예정', body: `${item || p.company || '택배'} 배달 출발`, tag: 'parcel-' + p.invoice});
+      await parcelNotify(p, item, done, level);
     } catch (e) { console.error('parcel', p.invoice, e.message); }
   }
 }

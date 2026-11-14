@@ -5,7 +5,7 @@
 //   택배:   parcels/{운송장} {company, invoice, item, status, eta, done, by}
 //           문자·카톡에서 운송장을 뽑아 등록 → 서버가 1시간마다 조회, 출발·도착 때 알림
 // ═══════════════════════════════════════════════════════════
-const NMAP_PKG = 'com.nhn.android.nmap', BMW_PKG = 'de.bmw.connected.mobile20.row';
+const NMAP_PKG = 'com.nhn.android.nmap', BMW_PKG = 'de.bmw.connected.mobile20.row', ROBOROCK_PKG = 'com.roborock.smart';
 let parcels = [];
 const lfN = () => window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.SeolyeonNative;
 
@@ -32,6 +32,15 @@ async function bmwOpen(what) {
     famFeedAdd(r.opened === false ? 'My BMW 앱이 없어 설치 화면을 열었습니다.' : `🚗 My BMW를 열었습니다.${what ? ` <b>${famEsc(what)}</b> 버튼을 눌러 주세요.` : ''} <span style="color:#94a3b8">(문 열기·잠금은 BMW 정책상 앱에서 직접 누르셔야 합니다)</span>`);
 }
 
+// ── 로보락: 공식 외부 연동이 없어 앱을 바로 열어 줌 (스마트싱스 연결되면 그쪽으로 제어 예정) ──
+async function roborockOpen(t) {
+    const N = lfN();
+    if (!N || !N.openApp) return famFeedAdd('로보락 앱 열기는 설연 앱(APK)에서 됩니다.');
+    const r = await N.openApp({ pkg: ROBOROCK_PKG }).catch(() => ({}));
+    const w = /멈춰|정지|중지/.test(t) ? '일시정지' : /충전|복귀|돌아가/.test(t) ? '충전대로 복귀' : /상태/.test(t) ? '' : '청소 시작';
+    famFeedAdd(r.opened === false ? '로보락 앱이 없어 설치 화면을 열었습니다.' : `🧹 로보락 앱을 열었습니다.${w ? ` <b>${w}</b>을 눌러 주세요.` : ''}`);
+}
+
 // ── 택배 ──
 function parcelListen() { try { db.collection('parcels').onSnapshot(s => { parcels = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.at || 0) - (a.at || 0)); parcelBar(); }, () => {}); } catch (e) {} }
 function parcelBar() {
@@ -43,11 +52,11 @@ function parcelBar() {
 }
 function parcelOpen() {
     const on = parcels.filter(p => !p.done), off = parcels.filter(p => p.done).slice(0, 5);
-    const row = p => `<div class="ag-li"><span>${famEsc(p.company || '')}</span><b>${famEsc(p.item || p.invoice)}<br><small style="color:#64748b;font-weight:500">${famEsc(p.status || '조회 대기')}${p.where ? ' · ' + famEsc(p.where) : ''}${p.checkedAt ? ' · ' + new Date(p.checkedAt).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}</small></b>${p.done ? '' : `<button class="fam-btn" style="padding:4px 8px;font-size:11px" onclick="parcelDone('${p.id}')">받음</button>`}</div>`;
+    const row = p => `<div class="ag-li"><span>${famEsc(p.company || '')}</span><b>${famEsc(p.item || p.invoice)}<br><small style="color:#64748b;font-weight:500">${famEsc(p.status || '조회 대기')}${p.where ? ' · ' + famEsc(p.where) : ''}${p.checkedAt ? ' · ' + new Date(p.checkedAt).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}</small></b><button class="fam-btn" style="padding:4px 8px;font-size:11px" onclick="parcelLook('${p.id}')">조회</button>${p.done ? '' : `<button class="fam-btn" style="padding:4px 8px;font-size:11px" onclick="parcelDone('${p.id}')">받음</button>`}</div>`;
     famSheet(`<div class="fam-h"><b>택배</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
         ${on.length ? on.map(row).join('') : '<div class="fam-note">배송 중인 택배가 없습니다.</div>'}
         ${off.length ? '<span class="fam-lbl">최근 받은 택배</span>' + off.map(row).join('') : ''}
-        <div class="fam-note">택배 문자·알림톡이 오면 운송장을 찾아 자동으로 추가하고, 1시간마다 조회해 출발·도착 때 알려 드립니다.</div>
+        <div class="fam-note">택배 문자·알림톡이 오면 운송장을 찾아 자동으로 추가합니다. [조회]는 네이버 택배 조회를 엽니다. 설정에 조회 키를 넣으면 1시간마다 자동 조회해 출발·도착 때 알려 드립니다.</div>
         <div class="fam-btns"><button class="fam-btn" onclick="parcelAddForm()">＋ 운송장 직접 추가</button><button class="fam-btn" onclick="naverOrders()">네이버 주문내역</button></div>`);
 }
 function parcelAddForm() {
@@ -62,6 +71,12 @@ async function parcelAdd(p) {
     if (old && old.exists) return;   // 이미 등록됨
     await ref.set({ id: inv, invoice: inv, company: String(p.company || '').trim(), item: String(p.item || '').trim(), status: '', done: false, at: Date.now(), by: famUser() });
 }
+// 키 없이 조회: 네이버 검색의 택배 조회 결과 (택배사 상관없이)
+function parcelLook(id) {
+    const p = parcels.find(x => x.id === id); if (!p) return;
+    const url = 'https://m.search.naver.com/search.naver?query=' + encodeURIComponent(((p.company || '') + ' 택배조회 ' + p.invoice).trim());
+    const N = lfN(); if (N && N.openUrl) N.openUrl({ url, pkg: '' }); else window.open(url, '_blank');
+}
 async function parcelDone(id) { await db.collection('parcels').doc(id).update({ done: true, doneAt: Date.now() }); famToast('받음으로 표시했습니다'); parcelOpen(); }
 function naverOrders() { const N = lfN(), url = 'https://m.pay.naver.com/o/home'; if (N && N.openUrl) N.openUrl({ url, pkg: '' }); else window.open(url, '_blank'); }
 
@@ -75,6 +90,7 @@ function lifeRoute(t) {
         bmwOpen(w); return true;
     }
     if (/택배|배송/.test(t) && /(어디|언제|조회|현황|목록|왔|와|보여)/.test(t)) { parcelOpen(); return true; }
+    if (/(로보락|로봇\s*청소기|청소기|청소)/.test(t) && /(시작|돌려|해\s*줘|켜|멈춰|정지|중지|충전|복귀|돌아가|열어|상태)/.test(t) && !/(일정|알려|기억)/.test(t)) { roborockOpen(t); return true; }
     if (/네이버\s*(주문|구매|쇼핑)\s*(내역|목록)?/.test(t)) { naverOrders(); return true; }
     return false;
 }

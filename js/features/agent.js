@@ -124,7 +124,9 @@ function agSetHtml() {
         ${typeof stSetHtml === 'function' ? stSetHtml() : ''}
         <span class="fam-lbl">택배 조회 키 (스마트택배)</span>
         <input class="fam-in" type="text" style="-webkit-text-security:disc" value="${famEsc((typeof famKeys === 'function' && famKeys().sweettracker) || '')}" placeholder="info.sweettracker.co.kr 에서 받은 키" autocomplete="off" onchange="famSetKey('sweettracker',this.value.trim());famToast('택배 조회 키를 저장했습니다')">
-        <div class="fam-note" style="margin:4px 0 0">한 사람만 넣으면 됩니다. 택배 문자의 운송장을 1시간마다 조회해 출발·도착 때 알려 드립니다.</div>
+        <span class="fam-lbl">또는 tracker.delivery 키 (Client ID:Secret)</span>
+        <input class="fam-in" type="text" style="-webkit-text-security:disc" value="${famEsc((typeof famKeys === 'function' && famKeys().trackerdelivery) || '')}" placeholder="console.tracker.delivery 의 ID:Secret" autocomplete="off" onchange="famSetKey('trackerdelivery',this.value.trim());famToast('저장했습니다')">
+        <div class="fam-note" style="margin:4px 0 0">둘 중 하나만 있으면 됩니다. 키가 없어도 택배 목록의 [조회]로 네이버 택배 조회를 열 수 있습니다.</div>
         <span class="fam-lbl">예정된 알림 ${rems.length}건</span>
         ${rems.length ? rems.map(r => `<div class="ag-li"><span>${famEsc(agFmt(r.at))}</span><b>${famEsc(r.title)}</b><button class="fam-x" onclick="agRemindDel('${r.id}').then(()=>famRenderSettings())">✕</button></div>`).join('') : '<div class="fam-note" style="margin:0">홈에서 "내일 8시에 ○○ 알려줘"라고 입력하세요.</div>'}
         <span class="fam-lbl">기억 노트 ${agNotes.length}건</span>
