@@ -208,6 +208,8 @@ async function tdQuery(key, carrierId, trackingNumber) {
   const r = await fetch('https://apis.tracker.delivery/graphql', {method: 'POST', headers: {'content-type': 'application/json', authorization: 'TRACKQL-API-KEY ' + key},
     body: JSON.stringify({query: 'query T($c:ID!,$n:String!){track(carrierId:$c,trackingNumber:$n){lastEvent{time status{code name} description location{name}}}}', variables: {c: carrierId, n: trackingNumber}})});
   const j = await r.json().catch(() => ({}));
+  // 무료 키는 21일마다 만료 → 인증 오류면 따로 알림
+  if (r.status === 401 || (j.errors || []).some(e => /UNAUTH|FORBIDDEN/i.test((e.extensions && e.extensions.code) || '') || /auth|credential|api key/i.test(e.message || ''))) throw new Error('TD_AUTH');
   return j.data && j.data.track && j.data.track.lastEvent ? j.data.track.lastEvent : null;
 }
 async function tdTrack(key, p) {
@@ -250,7 +252,13 @@ async function runParcels() {
       const item = p.item || j.itemName || '';
       await d.ref.update({code, level, status: last.kind || '', where: last.where || '', item, checkedAt: Date.now(), done});
       await parcelNotify(p, item, done, level);
-    } catch (e) { console.error('parcel', p.invoice, e.message); }
+    } catch (e) {
+      if (e.message === 'TD_AUTH') {
+        if (await once('td_auth_' + ymd(kst()))) await pushTo('정우설', {k: 'remind', id: 'td-auth', title: '📦 택배 조회 키 만료', body: 'console.tracker.delivery → 자격 증명에서 새로 만들어 설정 → 비서에 넣어 주세요', tag: 'td-auth'});
+        return;
+      }
+      console.error('parcel', p.invoice, e.message);
+    }
   }
 }
 
