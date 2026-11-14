@@ -182,11 +182,53 @@ async function weekly(u, day) {
   await saveBrief('weekly', u, day, `주간 요약 (${md(from)}~${md(day)})`, lines.join('\n\n'));
 }
 
+// ⑥ 택배 추적 (스마트택배 API) — 1시간마다, 출발·도착 때 알림
+const ST = 'https://info.sweettracker.co.kr/api/v1';
+const stNorm = s => String(s || '').replace(/\s|\(주\)|주식회사|택배|로지스틱스|logistics/gi, '').toLowerCase();
+async function stCompanies(key) {
+  const ref = db().collection('config').doc('stCompanies'), c = (await ref.get()).data();
+  if (c && c.list && Date.now() - c.at < 7 * 864e5) return c.list;
+  const r = await fetch(`${ST}/companylist?t_key=${key}`), j = await r.json();
+  const list = (j.Company || j.company || []).map(x => ({code: x.Code || x.code, name: x.Name || x.name}));
+  if (list.length) await ref.set({list, at: Date.now()});
+  return list;
+}
+async function stCode(key, company, invoice) {
+  const list = await stCompanies(key), n = stNorm(company);
+  const hit = n && list.find(x => stNorm(x.name).includes(n) || n.includes(stNorm(x.name)));
+  if (hit) return hit.code;
+  // 택배사를 모르면 운송장으로 추천 택배사 조회
+  try { const r = await fetch(`${ST}/recommend?t_key=${key}&t_invoice=${invoice}`), j = await r.json(); const rc = (j.Recommend || [])[0]; if (rc) return rc.Code; } catch (e) {}
+  return '';
+}
+async function runParcels() {
+  const key = ((await db().collection('config').doc('aiShared').get()).data() || {}).sweettracker;
+  if (!key) return;
+  const s = await db().collection('parcels').where('done', '==', false).get();
+  for (const d of s.docs) {
+    const p = d.data();
+    if (Date.now() - (p.at || 0) > 21 * 864e5) { await d.ref.update({done: true, status: p.status || '기간 지남'}); continue; }
+    try {
+      const code = p.code || await stCode(key, p.company, p.invoice);
+      if (!code) { await d.ref.update({status: '택배사 확인 필요', checkedAt: Date.now()}); continue; }
+      const r = await fetch(`${ST}/trackingInfo?t_key=${key}&t_code=${code}&t_invoice=${p.invoice}`), j = await r.json();
+      if (j.status === false || j.code) { await d.ref.update({code, status: j.msg || '조회 안 됨', checkedAt: Date.now()}); continue; }
+      const last = j.lastDetail || (j.trackingDetails || []).slice(-1)[0] || {}, level = +j.level || 0, done = !!j.complete || level >= 6;
+      const item = p.item || j.itemName || '';
+      await d.ref.update({code, level, status: last.kind || '', where: last.where || '', item, checkedAt: Date.now(), done});
+      const owner = p.by || '정우설';
+      if (done && !p.done) await pushTo(owner, {k: 'remind', id: 'pc' + p.invoice, title: '📦 택배 도착', body: `${item || p.company || '택배'} 배달 완료`, tag: 'parcel-' + p.invoice});
+      else if (level === 5 && (+p.level || 0) < 5) await pushTo(owner, {k: 'remind', id: 'pc' + p.invoice, title: '📦 오늘 도착 예정', body: `${item || p.company || '택배'} 배달 출발`, tag: 'parcel-' + p.invoice});
+    } catch (e) { console.error('parcel', p.invoice, e.message); }
+  }
+}
+
 // ── 5분마다 ──────────────────────────────────────────────
 exports.agentTick = onSchedule({schedule: 'every 5 minutes', timeZone: 'Asia/Seoul', region: 'asia-northeast3', timeoutSeconds: 300, memory: '512MiB'}, async () => {
   const now = Date.now(), k = kst(now), day = ymd(k), hm = k.getUTCHours() * 60 + k.getUTCMinutes(), wd = k.getUTCDay();
   const cfg = {users: ['정우설', '한미연'], lat: 36.6424, lon: 127.489, city: '청주', off: {}, ...((await db().collection('config').doc('agent').get()).data() || {})};
   await runReminders(now).catch(e => console.error('reminders', e));
+  if (k.getUTCMinutes() < 5 && hm >= 7 * 60 && hm < 23 * 60 && await once('parcel_' + day + '_' + k.getUTCHours())) await runParcels().catch(e => console.error('parcels', e));
   // 하루 한 번 정리: 14일 지난 브리핑·기록, 처리 끝난 30일 지난 확인 대기
   if (hm >= 3 * 60 && hm < 3 * 60 + 15 && await once('cleanup_' + day)) {
     for (const [col, field, ms] of [['briefs', 'at', 14 * 864e5], ['agentLog', 'at', 14 * 864e5], ['briefReq', 'at', 7 * 864e5]]) {

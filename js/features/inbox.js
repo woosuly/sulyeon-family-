@@ -105,6 +105,7 @@ async function ibDrain(opt) {
             try { out = await ibAskAI(part); } catch (e) { out = null; }
             for (let k = 0; k < part.length; k++) {
                 const s = part[k], a = out ? (out.find(o => +o.i === k) || { skip: true }) : { type: '문자', summary: s.raw.slice(0, 80) };
+                if (a.parcel && a.parcel.invoice && typeof parcelAdd === 'function') await parcelAdd({ ...a.parcel, item: a.parcel.item || '' }).catch(() => {});
                 if (!a.skip) await db.collection('inbox').doc(s.key).set({
                     id: s.key, kind: s.kind, owner: me, status: 'pending', at: Date.now(), ts: s.ts, from: s.from, name: s.name || '', number: s.number || '', room: s.room || '', raw: s.raw,
                     type: a.type || '문자', summary: a.summary || '', schedule: a.schedule && a.schedule.date ? a.schedule : null, reply: a.reply || '',
@@ -125,7 +126,7 @@ async function ibDrain(opt) {
 async function ibAskAI(list) {
     const today = typeof famYmd === 'function' ? famYmd(new Date()) : new Date().toISOString().slice(0, 10);
     const sys = `너는 정우설의 문자·카톡 비서다. 오늘은 ${today}. 받은 문자·카톡 목록을 보고 JSON 배열만 출력한다 (설명·코드블록 없이).
-각 문자마다 {"i":번호,"skip":true|false,"type":"주의|택배|예약|병원|고지서|일정|개인|기타","summary":"한 줄 요약(누가·무엇·언제)","schedule":{"date":"YYYY-MM-DD","time":"HH:MM 또는 빈칸","title":"일정 제목","place":"장소 또는 빈칸"} 또는 null,"reply":"답장 초안 또는 빈칸","shop":["장볼 물건"] 또는 [],"gj":{"person":"당사자 이름","event":"결혼|장례|돌·백일|생일·회갑·칠순|병문안|개업·이사|기타"} 또는 null,"due":{"date":"YYYY-MM-DD","time":"HH:MM 또는 빈칸","kind":"기프티콘|납부|무료취소|잔금|반납|만료|기타","what":"짧은 이름"} 또는 null}
+각 문자마다 {"i":번호,"skip":true|false,"type":"주의|택배|예약|병원|고지서|일정|개인|기타","summary":"한 줄 요약(누가·무엇·언제)","schedule":{"date":"YYYY-MM-DD","time":"HH:MM 또는 빈칸","title":"일정 제목","place":"장소 또는 빈칸"} 또는 null,"reply":"답장 초안 또는 빈칸","shop":["장볼 물건"] 또는 [],"parcel":{"company":"택배사","invoice":"운송장 번호(숫자만)","item":"물건 이름 또는 빈칸"} 또는 null,"gj":{"person":"당사자 이름","event":"결혼|장례|돌·백일|생일·회갑·칠순|병문안|개업·이사|기타"} 또는 null,"due":{"date":"YYYY-MM-DD","time":"HH:MM 또는 빈칸","kind":"기프티콘|납부|무료취소|잔금|반납|만료|기타","what":"짧은 이름"} 또는 null}
 규칙:
 - 스미싱·피싱 의심(모르는 번호가 링크만 보냄, 국제발신의 계정·연락처 등록/결제/택배 주소 확인 요구, 가족·지인 사칭, 단축 URL 클릭 유도 등)은 type:"주의", summary는 "스미싱 의심 — 링크 누르지 말 것"처럼 쓰고 reply는 반드시 빈칸.
 - 광고·홍보·단순 결제/배송완료 안내·스팸처럼 할 일이 없는 문자는 skip:true.
@@ -133,6 +134,7 @@ async function ibAskAI(list) {
 - 답장이 필요한 문자(아는 사람·업체의 질문, 확인 요청, 택배기사 문의 등)에만 reply를 쓴다. 정체가 불분명한 번호에는 쓰지 않는다. 정우설이 보내는 짧고 공손한 존댓말 1~2문장.
 - 기한이 있는 것은 due에 넣는다: 기프티콘·쿠폰·상품권 유효기간(kind 기프티콘, what은 상품명), 고지서·카드대금 납부기한(납부), 예약의 무료취소 기한(무료취소)·잔금일(잔금), 대여 반납일(반납), 포인트·마일리지·멤버십 소멸일(만료).
   기프티콘 선물 문자·카톡은 광고가 아니므로 skip하지 않는다.
+- 택배 문자·알림톡(발송·출발·도착 예정)에 운송장 번호가 있으면 parcel을 채운다. 배송완료 안내라도 운송장이 있으면 parcel을 채운다(skip:true여도 됨).
 - 청첩장·부고·돌잔치 등 경조사 알림은 type "경조사", gj에 당사자와 종류, 식 날짜는 schedule에 넣는다.
 - '연락처 등록됨'으로 표시된 보낸 사람은 아는 사람이다(가족·지인). 아는 사람의 문자는 스미싱으로 보지 않는다.
 - 카톡 대화방 메시지는 일정·약속, 장보기 부탁("올 때 우유", "휴지 사와")만 뽑고 잡담은 skip:true. 장볼 물건은 shop에 물건 이름만.

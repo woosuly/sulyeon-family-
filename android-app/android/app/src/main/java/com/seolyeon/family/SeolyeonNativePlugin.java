@@ -503,6 +503,18 @@ public class SeolyeonNativePlugin extends Plugin {
         call.reject("no settings");
     }
 
+    /** 설치된 앱 실행 (My BMW 등) — {pkg}: 없으면 Play 스토어 화면 */
+    @PluginMethod
+    public void openApp(PluginCall call) {
+        String pkg = call.getString("pkg", "");
+        try {
+            Intent i = getContext().getPackageManager().getLaunchIntentForPackage(pkg);
+            if (i != null) { i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); getContext().startActivity(i); JSObject r = new JSObject(); r.put("opened", true); call.resolve(r); return; }
+            Intent s = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + pkg)); s.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); getContext().startActivity(s);
+            JSObject r = new JSObject(); r.put("opened", false); call.resolve(r);
+        } catch (Exception e) { call.reject(String.valueOf(e.getMessage())); }
+    }
+
     /** 다른 앱으로 열기 (유튜브 뮤직·유튜브 등) — {url, pkg}: pkg 앱이 없으면 기본 앱·브라우저 */
     @PluginMethod
     public void openUrl(PluginCall call) {

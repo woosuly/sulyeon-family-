@@ -14,6 +14,7 @@ const agLocalInput = ms => { const d = new Date(ms - new Date().getTimezoneOffse
 function agRoute(raw) {
     const t = raw.trim();
     if (typeof mediaRoute === 'function' && mediaRoute(t)) return true;   // 음악·영상
+    if (typeof lifeRoute === 'function' && lifeRoute(t)) return true;     // 길찾기·차·택배
     if (/(기억\s*해\s*(줘|둬|놔)|기억해|메모\s*해\s*(줘|둬)|적어\s*(줘|둬))[.!]?$/.test(t)) { agNoteSave(t); return true; }
     // 알림 요청: '~에 알려줘'(시각 + 에) 또는 할 일 동사가 있을 때만. '주말 날씨 알려줘' 같은 정보 요청은 AI 답변으로
     const askEnd = /(알려\s*줘|알림\s*(줘|해\s*줘)|리마인드|깨워\s*줘|말해\s*줘)[.!]?$/.test(t);
@@ -119,6 +120,9 @@ function agSetHtml() {
         ${window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.SeolyeonNative && Capacitor.Plugins.SeolyeonNative.openAssistantSettings ? `<span class="fam-lbl">홈 버튼 길게 누르면 설연</span>
         <div class="fam-note" style="margin:0 0 6px">① 아래 버튼 → <b>디지털 어시스턴트 앱</b> → <b>설연</b> 선택<br>② 홈 버튼을 길게 눌러 '서클 투 서치'가 뜨면: 설정 → 디스플레이 → 내비게이션 바 → <b>서클 투 서치</b> 끄기<br>앱 아이콘을 길게 누르면 <b>말로 하기</b> 바로가기도 있습니다.</div>
         <div class="fam-btns" style="margin-top:0"><button class="fam-btn" onclick="Capacitor.Plugins.SeolyeonNative.openAssistantSettings()">기본 어시스턴트 앱 설정 열기</button></div>` : ''}
+        <span class="fam-lbl">택배 조회 키 (스마트택배)</span>
+        <input class="fam-in" type="text" style="-webkit-text-security:disc" value="${famEsc((typeof famKeys === 'function' && famKeys().sweettracker) || '')}" placeholder="info.sweettracker.co.kr 에서 받은 키" autocomplete="off" onchange="famSetKey('sweettracker',this.value.trim());famToast('택배 조회 키를 저장했습니다')">
+        <div class="fam-note" style="margin:4px 0 0">한 사람만 넣으면 됩니다. 택배 문자의 운송장을 1시간마다 조회해 출발·도착 때 알려 드립니다.</div>
         <span class="fam-lbl">예정된 알림 ${rems.length}건</span>
         ${rems.length ? rems.map(r => `<div class="ag-li"><span>${famEsc(agFmt(r.at))}</span><b>${famEsc(r.title)}</b><button class="fam-x" onclick="agRemindDel('${r.id}').then(()=>famRenderSettings())">✕</button></div>`).join('') : '<div class="fam-note" style="margin:0">홈에서 "내일 8시에 ○○ 알려줘"라고 입력하세요.</div>'}
         <span class="fam-lbl">기억 노트 ${agNotes.length}건</span>

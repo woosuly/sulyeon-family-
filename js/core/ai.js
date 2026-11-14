@@ -12,7 +12,7 @@
     // AI 키: 한 사람이 설정에 넣으면 가족 공유 문서(config/aiShared)에 저장 → 다른 폰은 AI 종류만 고르면 됨
     let famShared = (() => { try { return JSON.parse(famLS('famSharedKeys') || '{}') || {}; } catch (e) { return {}; } })();
     function famLocalKeys() { return (typeof timGetKeys === 'function') ? timGetKeys() : { gemini: famLS('timKey_gemini') || '', claude: famLS('timKey_claude') || '', gpt: famLS('timKey_gpt') || '' }; }
-    function famKeys() { const l = famLocalKeys(), o = {}; ['gemini', 'claude', 'gpt'].forEach(p => o[p] = famShared[p] || l[p] || ''); return o; }
+    function famKeys() { const l = famLocalKeys(), o = {}; Object.keys(famShared || {}).forEach(k => { if (typeof famShared[k] === 'string' && !['by'].includes(k)) o[k] = famShared[k]; }); ['gemini', 'claude', 'gpt'].forEach(p => o[p] = famShared[p] || l[p] || ''); return o; }   // 택배·유튜브 등 다른 공유 키도 포함
     (function famSharedListen() {
         try {
             firebase.auth().onAuthStateChanged(u => {
