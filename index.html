@@ -260,7 +260,7 @@
                     <div class="pg-acts">
                         <select class="pg-sel" onchange="switchAssetPeriod({classList:{add(){}},dataset:{period:this.value}})"><option value="month">월별</option><option value="week">주차별</option></select>
                         <button class="pg-btn" onclick="showSection('asset-cal-section')">일별</button>
-                        <button class="pg-more" aria-label="더보기" onclick="famMenu(this,[['집계 · AI 분석',()=>showSection('asset-analysis-section')],['예산 설정',()=>budgetForm()],['고정지출 · 저축',()=>showSection('save-section')],['가계부 엑셀(CSV) 받기',()=>famBackupCSV()]])">⋯</button>
+                        <button class="pg-more" aria-label="더보기" onclick="famMenu(this,[['집계 · AI 분석',()=>showSection('asset-analysis-section')],['예산 설정',()=>budgetForm()],['고정지출 · 저축',()=>showSection('save-section')],['엑셀로 받기 (내역·월별·여행 정산)',()=>famXlsx()]])">⋯</button>
                         <button onclick="showSection('main-section')" class="btn-home"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>홈</button>
                     </div>
                 </div>
@@ -894,6 +894,14 @@
                     <div class="fam-note" style="margin:0 0 8px">매월 지정일이 되면 자동으로 기록됩니다. 지출은 가계부에, 저축은 해당 저축에 쌓입니다. 같은 달에 두 번 기록되지 않습니다.</div>
                     <div id="sv-fixed"></div>
                 </div>
+                <div class="fam-box">
+                    <h4 style="display:flex;align-items:center">정기결제 <small style="margin-left:6px;color:#94a3b8;font-weight:600">카드 내역에서 찾음</small></h4>
+                    <div id="sub-list"></div>
+                </div>
+                <div class="fam-box">
+                    <h4 style="display:flex;align-items:center">차량<button class="fam-btn" style="margin-left:auto;padding:4px 10px;font-size:11px" onclick="carForm()">수정</button></h4>
+                    <div id="car-box"></div>
+                </div>
             </div>
         </section>
 
@@ -1181,6 +1189,7 @@
     <script src="js/features/chat-menu.js"></script>
     <script src="js/features/inbox.js"></script>
     <script src="js/features/agent.js"></script>
+    <script src="js/features/money.js"></script>
     <script src="js/core/sync.js"></script>
     <script src="js/core/nav.js"></script>
     <script src="js/features/schedule.js"></script>

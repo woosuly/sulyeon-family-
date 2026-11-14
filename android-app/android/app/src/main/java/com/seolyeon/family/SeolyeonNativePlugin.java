@@ -460,4 +460,32 @@ public class SeolyeonNativePlugin extends Plugin {
         try { CardQueue.setKakaoAllow(getContext(), new JSONArray(call.getArray("rooms", new JSArray()).toString())); } catch (Exception ignored) { }
         call.resolve();
     }
+
+    /** 파일을 폰 '다운로드' 폴더에 저장하고 (open:true면) 바로 열기 — {name, data(base64), mime} */
+    @PluginMethod
+    public void saveFile(PluginCall call) {
+        try {
+            String name = call.getString("name", "file"), mime = call.getString("mime", "application/octet-stream");
+            byte[] bytes = android.util.Base64.decode(call.getString("data", ""), android.util.Base64.DEFAULT);
+            Uri uri;
+            if (Build.VERSION.SDK_INT >= 29) {
+                android.content.ContentValues v = new android.content.ContentValues();
+                v.put(android.provider.MediaStore.Downloads.DISPLAY_NAME, name);
+                v.put(android.provider.MediaStore.Downloads.MIME_TYPE, mime);
+                uri = getContext().getContentResolver().insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, v);
+                try (java.io.OutputStream o = getContext().getContentResolver().openOutputStream(uri)) { o.write(bytes); }
+            } else {
+                java.io.File f = new java.io.File(getContext().getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS), name);
+                try (java.io.FileOutputStream o = new java.io.FileOutputStream(f)) { o.write(bytes); }
+                uri = androidx.core.content.FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", f);
+            }
+            if (Boolean.TRUE.equals(call.getBoolean("open", false))) {
+                Intent i = new Intent(Intent.ACTION_VIEW);
+                i.setDataAndType(uri, mime);
+                i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+                try { getContext().startActivity(Intent.createChooser(i, "열기").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); } catch (Exception ignored) { }
+            }
+            JSObject r = new JSObject(); r.put("uri", String.valueOf(uri)); call.resolve(r);
+        } catch (Exception e) { call.reject(String.valueOf(e.getMessage())); }
+    }
 }

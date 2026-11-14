@@ -57,6 +57,7 @@
                 <b style="white-space:nowrap">${svW(f.amt)}</b></div>`;
         }).join('') + (() => { const on = rows.filter(f => f.active !== false), e = on.filter(f => f.kind !== 'saving').reduce((a, f) => a + (+f.amt || 0), 0), v = on.filter(f => f.kind === 'saving').reduce((a, f) => a + (+f.amt || 0), 0); return `<div class="fam-note" style="text-align:right">매월 지출 ${svW(e)} · 저축 ${svW(v)}</div>`; })()
             : '<div class="fam-note">등록된 정기 이체가 없습니다. 관리비·통신비·적금 등을 넣어 두세요.</div>';
+        if (typeof subRender === 'function') { subRender(); carRender(); }
     }
     // ── 목표 ──
     function svGoalForm(id) {

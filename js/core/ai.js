@@ -143,6 +143,10 @@
     // ═══════════════════════════════════════════════════════════
     const FAM_BACKUP_COLS = ['schedules', 'assets', 'plans', 'albums', 'shoppingList', 'fixedExpenses', 'savingsGoals', 'savingsLogs', 'budgetReports', 'config', 'messages'];
     function famDownload(name, text, mime) {
+        // 앱(WebView)에서는 내려받기가 안 되므로 폰 다운로드 폴더에 저장
+        if (typeof famSaveFile === 'function' && window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.SeolyeonNative && Capacitor.Plugins.SeolyeonNative.saveFile) {
+            const b64 = btoa(unescape(encodeURIComponent(text))); famSaveFile(name, b64, mime.split(';')[0]); return;
+        }
         const blob = new Blob([text], { type: mime }), url = URL.createObjectURL(blob), a = document.createElement('a');
         a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
         setTimeout(() => URL.revokeObjectURL(url), 5000);

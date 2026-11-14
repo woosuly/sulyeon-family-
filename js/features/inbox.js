@@ -31,6 +31,19 @@ function ibParseCard(text, ts) {
     r.key = 'c_' + ibHash([r.card, r.cancel ? 'x' : 'o', r.date, r.hm, r.amt, r.merchant.replace(/\s/g, '')].join('|'));
     return r;
 }
+// 이상 결제: 새벽 결제, 같은 가맹점·금액이 10분 안에 두 번, 평소보다 훨씬 큰 금액
+function ibCardWarn(c, batch) {
+    const w = [], h = c.hm ? +c.hm.split(':')[0] : -1;
+    if (h >= 0 && h < 5) w.push('새벽 결제');
+    const toMin = x => x.hm ? +x.hm.split(':')[0] * 60 + +x.hm.split(':')[1] : -999;
+    if (batch.some(o => o !== c && !o.cancel && o.date === c.date && o.amt === c.amt && o.merchant === c.merchant && Math.abs(toMin(o) - toMin(c)) <= 10)) w.push('같은 결제 두 번');
+    try {
+        const past = (typeof anaAll === 'function' ? anaAll() : []).filter(e => e.type === '지출' && e.amt > 0).map(e => e.amt).sort((a, b) => a - b);
+        const med = past.length >= 10 ? past[Math.floor(past.length / 2)] : 0;
+        if (med && c.amt >= Math.max(med * 8, 300000)) w.push('평소보다 큰 금액');
+    } catch (e) {}
+    return w.join(' · ');
+}
 function ibCardCat(merchant) {
     const h = typeof famHistCat === 'function' ? famHistCat(merchant, '지출') : '';
     if (h) return h;
@@ -76,7 +89,7 @@ async function ibDrain(opt) {
             await db.collection('inbox').doc(c.key).set({
                 id: c.key, kind: 'card', owner: me, status: 'pending', at: Date.now(), ts: c.ts,
                 card: c.card, member: ibCards[c.card], date: c.date, amt: c.cancel ? -c.amt : c.amt, cancel: c.cancel,
-                merchant: c.merchant, category: ibCardCat(c.merchant), raw: c.raw
+                merchant: c.merchant, category: ibCardCat(c.merchant), raw: c.raw, hm: c.hm || '', warn: c.cancel ? '' : ibCardWarn(c, cards)
             });
             seen.add(c.key);
         }
@@ -95,7 +108,8 @@ async function ibDrain(opt) {
                 if (!a.skip) await db.collection('inbox').doc(s.key).set({
                     id: s.key, kind: s.kind, owner: me, status: 'pending', at: Date.now(), ts: s.ts, from: s.from, name: s.name || '', number: s.number || '', room: s.room || '', raw: s.raw,
                     type: a.type || '문자', summary: a.summary || '', schedule: a.schedule && a.schedule.date ? a.schedule : null, reply: a.reply || '',
-                    shop: Array.isArray(a.shop) ? a.shop.filter(x => typeof x === 'string' && x.trim()).slice(0, 10) : []
+                    shop: Array.isArray(a.shop) ? a.shop.filter(x => typeof x === 'string' && x.trim()).slice(0, 10) : [],
+                    due: a.due && /^\d{4}-\d{2}-\d{2}$/.test(a.due.date || '') ? { date: a.due.date, time: /^\d{1,2}:\d{2}$/.test(a.due.time || '') ? a.due.time : '', kind: a.due.kind || '기타', what: a.due.what || '' } : null
                 });
                 seen.add(s.key);
             }
@@ -110,12 +124,14 @@ async function ibDrain(opt) {
 async function ibAskAI(list) {
     const today = typeof famYmd === 'function' ? famYmd(new Date()) : new Date().toISOString().slice(0, 10);
     const sys = `너는 정우설의 문자·카톡 비서다. 오늘은 ${today}. 받은 문자·카톡 목록을 보고 JSON 배열만 출력한다 (설명·코드블록 없이).
-각 문자마다 {"i":번호,"skip":true|false,"type":"주의|택배|예약|병원|고지서|일정|개인|기타","summary":"한 줄 요약(누가·무엇·언제)","schedule":{"date":"YYYY-MM-DD","time":"HH:MM 또는 빈칸","title":"일정 제목","place":"장소 또는 빈칸"} 또는 null,"reply":"답장 초안 또는 빈칸","shop":["장볼 물건"] 또는 []}
+각 문자마다 {"i":번호,"skip":true|false,"type":"주의|택배|예약|병원|고지서|일정|개인|기타","summary":"한 줄 요약(누가·무엇·언제)","schedule":{"date":"YYYY-MM-DD","time":"HH:MM 또는 빈칸","title":"일정 제목","place":"장소 또는 빈칸"} 또는 null,"reply":"답장 초안 또는 빈칸","shop":["장볼 물건"] 또는 [],"due":{"date":"YYYY-MM-DD","time":"HH:MM 또는 빈칸","kind":"기프티콘|납부|무료취소|잔금|반납|만료|기타","what":"짧은 이름"} 또는 null}
 규칙:
 - 스미싱·피싱 의심(모르는 번호가 링크만 보냄, 국제발신의 계정·연락처 등록/결제/택배 주소 확인 요구, 가족·지인 사칭, 단축 URL 클릭 유도 등)은 type:"주의", summary는 "스미싱 의심 — 링크 누르지 말 것"처럼 쓰고 reply는 반드시 빈칸.
 - 광고·홍보·단순 결제/배송완료 안내·스팸처럼 할 일이 없는 문자는 skip:true.
 - 날짜·시간이 정해진 방문·예약·진료·약속·납부기한이 있으면 schedule을 채운다. 연도가 없으면 오늘 이후 가장 가까운 날짜.
 - 답장이 필요한 문자(아는 사람·업체의 질문, 확인 요청, 택배기사 문의 등)에만 reply를 쓴다. 정체가 불분명한 번호에는 쓰지 않는다. 정우설이 보내는 짧고 공손한 존댓말 1~2문장.
+- 기한이 있는 것은 due에 넣는다: 기프티콘·쿠폰·상품권 유효기간(kind 기프티콘, what은 상품명), 고지서·카드대금 납부기한(납부), 예약의 무료취소 기한(무료취소)·잔금일(잔금), 대여 반납일(반납), 포인트·마일리지·멤버십 소멸일(만료).
+  기프티콘 선물 문자·카톡은 광고가 아니므로 skip하지 않는다.
 - '연락처 등록됨'으로 표시된 보낸 사람은 아는 사람이다(가족·지인). 아는 사람의 문자는 스미싱으로 보지 않는다.
 - 카톡 대화방 메시지는 일정·약속, 장보기 부탁("올 때 우유", "휴지 사와")만 뽑고 잡담은 skip:true. 장볼 물건은 shop에 물건 이름만.
 - 문자에 없는 내용은 지어내지 않는다.`;
@@ -139,8 +155,8 @@ function ibListen() {
 function ibRenderBar() {
     const el = document.getElementById('ib-bar'); if (!el) return;
     if (!ibItems.length) { el.innerHTML = ''; return; }
-    const nc = ibItems.filter(x => x.kind === 'card').length, ns = ibItems.filter(x => x.kind !== 'card' && x.schedule).length, nr = ibItems.filter(x => x.reply).length;
-    const parts = [nc && `가계부 ${nc}`, ns && `일정 ${ns}`, nr && `답장 ${nr}`].filter(Boolean);
+    const nc = ibItems.filter(x => x.kind === 'card').length, ns = ibItems.filter(x => x.kind !== 'card' && x.schedule).length, nr = ibItems.filter(x => x.reply).length, nd = ibItems.filter(x => x.due).length;
+    const parts = [nc && `가계부 ${nc}`, ns && `일정 ${ns}`, nd && `기한 ${nd}`, nr && `답장 ${nr}`].filter(Boolean);
     el.innerHTML = `<button class="ib-bar" onclick="ibOpen()">${fi('list')}<span>확인 대기 <b>${ibItems.length}</b>건${parts.length ? ' · ' + parts.join(' · ') : ''}</span>${fi('expand')}</button>`;
 }
 function ibOpen() {
@@ -166,7 +182,7 @@ function ibRender() {
     if (cards.length) {
         h += `<div class="ib-sec"><span>가계부 반영 ${cards.length}건</span><button class="fam-btn pri" onclick="ibCardAll()">모두 반영</button></div>`;
         h += cards.map(c => `<div class="ib-item">
-            <div class="ib-row"><span class="ib-date">${ibMD(c.date)}</span><span class="ib-name">${famEsc(c.merchant)}${c.cancel ? ' <em class="ib-tag">취소</em>' : ''}</span><b class="ib-amt ${c.cancel ? 'minus' : ''}">${ibWon(c.amt)}</b></div>
+            <div class="ib-row"><span class="ib-date">${ibMD(c.date)}</span><span class="ib-name">${famEsc(c.merchant)}${c.cancel ? ' <em class="ib-tag">취소</em>' : ''}${c.warn ? ` <em class="ib-tag warn">⚠ ${famEsc(c.warn)}</em>` : ''}</span><b class="ib-amt ${c.cancel ? 'minus' : ''}">${ibWon(c.amt)}</b></div>
             <div class="ib-row"><select id="ibc-${c.id}" class="fam-sel ib-cat">${cats(c.category)}</select><span class="ib-sub">${famEsc(c.member)}</span>
             <button class="fam-btn" onclick="ibSkip('${c.id}')">제외</button><button class="fam-btn pri" onclick="ibCardOk('${c.id}')">반영</button></div></div>`).join('');
     }
@@ -180,6 +196,7 @@ function ibRender() {
             <details class="ib-raw"><summary>원문</summary>${famEsc(s.raw)}</details>
             ${sc ? `<div class="ib-sch">${fi('calendar')}<span>${ibMD(sc.date)}${sc.time ? ' ' + famEsc(sc.time) : ''} ${famEsc(sc.title || '')}${sc.place ? ' · ' + famEsc(sc.place) : ''}</span><button class="fam-btn pri" onclick="ibSchOk('${s.id}')">일정 등록</button></div>` : ''}
             ${s.reply ? `<textarea id="ibr-${s.id}" class="fam-in ib-reply" rows="2">${famEsc(s.reply)}</textarea>` : ''}
+            ${s.due ? `<div class="ib-sch">${fi('clock')}<span>${ibMD(s.due.date)}${s.due.time ? ' ' + famEsc(s.due.time) : ''} ${famEsc(s.due.kind)}${s.due.what ? ' · ' + famEsc(s.due.what) : ''}<br><small class="ib-sub">${famEsc(ibDueWhen(s.due).label)}</small></span><button class="fam-btn pri" onclick="ibDueOk('${s.id}')">알림 받기</button></div>` : ''}
             ${s.shop && s.shop.length ? `<div class="ib-sch">${fi('cart')}<span>장보기: ${s.shop.map(famEsc).join(', ')}</span><button class="fam-btn pri" onclick="ibShopOk('${s.id}')">장보기 추가</button></div>` : ''}
             <div class="ib-row ib-acts ib-wrap">${s.reply ? ibSendBtns(s) : ''}${s.number && !s.reply ? `<button class="fam-btn" onclick="ibN().dial({number:'${s.number}'})">전화</button>` : ''}<button class="fam-btn" onclick="ibSkip('${s.id}')">확인 완료</button></div></div>`;
         }).join('');
@@ -198,12 +215,32 @@ function ibSendBtns(s) {
     if (!N) b.push(`<button class="fam-btn" onclick="famShare(ibReplyText('${s.id}'))">보내기</button>`);
     return b.join('');
 }
+// 마감 알림 시각: 기프티콘·만료는 7일 전, 무료취소·잔금은 전날 저녁, 납부·반납은 전날 아침
+function ibDueWhen(d) {
+    const base = new Date(d.date + 'T' + (d.time || '09:00') + ':00'), at = new Date(base);
+    let label;
+    if (/기프티콘|만료/.test(d.kind)) { at.setDate(at.getDate() - 7); at.setHours(9, 0, 0, 0); label = '7일 전 아침 9시에 알림'; }
+    else if (/무료취소|잔금/.test(d.kind)) { at.setDate(at.getDate() - 1); at.setHours(19, 0, 0, 0); label = '전날 저녁 7시에 알림'; }
+    else { at.setDate(at.getDate() - 1); at.setHours(9, 0, 0, 0); label = '전날 아침 9시에 알림'; }
+    if (at.getTime() < Date.now() + 6e4) { const t = new Date(Date.now() + 10 * 6e4); return { at: Math.min(base.getTime() - 3600e3, t.getTime()) > Date.now() ? Math.min(base.getTime() - 3600e3, t.getTime()) : t.getTime(), label: '기한이 가까워 곧 알림' }; }
+    return { at: at.getTime(), label };
+}
+async function ibDueOk(id) {
+    const s = ibGet(id); if (!s || !s.due) return;
+    const w = ibDueWhen(s.due), title = `${s.due.what || s.summary || '기한'} ${s.due.kind} ${ibMD(s.due.date)}${s.due.time ? ' ' + s.due.time : ''}`;
+    try {
+        await agRemindAdd({ at: w.at, title, text: s.summary || '', kind: 'due' });
+        const rest = s.reply || s.schedule || (s.shop && s.shop.length);
+        await db.collection('inbox').doc(id).update(rest ? { due: null } : { status: 'done', doneAt: Date.now(), due: null });
+        famToast('알림을 걸었습니다 · ' + w.label);
+    } catch (e) { famToast('알림 실패: ' + e.message); }
+}
 async function ibShopOk(id) {
     const s = ibGet(id); if (!s || !s.shop || !s.shop.length) return;
     try {
         const b = db.batch(); s.shop.forEach((t, i) => { const sid = 'shop_' + Date.now() + '_' + i; b.set(db.collection('shoppingList').doc(sid), { id: sid, text: t, done: false, by: famUser(), createdAt: Date.now() + i, src: s.kind }); });
         await b.commit();
-        await db.collection('inbox').doc(id).update(s.reply || s.schedule ? { shop: [] } : { status: 'done', doneAt: Date.now() });
+        await db.collection('inbox').doc(id).update(s.reply || s.schedule || s.due ? { shop: [] } : { status: 'done', doneAt: Date.now() });
         famToast('장보기에 ' + s.shop.length + '개 추가했습니다');
     } catch (e) { famToast('추가 실패: ' + e.message); }
 }
@@ -228,7 +265,7 @@ async function ibSchOk(id) {
     const sc = s.schedule, sid = 'sch_' + Date.now(), time = /^\d{1,2}:\d{2}$/.test(sc.time || '') ? sc.time : '';
     try {
         await db.collection('schedules').doc(sid).set({ id: sid, date: sc.date, priority: '일반', member: s.owner, category: '개인', timeType: time ? 'timed' : 'allday', startTime: time, endTime: '', place: sc.place || '', memo: sc.title || s.summary, repeat: null, src: 'sms' });
-        await db.collection('inbox').doc(id).update(s.reply || (s.shop && s.shop.length) ? { schedule: null, schDone: sid } : { status: 'done', doneAt: Date.now(), schDone: sid });
+        await db.collection('inbox').doc(id).update(s.reply || s.due || (s.shop && s.shop.length) ? { schedule: null, schDone: sid } : { status: 'done', doneAt: Date.now(), schDone: sid });
         famToast(`${ibMD(sc.date)} 일정에 등록했습니다`);
     } catch (e) { famToast('등록 실패: ' + e.message); }
 }
