@@ -79,7 +79,7 @@
                 <div class="full"><label>계좌·보관처 (선택)</label><input id="svg-acc" value="${famEsc(x.account || '')}" placeholder="예: 카카오뱅크 세이프박스"></div>
                 <div><label>목표 금액 (만원, 선택)</label><input id="svg-tgt" type="number" inputmode="numeric" value="${x.target ? x.target / 10000 : ''}" placeholder="300"></div>
                 <div><label>목표 시점 (선택)</label><input id="svg-dl" type="month" value="${famEsc((x.deadline || '').slice(0, 7))}"></div>
-                ${id ? '' : '<div class="full"><label>이미 모은 금액 (만원, 선택)</label><input id="svg-init" type="number" inputmode="numeric" placeholder="0"></div>'}
+                ${id ? `<div class="full"><label>현재 잔액 (원) <small style="color:#94a3b8;font-weight:500">· 통장 금액과 다르면 고치세요 (차액을 '잔액 맞춤'으로 기록)</small></label><input id="svg-bal" type="number" inputmode="numeric" value="${svSaved(id)}"></div>` : '<div class="full"><label>이미 모은 금액 (원, 선택)</label><input id="svg-init" type="number" inputmode="numeric" placeholder="예: 3500000"></div>'}
             </div>
             <div class="fam-btns">${id ? `<button class="fam-btn" onclick="svGoalArchive('${id}')">보관</button><button class="fam-btn" style="color:#dc2626" onclick="svGoalDel('${id}')">삭제</button>` : ''}<button class="fam-btn pri" onclick="svGoalSave('${id || ''}')">저장</button></div>`);
     }
@@ -88,10 +88,14 @@
         if (!name) { famToast('이름을 입력하세요'); return; }
         const doc = { name, account: v('acc').trim(), target: Math.round((+v('tgt') || 0) * 10000), deadline: v('dl') };
         try {
-            if (id) await db.collection('savingsGoals').doc(id).update(doc);
-            else {
+            if (id) {
+                await db.collection('savingsGoals').doc(id).update(doc);
+                // 잔액을 직접 고치면 차액만 기록 (지난 입출금 기록은 그대로)
+                const bal = v('bal').trim(), diff = bal === '' ? 0 : Math.round(+bal) - svSaved(id);
+                if (diff) { const lid = 'sl_' + Date.now(); await db.collection('savingsLogs').doc(lid).set({ id: lid, goalId: id, date: famYmd(new Date()), amt: diff, memo: '잔액 맞춤', by: famUser(), createdAt: Date.now() }); }
+            } else {
                 const gid = 'goal_' + Date.now(); await db.collection('savingsGoals').doc(gid).set({ id: gid, ...doc, createdAt: Date.now(), by: famUser() });
-                const init = Math.round((+v('init') || 0) * 10000);
+                const init = Math.round(+v('init') || 0);
                 if (init) { const lid = 'sl_' + Date.now(); await db.collection('savingsLogs').doc(lid).set({ id: lid, goalId: gid, date: famYmd(new Date()), amt: init, memo: '시작 금액', by: famUser(), createdAt: Date.now() }); }
             }
             famSheetClose(); famToast('저장했습니다');
@@ -108,7 +112,7 @@
         famSheet(`<div class="fam-h"><b>💰 ${famEsc(x.name)}</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
             <div style="font-size:13px;color:#475569;margin:-4px 0 10px">${svW(svSaved(id))}${x.target ? ' / ' + svW(x.target) : ''}${x.account ? ' · ' + famEsc(x.account) : ''}</div>
             <div class="fam-box">${logs.length ? logs.map(l => `<div class="fam-row"><span style="flex:1"><b style="color:${l.amt < 0 ? '#dc2626' : '#059669'}">${l.amt < 0 ? '' : '+'}${svW(l.amt)}</b> <small style="color:#94a3b8">${famEsc(l.date)} · ${famEsc(l.memo || '')}${l.by ? ' · ' + famEsc(l.by) : ''}</small></span><button class="fam-x" style="width:24px;height:24px;font-size:10px" onclick="svLogDel('${l.id}','${id}')">✕</button></div>`).join('') : '<div class="fam-note">입출금 기록이 없습니다.</div>'}</div>
-            <div class="fam-btns"><button class="fam-btn" onclick="svGoalForm('${id}')">수정</button><button class="fam-btn pri" onclick="svLogForm('${id}',1)">＋ 입금</button></div>`);
+            <div class="fam-btns"><button class="fam-btn" onclick="svGoalForm('${id}')">수정 · 잔액 맞추기</button><button class="fam-btn" onclick="svLogForm('${id}',-1)">－ 출금</button><button class="fam-btn pri" onclick="svLogForm('${id}',1)">＋ 입금</button></div>`);
     }
     function svLogForm(gid, sign) {
         const x = svGoals.find(g => g.id === gid); if (!x) return;
