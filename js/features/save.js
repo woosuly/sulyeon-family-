@@ -34,6 +34,15 @@
         fxRunning = false;
     }
     function fxOpen() { showSection('save-section'); }
+    // 가계부 화면 아래 저축 현황 (목표 대비 진행률)
+    function svAssetBox() {
+        const el = document.getElementById('asset-sv-box'); if (!el) return;
+        const goals = svGoals.filter(x => !x.archived); if (!goals.length) { el.innerHTML = ''; return; }
+        const tot = goals.reduce((a, x) => a + svSaved(x.id), 0);
+        el.innerHTML = `<div class="fam-box" style="margin:0 0 14px;cursor:pointer" onclick="showSection('save-section')"><h4 style="display:flex;align-items:center">저축 현황<span style="margin-left:auto;font-size:13px;color:var(--month-header)">${svW(tot)}</span></h4>` +
+            goals.map(x => { const s = svSaved(x.id), t = Number(x.target) || 0, p = t ? Math.min(100, Math.round(s / t * 100)) : 0;
+                return `<div style="margin:6px 0 8px"><div style="display:flex;font-size:12.5px"><b style="font-weight:700;color:#334155">${famEsc(x.name)}</b><span style="margin-left:auto;color:#64748b">${svW(s)}${t ? ' / ' + svW(t) + ' · ' + p + '%' : ''}</span></div>${t ? `<div class="sv-bar" style="margin:4px 0 0"><i style="width:${p}%;background:var(--month-header)"></i></div>` : ''}</div>`; }).join('') + '</div>';
+    }
     function svRender() {
         const g = document.getElementById('sv-goals'), fx = document.getElementById('sv-fixed'); if (!g || !fx) return;
         const goals = svGoals.filter(x => !x.archived).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
@@ -58,6 +67,7 @@
         }).join('') + (() => { const on = rows.filter(f => f.active !== false), e = on.filter(f => f.kind !== 'saving').reduce((a, f) => a + (+f.amt || 0), 0), v = on.filter(f => f.kind === 'saving').reduce((a, f) => a + (+f.amt || 0), 0); return `<div class="fam-note" style="text-align:right">매월 지출 ${svW(e)} · 저축 ${svW(v)}</div>`; })()
             : '<div class="fam-note">등록된 정기 이체가 없습니다. 관리비·통신비·적금 등을 넣어 두세요.</div>';
         if (typeof subRender === 'function') { subRender(); carRender(); }
+        svAssetBox();
     }
     // ── 목표 ──
     function svGoalForm(id) {

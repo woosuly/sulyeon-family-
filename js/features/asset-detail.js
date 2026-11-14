@@ -71,10 +71,13 @@
             document.getElementById('acal-balance').textContent = (inc-exp).toLocaleString()+'원';
         }
 
-        function showAssetDetail(kind) {
+        function showAssetDetail(kind, keep) {
             const box   = document.getElementById('asset-detail-box');
             const title = document.getElementById('asset-detail-title');
             const list  = document.getElementById('asset-detail-list');
+            const mark = on => document.querySelectorAll('#asset-section .sum-box').forEach(b => b.classList.toggle('on', on && b.classList.contains(kind === 'income' ? 'inc' : 'exp')));
+            if (!keep && box.style.display !== 'none' && box.dataset.kind === kind) { box.style.display = 'none'; mark(false); return; }
+            mark(true);
             box.style.display = 'block';
             box.dataset.kind  = kind; // 차트 클릭 시 재호출용
 
@@ -193,6 +196,20 @@
         // initAssetCharts - 월별 6개월 / 주차별 W# 6주 + 클릭 연동
         let _periodMeta = []; // 차트 인덱스별 기간 정보
 
+        // 손익 꺾은선 위에 값 표시 (만 단위, 음수는 빨강)
+        const famLineLabels = { id: 'famLineLabels', afterDatasetsDraw(ch) {
+            const ctx = ch.ctx; ch.data.datasets.forEach((ds, di) => {
+                if (ds.type !== 'line' || !ch.isDatasetVisible(di)) return;
+                ch.getDatasetMeta(di).data.forEach((pt, i) => {
+                    const v = ds.data[i]; if (v == null) return;
+                    const t = (v > 0 ? '+' : v < 0 ? '-' : '') + (Math.abs(v) >= 1e4 ? Math.round(Math.abs(v) / 1e4).toLocaleString('ko-KR') + '만' : Math.abs(v).toLocaleString('ko-KR'));
+                    ctx.save(); ctx.font = '700 10.5px Pretendard, sans-serif'; ctx.textAlign = 'center';
+                    const w = ctx.measureText(t).width + 8, x = pt.x, y = pt.y - 11;
+                    ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x - w / 2, y - 9, w, 15, 7) : ctx.rect(x - w / 2, y - 9, w, 15); ctx.fill();
+                    ctx.fillStyle = v < 0 ? '#d9465c' : '#334155'; ctx.fillText(t, x, y + 2); ctx.restore();
+                });
+            });
+        } };
         function initAssetCharts() {
             if (aChart) aChart.destroy();
             const ctx = document.getElementById('mainAssetChart')?.getContext('2d');
@@ -213,12 +230,12 @@
                     // 상세 박스 열려있으면 갱신
                     const box = document.getElementById('asset-detail-box');
                     if (box && box.style.display !== 'none') {
-                        showAssetDetail(box.dataset.kind || 'expense');
+                        showAssetDetail(box.dataset.kind || 'expense', true);
                     }
                 },
                 plugins: { legend: { position: 'top', align: 'end', labels: { font: { size: 11 }, boxWidth: 10, boxHeight: 10, usePointStyle: true, pointStyle: 'rectRounded' } } },
                 scales: { x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#64748b' } },
-                          y: { grid: { color: 'rgba(148,163,184,.18)' }, border: { display: false }, ticks: { font: { size: 10 }, color: '#94a3b8', callback: v => v >= 1e4 ? (v / 1e4).toLocaleString('ko-KR') + '만' : v } } }
+                          y: { grid: { color: 'rgba(148,163,184,.18)' }, border: { display: false }, ticks: { font: { size: 10 }, color: '#94a3b8', callback: v => Math.abs(v) >= 1e4 ? (v / 1e4).toLocaleString('ko-KR') + '만' : v } } }
             };
 
             if (assetPeriod === 'month') {
@@ -238,8 +255,9 @@
                 assetSelectedLabel = _periodMeta[5].label;
                 aChart = new Chart(ctx, { data:{ labels, datasets:[
                     {type:'bar',label:'수입',data:incData,backgroundColor:famChartColor('inc'),borderRadius:6,maxBarThickness:22},
-                    {type:'bar',label:'지출',data:expData,backgroundColor:famChartColor('exp'),borderRadius:6,maxBarThickness:22}
-                ]}, options: chartOpts });
+                    {type:'bar',label:'지출',data:expData,backgroundColor:famChartColor('exp'),borderRadius:6,maxBarThickness:22},
+                    {type:'line',label:'손익',data:incData.map((v,i)=>v-expData[i]),borderColor:'#475569',backgroundColor:'#475569',borderWidth:2,pointRadius:3.5,pointBackgroundColor:'#fff',pointBorderWidth:2,tension:.35,order:-1}
+                ]}, options: chartOpts, plugins: [famLineLabels] });
 
             } else {
                 const labels=[]; const incData=[]; const expData=[];
@@ -263,8 +281,9 @@
                 assetSelectedLabel = _periodMeta[5].label;
                 aChart = new Chart(ctx, { data:{ labels, datasets:[
                     {type:'bar',label:'수입',data:incData,backgroundColor:famChartColor('inc'),borderRadius:6,maxBarThickness:22},
-                    {type:'bar',label:'지출',data:expData,backgroundColor:famChartColor('exp'),borderRadius:6,maxBarThickness:22}
-                ]}, options: chartOpts });
+                    {type:'bar',label:'지출',data:expData,backgroundColor:famChartColor('exp'),borderRadius:6,maxBarThickness:22},
+                    {type:'line',label:'손익',data:incData.map((v,i)=>v-expData[i]),borderColor:'#475569',backgroundColor:'#475569',borderWidth:2,pointRadius:3.5,pointBackgroundColor:'#fff',pointBorderWidth:2,tension:.35,order:-1}
+                ]}, options: chartOpts, plugins: [famLineLabels] });
             }
 
             updateAssetSummaryCards();

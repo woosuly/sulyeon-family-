@@ -95,9 +95,11 @@
 function famThemeHex() { return (getComputedStyle(document.documentElement).getPropertyValue('--month-header') || '#2b3a55').trim() || '#2b3a55'; }
 function famChartColor(kind, a) {
     if (kind === 'exp') return `rgba(225,86,107,${a ?? .7})`;
-    const h = famThemeHex().replace('#', ''), f = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
-    const n = parseInt(f, 16); if (isNaN(n)) return `rgba(43,58,85,${a ?? .75})`;
-    return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a ?? .75})`;
+    const raw = famThemeHex(), m = raw.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+    if (m) return `rgba(${m[1]},${m[2]},${m[3]},${a ?? .8})`;
+    const h = ((raw.match(/#[0-9a-f]{3,6}/i) || ['#2b3a55'])[0]).replace('#', ''), f = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+    const n = parseInt(f, 16); if (isNaN(n)) return `rgba(43,58,85,${a ?? .8})`;
+    return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a ?? .8})`;
 }
 // ── 공통: 작은 드롭다운 메뉴 (버튼 여러 줄 대신) — famMenu(버튼, [['이름', 함수], ...]) ──
 function famMenu(anchor, items) {

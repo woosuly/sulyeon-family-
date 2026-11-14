@@ -857,3 +857,13 @@ header button .fi { color:#fff; }
 .btn-home:not(:has(svg)){width:auto;padding:0 12px!important;font-size:12px!important}
 .sum-box{min-width:0}
 .sum-box>b{display:block;font-size:15px;font-weight:800;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 머리줄 칸: 높이·글자 통일 (드롭다운 포함) */
+.pg-acts>*{height:36px!important;min-height:36px!important;box-sizing:border-box!important;margin:0!important;font-size:13px!important;line-height:1!important;border-radius:10px!important}
+.pg-acts .pg-sel{padding:0 28px 0 12px!important;min-width:76px}
+.pg-acts .pg-btn{padding:0 12px!important;min-width:56px}
+.pg-acts .pg-more,.pg-acts .btn-home:has(svg){width:36px!important;min-width:36px!important;padding:0!important;display:inline-flex;align-items:center;justify-content:center}
+/* 요약 칸: 같은 높이, 눌린 칸 표시 */
+#asset-section .sum-box,#asset-cal-section .sum-box{min-height:62px}
+.sum-box.on{background:#fff;box-shadow:0 0 0 2px var(--month-header) inset}
+.sum-box.exp.on{box-shadow:0 0 0 2px #e1566b inset}
+.pg-acts .btn-home:has(svg){font-size:0!important}
