@@ -136,6 +136,19 @@
                 <div class="fam-note" style="margin:0 0 10px">Firestore 데이터를 파일로 내려받습니다. 월 1회 정도 받아 두세요.</div>
                 <div class="fam-btns" style="margin-top:0"><button class="fam-btn pri" onclick="famBackupJSON(this)">전체 백업 (JSON)</button><button class="fam-btn" onclick="famBackupCSV(this)">가계부 (CSV · 엑셀)</button></div>
             </div>`;
+        famSetFold();
+    }
+    // 설정 단락 접기: 제목(h4)을 누르면 펼치고 접음. 기본은 모두 접힘, 펼친 단락은 기억
+    function famSetFold() {
+        let open = {}; try { open = JSON.parse(famLS('famSetOpen') || '{}'); } catch (e) {}
+        document.querySelectorAll('#fam-settings-body > .fam-box').forEach(box => {
+            const h = box.querySelector(':scope > h4'); if (!h || box.dataset.fold) return;
+            const key = h.textContent.replace(/\s+/g, '').slice(0, 20), body = document.createElement('div'); body.className = 'fs-body';
+            while (h.nextSibling) body.appendChild(h.nextSibling);
+            box.appendChild(body); box.dataset.fold = '1'; h.classList.add('fs-h');
+            box.classList.toggle('fs-open', !!open[key]);
+            h.onclick = () => { const on = !box.classList.contains('fs-open'); box.classList.toggle('fs-open', on); open[key] = on; famLS('famSetOpen', JSON.stringify(open)); };
+        });
     }
 
     // ═══════════════════════════════════════════════════════════

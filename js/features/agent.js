@@ -115,31 +115,31 @@ function agRenderBar() {
     const since = Date.now() - 20 * 3600e3, b = agBriefs.filter(x => x.at > since).sort((a, c) => c.at - a.at)[0];
     const soon = agRems.filter(r => r.at > Date.now() && r.at < Date.now() + 24 * 3600e3).sort((a, c) => a.at - c.at);
     el.innerHTML = (b ? `<button class="ib-bar" onclick="agBriefOpen('${b.id}')">${fi('news')}<span>${famEsc(b.title)}</span>${fi('expand')}</button>` : '') +
-        (soon.length ? `<button class="ib-bar" onclick="famOpenSettings();setTimeout(()=>document.getElementById('ag-set')?.scrollIntoView({behavior:'smooth'}),200)">${fi('clock')}<span>다음 알림 <b>${famEsc(agFmt(soon[0].at))}</b> ${famEsc(soon[0].title)}${soon.length > 1 ? ` 외 ${soon.length - 1}건` : ''}</span></button>` : '');
+        (soon.length ? `<button class="ib-bar" onclick="famOpenSettings();setTimeout(()=>{const b=document.getElementById('ag-set');if(b){b.classList.add('fs-open');b.scrollIntoView({behavior:'smooth'})}},200)">${fi('clock')}<span>다음 알림 <b>${famEsc(agFmt(soon[0].at))}</b> ${famEsc(soon[0].title)}${soon.length > 1 ? ` 외 ${soon.length - 1}건` : ''}</span></button>` : '');
 }
 
 // ── 설정 화면: 브리핑 받아보기, 예정 알림, 기억 노트 ──
 function agSetHtml() {
     const rems = agRems.filter(r => r.at > Date.now() - 6e4).sort((a, b) => a.at - b.at).slice(0, 20);
-    return `<div class="fam-box" id="ag-set"><h4>🤖 비서</h4>
+    return `<div class="fam-box" id="ag-set"><h4>🗓️ 비서 · 브리핑 · 알림</h4>
         <div class="fam-note" style="margin:0 0 10px">아침 07:00 브리핑, 19:00 내일 일정 준비(장소가 있는 일정), 목 19:30 주말 제안, 일 20:00 주간 요약이 자동으로 옵니다.</div>
         <div class="fam-btns" style="margin-top:0">${Object.entries(AG_TYPES).map(([k, n]) => `<button class="fam-btn" onclick="agBriefNow('${k}')">${n}</button>`).join('')}</div>
         ${window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.SeolyeonNative && Capacitor.Plugins.SeolyeonNative.openAssistantSettings ? `<span class="fam-lbl">홈 버튼 길게 누르면 설연</span>
         <div class="fam-note" style="margin:0 0 6px">① 아래 버튼 → <b>디지털 어시스턴트 앱</b> → <b>설연</b> 선택<br>② 홈 버튼을 길게 눌러 '서클 투 서치'가 뜨면: 설정 → 디스플레이 → 내비게이션 바 → <b>서클 투 서치</b> 끄기<br>앱 아이콘을 길게 누르면 <b>말로 하기</b> 바로가기도 있습니다.</div>
         <div class="fam-btns" style="margin-top:0"><button class="fam-btn" onclick="Capacitor.Plugins.SeolyeonNative.openAssistantSettings()">기본 어시스턴트 앱 설정 열기</button></div>` : ''}
         ${typeof stSetHtml === 'function' ? stSetHtml() : ''}
-        <span class="fam-lbl">택배 조회 키 (스마트택배)</span>
-        <input class="fam-in" type="text" style="-webkit-text-security:disc" value="${famEsc((typeof famKeys === 'function' && famKeys().sweettracker) || '')}" placeholder="info.sweettracker.co.kr 에서 받은 키" autocomplete="off" onchange="famSetKey('sweettracker',this.value.trim());famToast('택배 조회 키를 저장했습니다')">
-        <span class="fam-lbl">또는 tracker.delivery 키 (Client ID:Secret)</span>
-        <input class="fam-in" type="text" style="-webkit-text-security:disc" value="${famEsc((typeof famKeys === 'function' && famKeys().trackerdelivery) || '')}" placeholder="console.tracker.delivery 의 ID:Secret" autocomplete="off" onchange="famSetKey('trackerdelivery',this.value.trim());famToast('저장했습니다')">
-        <div class="fam-note" style="margin:4px 0 0">둘 중 하나만 있으면 됩니다. 키가 없어도 택배 목록의 [조회]로 네이버 택배 조회를 열 수 있습니다.</div>
-        <span class="fam-lbl">비서 실행 기록</span>
-        <div class="fam-note" style="margin:0 0 6px">비서가 실패했거나 👎를 누른 요청을 모아 봅니다. 복사해서 Claude에게 보내면 고칠 곳을 찾기 쉽습니다.</div>
-        <div class="fam-btns" style="margin-top:0"><button class="fam-btn" onclick="brRunsOpen()">실행 기록 보기</button></div>
+        <div class="fs-row"><div><b>비서 실행 기록</b><small>실패·👎 요청 모아 보기 (복사해서 Claude에게)</small></div><button class="fam-btn" onclick="brRunsOpen()">보기</button></div>
         <span class="fam-lbl">예정된 알림 ${rems.length}건</span>
         ${rems.length ? rems.map(r => `<div class="ag-li"><span>${famEsc(agFmt(r.at))}</span><b>${famEsc(r.title)}</b><button class="fam-x" onclick="agRemindDel('${r.id}').then(()=>famRenderSettings())">✕</button></div>`).join('') : '<div class="fam-note" style="margin:0">홈에서 "내일 8시에 ○○ 알려줘"라고 입력하세요.</div>'}
         <span class="fam-lbl">기억 노트 ${agNotes.length}건</span>
         ${agNotes.length ? agNotes.slice(0, 30).map(n => `<div class="ag-li"><span>${famEsc(n.by || '')}</span><b>${famEsc(n.text)}</b><button class="fam-x" onclick="agNoteDel('${n.id}').then(()=>famRenderSettings())">✕</button></div>`).join('') : '<div class="fam-note" style="margin:0">홈에서 "○○ 기억해줘"라고 입력하세요.</div>'}
+    </div>
+    <div class="fam-box"><h4>📦 택배 조회</h4>
+        <span class="fam-lbl" style="margin-top:0">스마트택배 키</span>
+        <input class="fam-in" type="text" style="-webkit-text-security:disc" value="${famEsc((typeof famKeys === 'function' && famKeys().sweettracker) || '')}" placeholder="info.sweettracker.co.kr 에서 받은 키" autocomplete="off" onchange="famSetKey('sweettracker',this.value.trim());famToast('택배 조회 키를 저장했습니다')">
+        <span class="fam-lbl">또는 tracker.delivery 키 (Client ID:Secret)</span>
+        <input class="fam-in" type="text" style="-webkit-text-security:disc" value="${famEsc((typeof famKeys === 'function' && famKeys().trackerdelivery) || '')}" placeholder="console.tracker.delivery 의 ID:Secret" autocomplete="off" onchange="famSetKey('trackerdelivery',this.value.trim());famToast('저장했습니다')">
+        <div class="fam-note" style="margin:4px 0 0">둘 중 하나만 있으면 됩니다. 키가 없어도 택배 목록의 [조회]로 네이버 택배 조회를 열 수 있습니다.</div>
     </div>`;
 }
 

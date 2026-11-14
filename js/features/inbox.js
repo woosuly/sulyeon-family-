@@ -288,16 +288,14 @@ async function ibSchOk(id) {
 // ── 설정 화면 ─────────────────────────────────────────────
 function ibSetHtml() {
     if (!ibN()) return '';
-    return `<div class="fam-box"><h4>📥 문자 비서</h4>
-        <div class="fam-note" style="margin:0 0 10px">이 폰의 문자를 읽어 카드 결제는 가계부 반영 대기로, 택배·예약 등은 요약·일정·답장 초안으로 올립니다. 반영은 확인을 눌러야 됩니다. 인증번호 문자는 저장하지 않습니다.</div>
-        <div id="ib-state" class="fam-note" style="margin:0 0 8px">상태 확인 중…</div>
-        <div class="fam-btns" style="margin-top:0"><button class="fam-btn" onclick="ibN().openCardListenerSettings()">알림 읽기 허용</button><button class="fam-btn" onclick="ibAskSms()">문자함 읽기 허용</button>${ibN().lookupContacts ? '<button class="fam-btn" onclick="ibAskContacts()">연락처 허용</button>' : ''}</div>
-        ${ibN().kakaoRooms ? `<span class="fam-lbl">카톡: 받을 대화방</span><div id="ib-rooms" class="fam-note" style="margin:0">불러오는 중…</div><div class="fam-note">예약·택배 같은 업체 알림톡은 방을 고르지 않아도 받습니다.</div>${typeof kkSetHtml === 'function' ? kkSetHtml() : ''}` : ''}
-        <span class="fam-lbl">문자: 안 받을 사람</span>
-        <div class="fam-note" style="margin:0;display:flex;align-items:center;gap:8px"><span style="flex:1">${ibBlockList().length ? '안 받는 번호·발신자 <b>' + ibBlockList().length + '</b>개' : '모든 문자를 받습니다 (광고는 AI가 걸러냄)'}</span><button class="fam-btn" style="flex:none" onclick="ibBlockOpen()">편집</button></div>
-        <span class="fam-lbl">가계부에 넣을 카드 (끝 4자리 · 사용자)</span>
-        <input class="fam-in" value="${famEsc(Object.entries(ibCards).map(([k, v]) => k + ' ' + v).join(', '))}" placeholder="예: 1089 정우설" onchange="ibSetCards(this.value)">
-        <div class="fam-note">허용 버튼이 회색으로 막혀 있으면: 설정 → 애플리케이션 → 설연 → 오른쪽 위 ⋮ → '제한된 설정 허용' 후 다시 누르세요.</div>
+    return `<div class="fam-box"><h4>📥 문자·카톡 비서</h4>
+        <div class="fam-note" style="margin:0 0 8px">카드 결제는 가계부 확인 대기로, 택배·예약 등은 요약·일정·답장 초안으로 올립니다. 인증번호 문자는 저장하지 않습니다.</div>
+        <div id="ib-state" class="fs-perm">권한 확인 중…</div>
+        ${ibN().kakaoRooms ? `<div class="fs-row"><div><b>카톡 받을 방</b><small id="ib-rooms">불러오는 중…</small></div><button class="fam-btn" onclick="ibRoomsOpen()">방 고르기</button></div>` : ''}
+        <div class="fs-row"><div><b>문자 안 받을 사람</b><small>${ibBlockList().length ? ibBlockList().length + '명 · 광고는 AI가 걸러냄' : '없음 · 광고는 AI가 걸러냄'}</small></div><button class="fam-btn" onclick="ibBlockOpen()">편집</button></div>
+        ${typeof kkSetHtml === 'function' ? kkSetHtml() : ''}
+        <div class="fs-row"><div><b>가계부에 넣을 카드</b><small>끝 4자리와 사용자 (예: 1089 정우설)</small></div></div>
+        <input class="fam-in" style="margin-top:6px" value="${famEsc(Object.entries(ibCards).map(([k, v]) => k + ' ' + v).join(', '))}" placeholder="예: 1089 정우설" onchange="ibSetCards(this.value)">
         <div class="fam-btns"><button class="fam-btn pri" onclick="ibCheckNow(this)">지금 문자 확인</button></div>
     </div>`;
 }
@@ -305,7 +303,12 @@ async function ibStateRefresh() {
     const el = document.getElementById('ib-state'), N = ibN(); if (!el || !N) return;
     try {
         const s = await N.cardState(), k = N.kakaoRooms ? await N.kakaoRooms().catch(() => ({})) : {};
-        el.innerHTML = `알림 읽기: <b>${s.listener ? '허용됨' : '꺼짐'}</b> · 문자함 읽기: <b>${s.sms ? '허용됨' : '꺼짐'}</b>${N.kakaoRooms ? ` · 연락처: <b>${k.contacts ? '허용됨' : '꺼짐'}</b>` : ''}`;
+        // 허용된 건 ✓ 표시만, 꺼진 것만 버튼
+        const items = [['알림 읽기', s.listener, "ibN().openCardListenerSettings()"], ['문자함', s.sms, 'ibAskSms()']];
+        if (N.lookupContacts) items.push(['연락처', k.contacts, 'ibAskContacts()']);
+        const off = items.filter(x => !x[1]);
+        el.innerHTML = items.map(([n, ok, fn]) => ok ? `<span class="ok">✓ ${n}</span>` : `<button class="fam-btn" onclick="${fn}">${n} 허용</button>`).join('') +
+            (off.length ? `<div class="fam-note" style="width:100%;margin:4px 0 0">버튼이 회색으로 막혀 있으면: 폰 설정 → 애플리케이션 → 설연 → ⋮ → '제한된 설정 허용'</div>` : '');
     } catch (e) { el.textContent = '새 버전 앱(APK)이 필요합니다'; }
     ibRoomsRender();
 }
@@ -319,7 +322,7 @@ async function ibRoomsRender() {
     const el = document.getElementById('ib-rooms'), N = ibN(); if (!el || !N || !N.kakaoRooms) return;
     try {
         const r = await N.kakaoRooms(), allow = r.allow || [], seen = r.seen || [];
-        el.innerHTML = `<div style="display:flex;align-items:center;gap:8px"><span style="flex:1">받는 방 <b>${allow.length}</b>개${allow.length ? ' · ' + famEsc(allow.slice(0, 3).join(', ')) + (allow.length > 3 ? ' 외' : '') : ''}<br><small>알림 온 방 ${seen.length}개</small></span><button class="fam-btn" style="flex:none" onclick="ibRoomsOpen()">방 고르기</button></div>`;
+        el.textContent = `받는 방 ${allow.length}개 · 알림 온 방 ${seen.length}개`;
     } catch (e) { el.textContent = '불러오지 못했습니다'; }
 }
 let ibRoomQ = '';

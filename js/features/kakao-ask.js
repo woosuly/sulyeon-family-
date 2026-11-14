@@ -65,8 +65,8 @@ function kkAskVoice() {
 function kkSetHtml() {
     const N = kkN(); if (!N || !N.kakaoAsk) return '';
     setTimeout(() => N.kakaoAsk({}).then(r => { const c = document.getElementById('kk-on'), b = document.getElementById('kk-bt'); if (c) c.checked = !!r.on; if (b) b.checked = r.btOnly !== false; }).catch(() => {}), 50);
-    return `<label class="fam-chk" style="margin-top:8px"><input type="checkbox" id="kk-on" onchange="kkN().kakaoAsk({on:this.checked});famToast(this.checked?'읽어드릴지 묻습니다':'묻지 않습니다')"> 받는 카톡방, 연락처에 저장된 사람의 문자가 오면 <b>"읽어드릴까요?"</b> 묻기</label>
-        <label class="fam-chk" style="margin-left:22px"><input type="checkbox" id="kk-bt" onchange="kkN().kakaoAsk({btOnly:this.checked})"> 차·이어폰(블루투스) 연결됐을 때만</label>`;
+    return `<label class="fs-tog"><div><b>"읽어드릴까요?" 묻기</b><small>받는 카톡방 · 연락처에 있는 사람의 문자</small></div><input type="checkbox" id="kk-on" onchange="kkN().kakaoAsk({on:this.checked});famToast(this.checked?'읽어드릴지 묻습니다':'묻지 않습니다')"></label>
+        <label class="fs-tog sub"><div><b>차·이어폰(블루투스) 연결됐을 때만</b></div><input type="checkbox" id="kk-bt" onchange="kkN().kakaoAsk({btOnly:this.checked})"></label>`;
 }
 (function () {
     const wait = () => { const N = kkN(); if (N && N.addListener) { try { N.addListener('kakaoIn', d => kkPopup(d.room, d.from, d.text, d.n)); } catch (e) {} } };
