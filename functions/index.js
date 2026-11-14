@@ -45,3 +45,8 @@ exports.sendChatNotif = onDocumentCreated(
     await Promise.all(devs.filter(d => dead.includes(d.fcm)).map(d => d.ref.delete().catch(() => null)));
   }
 );
+
+// 비서 엔진 (리마인더·브리핑) — agent.js
+const agent = require('./agent');
+exports.agentTick = agent.agentTick;
+exports.briefNow = agent.briefNow;
