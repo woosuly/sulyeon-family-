@@ -142,7 +142,7 @@ async function weekend(u, day, cfg) {
   const sat = addDays(day, (6 - new Date(day + 'T00:00:00Z').getUTCDay() + 7) % 7), sun = addDays(sat, 1);
   const [w1, w2] = [await weather(cfg.lat, cfg.lon, sat), await weather(cfg.lat, cfg.lon, sun)];
   const busy = [...await schedulesOn(sat), ...await schedulesOn(sun)].filter(e => mine(e, u)).map(schLine);
-  const wish = (await db().collection('travelWish').get()).docs.map(d => d.data()).filter(x => !x.done).map(x => x.name).slice(0, 15);
+  const wish = (await db().collection('wishes').get()).docs.map(d => d.data()).filter(x => !x.done).map(x => x.name).slice(0, 15);
   const text = await ai(AI_SYS, `이번 주말 ${md(sat)}~${md(sun)} 청주 날씨: 토 ${w1 || '?'}, 일 ${w2 || '?'}.
 주말 일정: ${busy.length ? busy.join(', ') : '없음'}. 가고 싶은 곳 목록: ${wish.length ? wish.join(', ') : '없음'}.
 청주에서 2시간 이내로 다녀올 만한 곳 3가지를 제안해줘 (등산 코스 1곳 이상, 지금 시기의 단풍·꽃·축제 등 제철 요소, 가고 싶은 곳 목록에 맞는 게 있으면 우선).

@@ -196,20 +196,16 @@
         // initAssetCharts - 월별 6개월 / 주차별 W# 6주 + 클릭 연동
         let _periodMeta = []; // 차트 인덱스별 기간 정보
 
-        // 손익 꺾은선 위에 값 표시 (만 단위, 음수는 빨강)
-        const famLineLabels = { id: 'famLineLabels', afterDatasetsDraw(ch) {
-            const ctx = ch.ctx; ch.data.datasets.forEach((ds, di) => {
-                if (ds.type !== 'line' || !ch.isDatasetVisible(di)) return;
-                ch.getDatasetMeta(di).data.forEach((pt, i) => {
-                    const v = ds.data[i]; if (v == null) return;
-                    const t = (v > 0 ? '+' : v < 0 ? '-' : '') + (Math.abs(v) >= 1e4 ? Math.round(Math.abs(v) / 1e4).toLocaleString('ko-KR') + '만' : Math.abs(v).toLocaleString('ko-KR'));
-                    ctx.save(); ctx.font = '700 10.5px Pretendard, sans-serif'; ctx.textAlign = 'center';
-                    const w = ctx.measureText(t).width + 8, x = pt.x, y = pt.y - 11;
-                    ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x - w / 2, y - 9, w, 15, 7) : ctx.rect(x - w / 2, y - 9, w, 15); ctx.fill();
-                    ctx.fillStyle = v < 0 ? '#d9465c' : '#334155'; ctx.fillText(t, x, y + 2); ctx.restore();
-                });
+        // 손익: 막대 대신 월 이름 아래에 작은 글씨 (적자는 빨강)
+        const famNetLabels = (inc, exp) => ({ id: 'famNetLabels', afterDraw(ch) {
+            const ctx = ch.ctx, x = ch.scales.x, y0 = x.bottom + 3;
+            inc.forEach((v, i) => {
+                const n = v - (exp[i] || 0); if (!v && !exp[i]) return;
+                const t = (n > 0 ? '+' : n < 0 ? '-' : '') + (Math.abs(n) >= 1e4 ? Math.round(Math.abs(n) / 1e4).toLocaleString('ko-KR') + '만' : Math.abs(n).toLocaleString('ko-KR'));
+                ctx.save(); ctx.font = '600 10px Pretendard, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+                ctx.fillStyle = n < 0 ? '#d9465c' : '#64748b'; ctx.fillText(t, x.getPixelForTick(i), y0); ctx.restore();
             });
-        } };
+        } });
         function initAssetCharts() {
             if (aChart) aChart.destroy();
             const ctx = document.getElementById('mainAssetChart')?.getContext('2d');
@@ -219,7 +215,7 @@
             _periodMeta = [];
 
             const chartOpts = {
-                responsive: true, maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false, layout: { padding: { bottom: 14 } },
                 onClick: (evt, elements) => {
                     if (!elements.length) return;
                     const p = _periodMeta[elements[0].index];
@@ -255,9 +251,8 @@
                 assetSelectedLabel = _periodMeta[5].label;
                 aChart = new Chart(ctx, { data:{ labels, datasets:[
                     {type:'bar',label:'수입',data:incData,backgroundColor:famChartColor('inc'),borderRadius:6,maxBarThickness:22},
-                    {type:'bar',label:'지출',data:expData,backgroundColor:famChartColor('exp'),borderRadius:6,maxBarThickness:22},
-                    {type:'line',label:'손익',data:incData.map((v,i)=>v-expData[i]),borderColor:'#475569',backgroundColor:'#475569',borderWidth:2,pointRadius:3.5,pointBackgroundColor:'#fff',pointBorderWidth:2,tension:.35,order:-1}
-                ]}, options: chartOpts, plugins: [famLineLabels] });
+                    {type:'bar',label:'지출',data:expData,backgroundColor:famChartColor('exp'),borderRadius:6,maxBarThickness:22}
+                ]}, options: chartOpts, plugins: [famNetLabels(incData, expData)] });
 
             } else {
                 const labels=[]; const incData=[]; const expData=[];
@@ -281,9 +276,8 @@
                 assetSelectedLabel = _periodMeta[5].label;
                 aChart = new Chart(ctx, { data:{ labels, datasets:[
                     {type:'bar',label:'수입',data:incData,backgroundColor:famChartColor('inc'),borderRadius:6,maxBarThickness:22},
-                    {type:'bar',label:'지출',data:expData,backgroundColor:famChartColor('exp'),borderRadius:6,maxBarThickness:22},
-                    {type:'line',label:'손익',data:incData.map((v,i)=>v-expData[i]),borderColor:'#475569',backgroundColor:'#475569',borderWidth:2,pointRadius:3.5,pointBackgroundColor:'#fff',pointBorderWidth:2,tension:.35,order:-1}
-                ]}, options: chartOpts, plugins: [famLineLabels] });
+                    {type:'bar',label:'지출',data:expData,backgroundColor:famChartColor('exp'),borderRadius:6,maxBarThickness:22}
+                ]}, options: chartOpts, plugins: [famNetLabels(incData, expData)] });
             }
 
             updateAssetSummaryCards();
