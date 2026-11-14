@@ -99,6 +99,10 @@ async function ibDrain(opt) {
         let names = {};
         if (nums.length && N.lookupContacts) { try { names = (await N.lookupContacts({ numbers: nums })).names || {}; } catch (e) {} }
         smss.forEach(s => { const isNum = /^[\d+\-\s()]{7,}$/.test(s.from); s.number = isNum ? s.from.replace(/[^\d+]/g, '') : ''; s.name = isNum ? (names[s.from] || '') : s.from; });
+        // 최근 보낸 사람 기록(문자만, 설정에서 '안 받을 사람' 고를 때) + 안 받기로 한 번호·이름은 AI로 보내지 않고 버림
+        ibSendersNote(smss.filter(s => s.kind === 'sms'));
+        const blk = ibBlockList();
+        for (let i = smss.length - 1; i >= 0; i--) if (smss[i].kind === 'sms' && ibBlocked(smss[i], blk)) { seen.add(smss[i].key); smss.splice(i, 1); }
         for (let i = 0; i < smss.length; i += 15) {
             const part = smss.slice(i, i + 15);
             let out = null;
@@ -289,6 +293,8 @@ function ibSetHtml() {
         <div id="ib-state" class="fam-note" style="margin:0 0 8px">상태 확인 중…</div>
         <div class="fam-btns" style="margin-top:0"><button class="fam-btn" onclick="ibN().openCardListenerSettings()">알림 읽기 허용</button><button class="fam-btn" onclick="ibAskSms()">문자함 읽기 허용</button>${ibN().lookupContacts ? '<button class="fam-btn" onclick="ibAskContacts()">연락처 허용</button>' : ''}</div>
         ${ibN().kakaoRooms ? `<span class="fam-lbl">카톡: 받을 대화방</span><div id="ib-rooms" class="fam-note" style="margin:0">불러오는 중…</div><div class="fam-note">예약·택배 같은 업체 알림톡은 방을 고르지 않아도 받습니다.</div>` : ''}
+        <span class="fam-lbl">문자: 안 받을 사람</span>
+        <div class="fam-note" style="margin:0;display:flex;align-items:center;gap:8px"><span style="flex:1">${ibBlockList().length ? '안 받는 번호·발신자 <b>' + ibBlockList().length + '</b>개' : '모든 문자를 받습니다 (광고는 AI가 걸러냄)'}</span><button class="fam-btn" style="flex:none" onclick="ibBlockOpen()">편집</button></div>
         <span class="fam-lbl">가계부에 넣을 카드 (끝 4자리 · 사용자)</span>
         <input class="fam-in" value="${famEsc(Object.entries(ibCards).map(([k, v]) => k + ' ' + v).join(', '))}" placeholder="예: 1089 정우설" onchange="ibSetCards(this.value)">
         <div class="fam-note">허용 버튼이 회색으로 막혀 있으면: 설정 → 애플리케이션 → 설연 → 오른쪽 위 ⋮ → '제한된 설정 허용' 후 다시 누르세요.</div>
@@ -321,15 +327,18 @@ async function ibRoomsOpen() {
     const N = ibN(); if (!N || !N.kakaoRooms) return;
     const r = await N.kakaoRooms().catch(() => ({})), allow = new Set(r.allow || []), seen = [...(r.seen || [])];
     allow.forEach(a => { if (!seen.some(x => x.room === a)) seen.push({ room: a, group: false, added: true }); });
+    const hid = new Set(ibLS('ibRoomHide') || []);
+    for (let i = seen.length - 1; i >= 0; i--) if (hid.has(seen[i].room) && !allow.has(seen[i].room)) seen.splice(i, 1);
     // 받는 방 먼저, 그다음 최근 알림 순
     const list = seen.sort((a, b) => (allow.has(b.room) - allow.has(a.room)) || ((b.ts || 0) - (a.ts || 0)));
     famSheet(`<div class="fam-h"><b>카톡 받을 방</b><button class="fam-x" onclick="famSheetClose();ibRoomsRender()">✕</button></div>
         <input class="fam-in" id="ib-room-q" placeholder="방 이름 검색" value="${famEsc(ibRoomQ)}" oninput="ibRoomQ=this.value;ibRoomFilter()" style="margin:0 0 8px">
         <div id="ib-room-list" style="max-height:52vh;overflow-y:auto;border:1px solid #e2e8f0;border-radius:12px;padding:4px 10px">
-            ${list.length ? list.map(x => `<label class="fam-chk ib-room" data-n="${famEsc(x.room.toLowerCase())}" style="display:flex"><input type="checkbox" ${allow.has(x.room) ? 'checked' : ''} onchange="ibRoomToggle(this.dataset.r,this.checked)" data-r="${famEsc(x.room)}"> <span style="flex:1;margin-left:6px">${famEsc(x.room)}</span>${x.group ? '<em class="ib-tag">단체</em>' : ''}${x.added ? '<em class="ib-tag">직접</em>' : ''}</label>`).join('') : '<div class="fam-note">아직 카톡 알림이 온 방이 없습니다.</div>'}
+            ${list.length ? list.map(x => `<label class="fam-chk ib-room" data-n="${famEsc(x.room.toLowerCase())}" style="display:flex"><input type="checkbox" ${allow.has(x.room) ? 'checked' : ''} onchange="ibRoomToggle(this.dataset.r,this.checked)" data-r="${famEsc(x.room)}"> <span style="flex:1;margin-left:6px">${famEsc(x.room)}</span>${x.group ? '<em class="ib-tag">단체</em>' : ''}${x.added ? '<em class="ib-tag">직접</em>' : ''}<button class="fam-x" style="width:24px;height:24px;font-size:10px;flex:none;margin-left:6px" title="목록에서 지우기" onclick="event.preventDefault();event.stopPropagation();ibRoomHide(this.dataset.r)" data-r="${famEsc(x.room)}">✕</button></label>`).join('') : '<div class="fam-note">아직 카톡 알림이 온 방이 없습니다.</div>'}
         </div>
         <div style="display:flex;gap:6px;margin-top:8px"><input id="ib-room-add" class="fam-in" style="flex:1;margin:0" placeholder="목록에 없는 방: 이름 직접 입력"><button class="fam-btn" onclick="ibRoomAdd()">추가</button></div>
-        <div class="fam-note">폰이 카톡 방 전체 목록을 다른 앱에 주지 않아서, 설연 설치 뒤 알림이 온 방만 나옵니다. 알림을 꺼 둔 방은 받을 수 없으니 받을 방은 알림을 켜 두세요(무음은 괜찮음).</div>`);
+        ${(ibLS('ibRoomHide') || []).length ? `<div class="fam-btns" style="margin-top:6px"><button class="fam-btn" onclick="ibRoomUnhideAll()">숨긴 방 ${(ibLS('ibRoomHide') || []).length}개 다시 보기</button></div>` : ''}
+        <div class="fam-note">✕는 목록에서 지우기(받기도 꺼짐)입니다. 폰이 카톡 방 전체 목록을 다른 앱에 주지 않아서, 설연 설치 뒤 알림이 온 방만 나옵니다. 알림을 꺼 둔 방은 받을 수 없으니 받을 방은 알림을 켜 두세요(무음은 괜찮음).</div>`);
     ibRoomFilter();
 }
 function ibRoomFilter() {
@@ -340,10 +349,36 @@ async function ibRoomAdd() {
     const v = (document.getElementById('ib-room-add') || {}).value || ''; if (!v.trim()) return;
     await ibRoomToggle(v.trim(), true); ibRoomsOpen();
 }
+// 목록에서 지우기: 받기도 끄고 목록에서 숨김 (그 방에서 카톡이 다시 와도 목록에 안 뜸, '숨긴 방 다시 보기'로 복구)
+async function ibRoomHide(room) {
+    const h = new Set(ibLS('ibRoomHide') || []); h.add(room); ibLS('ibRoomHide', [...h]);
+    await ibRoomToggle(room, false); ibRoomsOpen();
+}
+function ibRoomUnhideAll() { ibLS('ibRoomHide', []); ibRoomsOpen(); }
 async function ibRoomToggle(room, on) {
     const N = ibN(); const r = await N.kakaoRooms(); const a = new Set(r.allow || []);
     on ? a.add(room) : a.delete(room); await N.setKakaoRooms({ rooms: [...a] }); famToast(on ? room + ' 받기' : room + ' 안 받기');
 }
+// ── 문자: 안 받을 번호·발신자 (이 폰에만 저장) ──
+function ibBlockList() { return ibLS('ibBlock') || []; }
+function ibBlocked(s, blk) { const n = (s.number || '').replace(/[^\d]/g, ''); return blk.some(b => { const d = String(b).replace(/[^\d]/g, ''); return (d.length >= 4 && n && n.endsWith(d)) || (s.name && s.name === b) || (s.from && s.from === b); }); }
+function ibSendersNote(list) {
+    if (!list.length) return;
+    const m = new Map((ibLS('ibSenders') || []).map(x => [x.k, x]));
+    list.forEach(s => { const k = s.name || s.number || s.from; if (k) m.set(k, { k, number: s.number || '', name: s.name || '', at: Date.now() }); });
+    ibLS('ibSenders', [...m.values()].sort((a, b) => b.at - a.at).slice(0, 100));
+}
+function ibBlockOpen() {
+    const blk = new Set(ibBlockList()), snd = ibLS('ibSenders') || [];
+    famSheet(`<div class="fam-h"><b>문자: 안 받을 사람</b><button class="fam-x" onclick="famSheetClose();famRenderSettings&&famRenderSettings()">✕</button></div>
+        <div class="fam-note" style="margin:0 0 8px">체크한 번호·발신자의 문자는 정리하지 않고 버립니다 (카드 결제 문자는 그대로 받음). 이 폰에만 저장됩니다.</div>
+        <input class="fam-in" placeholder="검색" oninput="const q=this.value.toLowerCase();document.querySelectorAll('#ib-blk .ib-room').forEach(l=>l.style.display=!q||l.dataset.n.includes(q)?'flex':'none')" style="margin:0 0 8px">
+        <div id="ib-blk" style="max-height:48vh;overflow-y:auto;border:1px solid #e2e8f0;border-radius:12px;padding:4px 10px">
+            ${[...new Set([...blk, ...snd.map(x => x.k)])].map(k => { const x = snd.find(y => y.k === k) || {}; return `<label class="fam-chk ib-room" data-n="${famEsc(String(k).toLowerCase())}" style="display:flex"><input type="checkbox" ${blk.has(k) ? 'checked' : ''} data-k="${famEsc(k)}" onchange="ibBlockSet(this.dataset.k,this.checked)"> <span style="flex:1;margin-left:6px">${famEsc(k)}${x.name && x.number ? ` <small style="color:#94a3b8">${famEsc(x.number)}</small>` : ''}</span></label>`; }).join('') || '<div class="fam-note">최근 문자를 보낸 사람이 아직 없습니다.</div>'}
+        </div>
+        <div style="display:flex;gap:6px;margin-top:8px"><input id="ib-blk-add" class="fam-in" style="flex:1;margin:0" placeholder="번호(뒤 4자리 이상) 또는 이름"><button class="fam-btn" onclick="const v=document.getElementById('ib-blk-add').value.trim();if(v){ibBlockSet(v,true);ibBlockOpen()}">추가</button></div>`);
+}
+function ibBlockSet(k, on) { const b = new Set(ibBlockList()); on ? b.add(k) : b.delete(k); ibLS('ibBlock', [...b]); famToast(on ? k + ' 안 받기' : k + ' 다시 받기'); }
 async function ibAskSms() { try { await ibN().readCardSms({ days: 1, ask: true }); famToast('문자함 읽기를 허용했습니다'); } catch (e) { famToast('문자함 읽기가 허용되지 않았습니다'); } ibStateRefresh(); }
 async function ibCheckNow(btn) {
     btn.disabled = true; const t = btn.textContent; btn.textContent = '확인 중…';
