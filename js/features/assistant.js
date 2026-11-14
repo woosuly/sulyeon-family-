@@ -238,6 +238,8 @@
     function famMe(t) { famFeedAdd(famEsc(t), 'ff-me'); }
 
     function famRun(raw) {
+        // 부르는 말 떼기: "헬로 설연", "설연아", "설현아"(발음대로 인식된 경우) 등 → 뒤 내용만 처리
+        raw = String(raw).replace(/^\s*((헬로|하이|hello|hi|헤이|hey)\s*)?(설연|설현|서련|설련)(아|야)?(?=[\s,.!~?]|$)[\s,.!~]*/i, '').trim() || raw;
         const m = raw.match(/^\/(\S+)\s*([\s\S]*)$/), cmd = m ? m[1].toLowerCase() : '', arg = m ? m[2].trim() : raw;
         if (cmd === '지우기' || cmd === '새대화') return famFeedNew();
         if (cmd === '지난대화') return famHistOpen();
