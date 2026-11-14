@@ -95,9 +95,6 @@
         <package android:name="de.bmw.connected.mobile20.row" />
         <package android:name="com.samsung.android.oneconnect" />
         <package android:name="com.roborock.smart" />
-        <package android:name="kr.co.azsmart.apartner" />
-        <package android:name="com.zigbang.smarthome.homeapp" />
-        <package android:name="com.sds.hms.iotdoorlock" />
         <intent><action android:name="android.speech.RecognitionService" /></intent>
         <intent><action android:name="android.intent.action.TTS_SERVICE" /></intent>
     </queries>

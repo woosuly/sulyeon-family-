@@ -52,7 +52,7 @@ const BR_TOOLS = [
     { name: 'watch_flight', description: '항공권 가격 지켜보기 등록 (매주 확인·알림)', params: brS({ dest: brStr('도착 도시'), from: brStr('출발 공항, 기본 인천'), when: brStr('여행 시기'), nights: brNum('몇 박'), target: brNum('선택: 1인 왕복 목표가(원)') }, ['dest', 'when']) },
     { name: 'propose_ledger', description: '가계부 기록 확인 카드 띄우기 (사용자가 눌러야 저장)', params: brS({ text: brStr('예: 점심 김밥천국 12000 카드') }, ['text']) },
     { name: 'draft_message', description: '가족 채팅·문자·카톡 보낼 말 초안 카드 (사용자가 눌러야 전송)', params: brS({ to: brStr('아내|남편|가족채팅|사람 이름'), text: brStr('보낼 내용') }, ['text']) },
-    { name: 'open_app', description: '화면·앱 열기: 길찾기, 음악, 영상, 택배, 산행기록, 항공권, 저축 화면 등', params: brS({ what: brStr('navigate|music|video|parcels|hikelog|flights|save|schedule|ledger|travel|map|parking(아파트너 방문차량, arg에 차량번호)|door(직방 현관 도어록 앱)'), arg: brStr('목적지·검색어 등') }, ['what']) },
+    { name: 'open_app', description: '화면·앱 열기: 길찾기, 음악, 영상, 택배, 산행기록, 항공권, 저축 화면 등', params: brS({ what: brStr('navigate|music|video|parcels|hikelog|flights|save|schedule|ledger|travel|map'), arg: brStr('목적지·검색어 등') }, ['what']) },
 ];
 
 // ── 도구 실행 ──
@@ -156,7 +156,7 @@ async function brRun(name, a) {
         case 'open_app': {
             const w = a.what, g = a.arg || '';
             const act = { navigate: () => naverRoute(g, typeof lfGeoFor === 'function' ? lfGeoFor(g) : null), music: () => musicPlay(g), video: () => videoSearch(g), parcels: () => parcelOpen(), hikelog: () => hikeLogSheet(), flights: () => flOpen(),
-                save: () => { famFeedClose(); showSection('save-section'); }, schedule: () => g ? famGoSch(g) : (famFeedClose(), showSection('schedule-section')), ledger: () => { famFeedClose(); showSection('asset-cal-section'); }, travel: () => { famFeedClose(); showSection('travel-section'); }, map: () => mapOpen(), parking: () => aptParking(g), door: () => doorOpen(g) }[w];
+                save: () => { famFeedClose(); showSection('save-section'); }, schedule: () => g ? famGoSch(g) : (famFeedClose(), showSection('schedule-section')), ledger: () => { famFeedClose(); showSection('asset-cal-section'); }, travel: () => { famFeedClose(); showSection('travel-section'); }, map: () => mapOpen() }[w];
             if (!act) return { error: '모르는 화면' };
             brUi.push(act); return { ok: true };
         }
