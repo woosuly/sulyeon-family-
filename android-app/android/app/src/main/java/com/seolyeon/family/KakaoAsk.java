@@ -33,6 +33,25 @@ public class KakaoAsk {
 
     static boolean on(Context c) { return c.getSharedPreferences("kakao_rooms", Context.MODE_PRIVATE).getBoolean("ask", true); }
     static void setOn(Context c, boolean v) { c.getSharedPreferences("kakao_rooms", Context.MODE_PRIVATE).edit().putBoolean("ask", v).apply(); }
+    /** 블루투스(차·이어폰)로 소리가 나갈 때만 묻기 — 기본 켬 */
+    static boolean btOnly(Context c) { return c.getSharedPreferences("kakao_rooms", Context.MODE_PRIVATE).getBoolean("btOnly", true); }
+    static void setBtOnly(Context c, boolean v) { c.getSharedPreferences("kakao_rooms", Context.MODE_PRIVATE).edit().putBoolean("btOnly", v).apply(); }
+    static boolean btConnected(Context c) {
+        try {
+            android.media.AudioManager am = (android.media.AudioManager) c.getSystemService(Context.AUDIO_SERVICE);
+            if (am == null) return false;
+            for (android.media.AudioDeviceInfo d : am.getDevices(android.media.AudioManager.GET_DEVICES_OUTPUTS)) {
+                int t = d.getType();
+                if (t == android.media.AudioDeviceInfo.TYPE_BLUETOOTH_A2DP || t == android.media.AudioDeviceInfo.TYPE_BLUETOOTH_SCO || t == 26 /* BLE_HEADSET */ || t == 27 /* BLE_SPEAKER */) return true;
+            }
+        } catch (Exception ignored) { }
+        return false;
+    }
+    /** 소리로 할 첫마디: "한미연님 카톡이 왔습니다" / "우리가족 방에 카톡이 왔습니다" / "○○님 문자가 왔습니다" */
+    static String who(String room, String from) {
+        if (room.startsWith(SMS)) return room.substring(SMS.length()) + "님 문자가 왔습니다.";
+        return room.equals(from) ? room + "님 카톡이 왔습니다." : room + " 방에 " + (from == null || from.isEmpty() ? "" : from + "님 ") + "카톡이 왔습니다.";
+    }
 
     /** 문자: 연락처에 저장된 사람(알림 제목이 이름)만. 대화방 이름은 "문자 · 이름" */
     static final String SMS = "문자 · ";
@@ -43,8 +62,8 @@ public class KakaoAsk {
     }
     static synchronized void incoming(Context c, String room, String from, String text) {
         if (!on(c) || text == null || text.trim().isEmpty()) return;
-        int h = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
-        if (h >= 22 || h < 7) return;
+        boolean bt = btConnected(c);
+        if (btOnly(c) && !bt) return;          // 차·이어폰 연결 안 됐으면 아무것도 안 함 (카톡·문자 앱 알림만)
         List<String[]> l = pend.get(room);
         if (l == null) { l = new ArrayList<>(); pend.put(room, l); }
         // 카톡이 같은 알림을 다시 올리는 경우 중복 제외
@@ -53,6 +72,8 @@ public class KakaoAsk {
         while (l.size() > 10) l.remove(0);
         if (MainActivity.foreground && SeolyeonNativePlugin.fireKakaoIn(room, from, text, l.size())) return;
         post(c, room, l);
+        // 앱 밖: 블루투스로 묻는 말까지 들려 줌 (같은 방에서 이어 오면 처음 한 번만). 대답은 알림의 [읽어주기]
+        if (bt && l.size() == 1) speak(c, who(room, from) + " 읽어드릴까요?");
     }
 
     private static void post(Context c, String room, List<String[]> l) {

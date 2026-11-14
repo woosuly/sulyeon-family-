@@ -3,7 +3,8 @@
 //   설연이 열려 있을 때 카톡이 오면: 팝업 + "카톡이 왔습니다. 읽어드릴까요?" 묻고 5초 듣기
 //     "네·응·읽어" → 읽어 줌 / "아니·됐어" → 닫기 / 버튼으로도 가능
 //   설연이 닫혀 있으면: 안드로이드 팝업 알림의 [읽어주기] 버튼 (KakaoAsk.java)
-//   밤 10시 ~ 아침 7시는 묻지 않음. 설정 → 문자·카톡에서 끄기
+//   기본: 블루투스(차·이어폰) 연결됐을 때만. 앱 밖이면 블루투스로 "○○님 카톡이 왔습니다. 읽어드릴까요?"까지 들려 줌
+//   설정 → 문자·카톡에서 끄기·조건 변경
 // ═══════════════════════════════════════════════════════════
 const kkN = () => window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.SeolyeonNative;
 let kkRec = null;
@@ -63,8 +64,9 @@ function kkAskVoice() {
 // 설정 → 문자·카톡
 function kkSetHtml() {
     const N = kkN(); if (!N || !N.kakaoAsk) return '';
-    setTimeout(() => N.kakaoAsk({}).then(r => { const c = document.getElementById('kk-on'); if (c) c.checked = !!r.on; }).catch(() => {}), 50);
-    return `<label class="fam-chk" style="margin-top:8px"><input type="checkbox" id="kk-on" onchange="kkN().kakaoAsk({on:this.checked});famToast(this.checked?'카톡 오면 읽어드릴지 묻습니다':'묻지 않습니다')"> 받는 카톡방, 연락처에 저장된 사람의 문자가 오면 <b>"읽어드릴까요?"</b> 묻기 <small style="color:#94a3b8">(밤 10시~아침 7시 제외)</small></label>`;
+    setTimeout(() => N.kakaoAsk({}).then(r => { const c = document.getElementById('kk-on'), b = document.getElementById('kk-bt'); if (c) c.checked = !!r.on; if (b) b.checked = r.btOnly !== false; }).catch(() => {}), 50);
+    return `<label class="fam-chk" style="margin-top:8px"><input type="checkbox" id="kk-on" onchange="kkN().kakaoAsk({on:this.checked});famToast(this.checked?'읽어드릴지 묻습니다':'묻지 않습니다')"> 받는 카톡방, 연락처에 저장된 사람의 문자가 오면 <b>"읽어드릴까요?"</b> 묻기</label>
+        <label class="fam-chk" style="margin-left:22px"><input type="checkbox" id="kk-bt" onchange="kkN().kakaoAsk({btOnly:this.checked})"> 차·이어폰(블루투스) 연결됐을 때만</label>`;
 }
 (function () {
     const wait = () => { const N = kkN(); if (N && N.addListener) { try { N.addListener('kakaoIn', d => kkPopup(d.room, d.from, d.text, d.n)); } catch (e) {} } };

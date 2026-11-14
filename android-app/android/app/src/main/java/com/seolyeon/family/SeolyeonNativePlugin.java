@@ -481,7 +481,8 @@ public class SeolyeonNativePlugin extends Plugin {
     @PluginMethod
     public void kakaoAsk(PluginCall call) {
         if (call.hasOption("on")) KakaoAsk.setOn(getContext(), Boolean.TRUE.equals(call.getBoolean("on", true)));
-        JSObject r = new JSObject(); r.put("on", KakaoAsk.on(getContext())); r.put("n", KakaoAsk.count(call.getString("room", "")));
+        if (call.hasOption("btOnly")) KakaoAsk.setBtOnly(getContext(), Boolean.TRUE.equals(call.getBoolean("btOnly", true)));
+        JSObject r = new JSObject(); r.put("on", KakaoAsk.on(getContext())); r.put("btOnly", KakaoAsk.btOnly(getContext())); r.put("bt", KakaoAsk.btConnected(getContext())); r.put("n", KakaoAsk.count(call.getString("room", "")));
         JSArray list = new JSArray();
         for (String[] m : KakaoAsk.peek(call.getString("room", ""))) { JSObject o = new JSObject(); o.put("from", m[0]); o.put("text", m[1]); list.put(o); }
         r.put("list", list); call.resolve(r);
