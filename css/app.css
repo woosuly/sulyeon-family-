@@ -867,3 +867,15 @@ header button .fi { color:#fff; }
 .sum-box.on{background:#fff;box-shadow:0 0 0 2px var(--month-header) inset}
 .sum-box.exp.on{box-shadow:0 0 0 2px #e1566b inset}
 .pg-acts .btn-home:has(svg){font-size:0!important}
+/* 가계부 머리줄을 아래 수입·지출·손익 3칸과 같은 격자로: 제목=1열, 드롭다운=2열, 버튼들=3열 */
+#asset-section .pg-head,#asset-cal-section .pg-head{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:center}
+#asset-section .pg-grid,#asset-cal-section .pg-grid{display:contents}
+.pg-grid>.pg-sel{width:100%!important;min-width:0!important}
+.pg-c3{display:flex;gap:6px;min-width:0}
+.pg-c3>.pg-btn{flex:1 1 auto;min-width:0!important;padding:0 6px!important}
+.pg-c3>*{height:36px!important;box-sizing:border-box;font-size:13px!important}
+.pg-c3>.btn-home:has(svg){font-size:0!important}
+#asset-section .sum-grid,#asset-cal-section .sum-grid{gap:8px}
+#asset-cal-section .sch-header{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:center}
+#asset-cal-section .sch-header h3,#asset-section .sch-header h3{white-space:nowrap}
+#asset-cal-section .sch-header>div:first-child{min-width:0}
