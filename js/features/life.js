@@ -41,6 +41,27 @@ async function roborockOpen(t) {
     famFeedAdd(r.opened === false ? '로보락 앱이 없어 설치 화면을 열었습니다.' : `🧹 로보락 앱을 열었습니다.${w ? ` <b>${w}</b>을 눌러 주세요.` : ''}`);
 }
 
+// ── 아파트너 방문차량 등록 · 직방 현관 도어록: 외부 연동이 없어 앱을 바로 열어 줌 ──
+//   차량번호를 말하면 클립보드에 복사해 두어 아파트너에서 붙여 넣기만 하면 됨
+//   현관문 열기는 보안상 설연이 직접 하지 않음 (직방 앱에서 직접)
+const APT_PKG = 'kr.co.azsmart.apartner', DOOR_PKGS = ['com.zigbang.smarthome.homeapp', 'com.sds.hms.iotdoorlock'];
+async function aptParking(t) {
+    const N = lfN(), plate = (String(t || '').match(/\d{2,3}\s*[가-힣]\s*\d{4}/) || [''])[0].replace(/\s/g, '');
+    if (plate) { try { await navigator.clipboard.writeText(plate); } catch (e) {} }
+    if (!N || !N.openApp) return famFeedAdd('아파트너 열기는 설연 앱(APK)에서 됩니다.');
+    const r = await N.openApp({ pkg: APT_PKG }).catch(() => ({}));
+    famFeedAdd(r.opened === false ? '아파트너 앱이 없어 설치 화면을 열었습니다.' : `🅿️ 아파트너를 열었습니다. <b>방문차량 등록</b>에서 ${plate ? `차량번호 <b>${famEsc(plate)}</b>를 붙여 넣으세요 (복사해 두었습니다).` : '차량번호를 넣어 주세요.'}`);
+}
+async function doorOpen(t) {
+    const N = lfN();
+    if (!N || !N.openApp) return famFeedAdd('직방 도어록 앱 열기는 설연 앱(APK)에서 됩니다.');
+    for (const pkg of DOOR_PKGS) {
+        const r = await N.openApp({ pkg, noStore: true }).catch(() => ({}));
+        if (r.opened) return famFeedAdd(`🚪 직방 앱을 열었습니다.${/열어|열기/.test(t) ? ' <b>문 열기</b>를 눌러 주세요.' : ''} <span style="color:#94a3b8">(현관문은 보안상 앱에서 직접 여셔야 합니다)</span>`);
+    }
+    famFeedAdd('직방 도어록 앱(직방 스마트홈 · 직방 스마트 도어록)을 찾지 못했습니다. 이 폰에 설치돼 있는지 확인해 주세요.');
+}
+
 // ── 택배 ──
 function parcelListen() { try { db.collection('parcels').onSnapshot(s => { parcels = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.at || 0) - (a.at || 0)); parcelBar(); }, () => {}); } catch (e) {} }
 function parcelBar() {
@@ -85,6 +106,8 @@ function lifeRoute(t) {
     let m;
     if ((m = t.match(/^(.+?)\s*(까지|으로|로)?\s*(길\s*(안내|찾기|찾아\s*줘?)|가는\s*길|네비|내비|경로)/))) { const d = m[1].replace(/(지금|여기서|집에서|에서)\s*/g, '').trim(); if (d) { naverRoute(d, lfGeoFor(d)); famFeedAdd(`🧭 네이버 지도에서 <b>${famEsc(d)}</b> 길찾기를 엽니다.`); return true; } }
     if (/네이버\s*지도\s*(열어|켜)/.test(t)) { naverRoute('내 위치'); return true; }
+    if (/(주차\s*등록|방문\s*차량|방문\s*차|방문\s*주차|차량\s*등록|아파트너)/.test(t)) { aptParking(t); return true; }
+    if (/(현관|도어\s*락|도어록|직방)/.test(t) && /(열어|열기|잠가|잠궈|잠금|상태|확인|앱)/.test(t)) { doorOpen(t); return true; }
     if (/(차|bmw|비엠|BMW)\s*(문)?\s*(열어|닫아|잠가|잠궈|잠금|시동|에어컨|히터|위치|어디)/i.test(t) || /my\s*bmw|마이\s*비엠/i.test(t)) {
         const w = /열어/.test(t) ? '문 열기' : /닫아|잠가|잠궈|잠금/.test(t) ? '문 잠금' : /시동|에어컨|히터/.test(t) ? '공조 시작' : /위치|어디/.test(t) ? '차량 위치' : '';
         bmwOpen(w); return true;

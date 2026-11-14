@@ -510,6 +510,8 @@ public class SeolyeonNativePlugin extends Plugin {
         try {
             Intent i = getContext().getPackageManager().getLaunchIntentForPackage(pkg);
             if (i != null) { i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); getContext().startActivity(i); JSObject r = new JSObject(); r.put("opened", true); call.resolve(r); return; }
+            // noStore: 설치 안 돼 있으면 스토어를 열지 않고 알려만 줌 (여러 앱 중 깔린 것 찾기용)
+            if (Boolean.TRUE.equals(call.getBoolean("noStore", false))) { JSObject r = new JSObject(); r.put("opened", false); r.put("installed", false); call.resolve(r); return; }
             Intent s = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + pkg)); s.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); getContext().startActivity(s);
             JSObject r = new JSObject(); r.put("opened", false); call.resolve(r);
         } catch (Exception e) { call.reject(String.valueOf(e.getMessage())); }
