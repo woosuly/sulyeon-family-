@@ -309,9 +309,8 @@
                             <span class="fi-title"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg></span>
                             <h3 style="margin:0;font-size:clamp(15px,2vw,18px);font-weight:800;">앨범</h3>
                         </div>
-                        <button onclick="showSection('main-section')" class="btn-home"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>홈</button>
+                        <div class="pg-acts"><button class="pg-btn pri" onclick="openFolderModal(null)">＋ 폴더</button><button onclick="showSection('main-section')" class="btn-home"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>홈</button></div>
                     </div>
-                    <button class="btn-action btn-primary" style="width:100%;height:44px;margin-bottom:14px;" onclick="openFolderModal(null)">＋ 새 폴더 만들기</button>
                     <div class="folder-grid" id="folder-container"></div>
                 </div>
             </div>
@@ -374,15 +373,11 @@
                             <span class="fi-title"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 13.5L3 11l1.5-1.5 8 1 4-4.5c1-1 2.6-1.4 3.2-.8s.2 2.2-.8 3.2l-4.5 4 1 8L14 21.5l-2.5-7.5"/><path d="M6 17l-2 .5 1.5 1.5"/></svg></span>
                             <h3 style="margin:0;font-size:clamp(15px,2vw,18px);font-weight:800;">여행 &amp; 여가</h3>
                         </div>
-                        <button onclick="showSection('main-section')" class="btn-home"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>홈</button>
+                        <div class="pg-acts"><button class="pg-btn pri" onclick="openPlanModal(null)">＋ 추가</button><button class="pg-more" aria-label="더보기" onclick="famMenu(this,[['여행 노트 · 지도',()=>mapOpen()],['산행 기록',()=>hikeLogSheet()],['가고 싶은 곳',()=>mapOpen('wish')]])">⋯</button><button onclick="showSection('main-section')" class="btn-home"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>홈</button></div>
                     </div>
-
-                    <button class="btn-action btn-primary" style="width:100%;margin-bottom:12px;height:44px;" onclick="openPlanModal(null)">＋ 새 계획 추가</button>
 
                     <!-- 여행 노트·산행 기록 + 필터 (한 줄, 같은 크기) -->
                     <div class="plan-bar">
-                        <button class="plan-filter-btn" onclick="mapOpen()">여행 노트</button>
-                        <button class="plan-filter-btn" onclick="hikeLogSheet()">산행 기록</button>
                         <button class="plan-filter-btn" id="fbtn-period" onclick="togglePlanFilter('period')">기간 ▾</button>
                         <button class="plan-filter-btn" id="fbtn-area"   onclick="togglePlanFilter('area')">지역 ▾</button>
                         <div id="plan-chips"></div>
@@ -811,14 +806,7 @@
                         <span class="fi-title"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
                         <h3 style="margin:0;font-size:clamp(15px,2vw,18px);font-weight:800;">일별 가계부</h3>
                     </div>
-                    <button onclick="showSection('asset-section')" class="btn-home"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>뒤로</button>
-                </div>
-                <!-- 구성원 필터 -->
-                <div style="display:flex;gap:6px;margin-bottom:12px;">
-                    <button class="asset-member-tab active" data-m="all"  onclick="switchAssetMember(this)">전체</button>
-                    <button class="asset-member-tab"        data-m="공통"   onclick="switchAssetMember(this)">공통</button>
-                    <button class="asset-member-tab"        data-m="정우설" onclick="switchAssetMember(this)">정우설</button>
-                    <button class="asset-member-tab"        data-m="한미연" onclick="switchAssetMember(this)">한미연</button>
+                    <div class="pg-acts"><select class="pg-sel" onchange="switchAssetMember({classList:{add(){}},dataset:{m:this.value}})"><option value="all">전체</option><option value="공통">공통</option><option value="정우설">정우설</option><option value="한미연">한미연</option></select><button class="pg-btn pri" onclick="openAssetEntryModal(null,famYmd(new Date()))">＋ 입력</button><button onclick="showSection('asset-section')" class="btn-home"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>뒤로</button></div>
                 </div>
                 <!-- 네비게이션 -->
                 <div class="sch-nav-bar" style="margin-bottom:12px;">
@@ -829,17 +817,14 @@
                 </div>
                 <!-- 월 합계 -->
                 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">
-                    <div style="background:#f0fdf4;border-radius:10px;padding:8px 10px;text-align:center;">
-                        <div style="font-size:9px;color:#166534;font-weight:700;">수입</div>
-                        <div id="acal-income" style="font-size:13px;font-weight:800;color:#166534;">–</div>
+                    <div class="sum-box inc" style="cursor:default"><small>수입</small>
+                        <div id="acal-income">–</div>
                     </div>
-                    <div style="background:#fef2f2;border-radius:10px;padding:8px 10px;text-align:center;">
-                        <div style="font-size:9px;color:#991b1b;font-weight:700;">지출</div>
-                        <div id="acal-expense" style="font-size:13px;font-weight:800;color:#991b1b;">–</div>
+                    <div class="sum-box exp" style="cursor:default"><small>지출</small>
+                        <div id="acal-expense">–</div>
                     </div>
-                    <div style="background:#eff6ff;border-radius:10px;padding:8px 10px;text-align:center;">
-                        <div style="font-size:9px;color:#1e40af;font-weight:700;">손익</div>
-                        <div id="acal-balance" style="font-size:13px;font-weight:800;color:#1e40af;">–</div>
+                    <div class="sum-box bal"><small>손익</small>
+                        <div id="acal-balance">–</div>
                     </div>
                 </div>
                 <div class="cal-scroll-area"><div id="asset-cal-grid"></div></div>
@@ -922,12 +907,13 @@
                     </div>
                     <button onclick="showSection('main-section')" class="btn-home"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>홈</button>
                 </div>
-                <div id="shop-grid" class="shop-grid"></div>
                 <div class="fam-box">
                     <h4 style="display:flex;align-items:center">장보기 목록 <small id="shop-count" style="margin-left:8px;color:#94a3b8;font-weight:600"></small><button class="fam-btn" style="margin-left:auto;padding:4px 10px;font-size:11px" onclick="famShopToAsset()">가계부로</button><button class="fam-btn" style="margin-left:6px;padding:4px 10px;font-size:11px" onclick="famShopClearDone()">완료 지우기</button></h4>
                     <div style="display:flex;gap:8px;margin-bottom:6px"><input id="shop-new" class="fam-sel" style="flex:1" placeholder="우유, 계란 (쉼표로 여러 개)" onkeydown="if(event.key==='Enter'){event.preventDefault();famShopAddInput()}"><button class="fam-btn pri" onclick="famShopAddInput()">추가</button></div>
                     <div id="shop-list"></div>
                 </div>
+                <div class="shop-sub">자주 쓰는 쇼핑몰</div>
+                <div id="shop-grid" class="shop-grid"></div>
             </div>
         </section>
     </main>

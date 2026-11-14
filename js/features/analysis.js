@@ -1,7 +1,7 @@
     // ═══════════════════════════════════════════════════════════
     // 📊 가계부 집계 · AI 트렌드 분석
     // ═══════════════════════════════════════════════════════════
-    const ANA_MEMBERS = [['공통', '👨‍👩‍👧'], ['정우설', '👨'], ['한미연', '👩']];
+    const ANA_MEMBERS = [['공통', ''], ['정우설', ''], ['한미연', '']];
     const ana = { period: '3m', from: '', to: '', members: { '공통': true, '정우설': true, '한미연': true }, types: { '수입': true, '지출': true }, catOff: {}, excl: {}, ai: '' };
     let anaChart = null;
     function anaYM(s) { const m = String(s || '').match(/(\d{4})\D?(\d{1,2})/); return m ? m[1] + '-' + String(m[2]).padStart(2, '0') : ''; }
@@ -34,17 +34,17 @@
         root.innerHTML = `
             <div class="fam-box"><h4>조건</h4>
                 <div class="fam-grid2">
-                    <select class="fam-sel" onchange="ana.period=this.value;anaRender()">${P.map(([k, n]) => `<option value="${k}" ${ana.period === k ? 'selected' : ''}>📅 ${n}</option>`).join('')}</select>
-                    <select class="fam-sel" onchange="anaSetMember(this.value)">${[['all','👥 구성원 전체'],['정우설','👨 정우설'],['한미연','👩 한미연'],['공통','👨‍👩‍👧 공통']].map(([k,n]) => `<option value="${k}" ${anaMemberSel() === k ? 'selected' : ''}>${n}</option>`).join('')}</select>
-                    <select class="fam-sel" onchange="anaSetType(this.value)">${[['all','📥📤 수입·지출'],['수입','📥 수입만'],['지출','📤 지출만']].map(([k,n]) => `<option value="${k}" ${anaTypeSel() === k ? 'selected' : ''}>${n}</option>`).join('')}</select>
-                    <button class="fam-btn" onclick="anaOpenCats()">🏷️ 항목 ${Object.keys(cats).filter(k => !ana.catOff[k]).length}/${Object.keys(cats).length} ▾</button>
+                    <select class="fam-sel" onchange="ana.period=this.value;anaRender()">${P.map(([k, n]) => `<option value="${k}" ${ana.period === k ? 'selected' : ''}>${n}</option>`).join('')}</select>
+                    <select class="fam-sel" onchange="anaSetMember(this.value)">${[['all','구성원 전체'],['정우설','정우설'],['한미연','한미연'],['공통','공통']].map(([k,n]) => `<option value="${k}" ${anaMemberSel() === k ? 'selected' : ''}>${n}</option>`).join('')}</select>
+                    <select class="fam-sel" onchange="anaSetType(this.value)">${[['all','수입·지출'],['수입','수입만'],['지출','지출만']].map(([k,n]) => `<option value="${k}" ${anaTypeSel() === k ? 'selected' : ''}>${n}</option>`).join('')}</select>
+                    <button class="fam-btn" onclick="anaOpenCats()">항목 ${Object.keys(cats).filter(k => !ana.catOff[k]).length}/${Object.keys(cats).length} ▾</button>
                 </div>
                 ${ana.period === 'custom' ? `<div style="display:flex;gap:8px;margin-top:10px;align-items:center"><input type="month" class="fam-in" value="${ana.from}" onchange="ana.from=this.value;anaRender()"><span>~</span><input type="month" class="fam-in" value="${ana.to}" onchange="ana.to=this.value;anaRender()"></div>` : ''}
             </div>
             <div class="fam-sum">
-                <div style="background:#f0fdf4"><span style="color:#166534">수입</span><b style="color:#166534">${anaW(inc)}</b></div>
-                <div style="background:#fef2f2"><span style="color:#991b1b">지출</span><b style="color:#991b1b">${anaW(exp)}</b></div>
-                <div style="background:#eff6ff"><span style="color:#1e40af">손익</span><b style="color:${inc - exp < 0 ? '#b91c1c' : '#1e40af'}">${anaW(inc - exp)}</b></div>
+                <div class="sum-box inc" style="cursor:default"><small>수입</small><b style="color:var(--month-header)">${anaW(inc)}</b></div>
+                <div class="sum-box exp" style="cursor:default"><small>지출</small><b style="color:#d9465c">${anaW(exp)}</b></div>
+                <div class="sum-box bal"><small>손익</small><b style="color:${inc - exp < 0 ? '#b91c1c' : '#1e40af'}">${anaW(inc - exp)}</b></div>
             </div>
             <div class="fam-note" style="margin:-4px 0 10px">${rows.length}건 · ${months.length}개월${months.length && exp ? ' · 월평균 지출 ' + anaW(exp / months.length) : ''}</div>
             <div class="fam-box"><h4>월별 추이</h4><div style="height:210px"><canvas id="anaChart"></canvas></div></div>
@@ -68,8 +68,8 @@
         const base = anaBase(), cats = {}; base.forEach(e => { const k = e.type + '|' + e.category; cats[k] = (cats[k] || 0) + e.amt; });
         const grp = t => Object.keys(cats).filter(k => k.startsWith(t + '|')).sort((a, b) => cats[b] - cats[a]);
         const row = k => `<label class="fam-row" style="cursor:pointer"><input type="checkbox" data-ana="cat" value="${famEsc(k)}" ${ana.catOff[k] ? '' : 'checked'} style="width:18px;height:18px;accent-color:var(--month-header)"><span style="flex:1">${famEsc(k.split('|')[1])}</span><span style="color:#94a3b8;font-size:12px">${anaW(cats[k])}</span></label>`;
-        famSheet(`<div class="fam-h"><b>🏷️ 항목 선택</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
-            ${['수입', '지출'].filter(t => ana.types[t]).map(t => `<div class="fam-box"><h4>${t === '수입' ? '📥 수입' : '📤 지출'}</h4>${grp(t).map(row).join('') || '<div class="fam-note">해당 내역 없음</div>'}</div>`).join('')}
+        famSheet(`<div class="fam-h"><b>항목 선택</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
+            ${['수입', '지출'].filter(t => ana.types[t]).map(t => `<div class="fam-box"><h4>${t}</h4>${grp(t).map(row).join('') || '<div class="fam-note">해당 내역 없음</div>'}</div>`).join('')}
             <div class="fam-btns"><button class="fam-btn" onclick="ana.catOff={};anaRender();anaOpenCats()">전체 선택</button><button class="fam-btn" onclick="anaAllOff();anaOpenCats()">전체 해제</button><button class="fam-btn pri" style="margin-left:auto" onclick="famSheetClose()">완료</button></div>`);
     }
     function anaAllOff() { anaBase().forEach(e => { ana.catOff[e.type + '|' + e.category] = true; }); anaRender(); }
@@ -80,9 +80,9 @@
         if (r && ana.period !== 'custom') labels = anaMonthsBack({ m: 1, '3m': 3, '6m': 6, '12m': 12 }[ana.period]);
         const sum = (ym, t) => rows.filter(e => e._ym === ym && e.type === t).reduce((a, e) => a + e.amt, 0);
         const ds = [];
-        if (ana.types['수입']) ds.push({ type: 'bar', label: '수입', data: labels.map(m => sum(m, '수입')), backgroundColor: '#86efac', borderRadius: 6 });
-        if (ana.types['지출']) ds.push({ type: 'bar', label: '지출', data: labels.map(m => sum(m, '지출')), backgroundColor: '#fca5a5', borderRadius: 6 });
-        if (ana.types['수입'] && ana.types['지출']) ds.push({ type: 'line', label: '손익', data: labels.map(m => sum(m, '수입') - sum(m, '지출')), borderColor: '#1e40af', backgroundColor: '#1e40af', tension: .3, pointRadius: 3 });
+        if (ana.types['수입']) ds.push({ type: 'bar', label: '수입', data: labels.map(m => sum(m, '수입')), backgroundColor: famChartColor('inc'), borderRadius: 6, maxBarThickness: 22 });
+        if (ana.types['지출']) ds.push({ type: 'bar', label: '지출', data: labels.map(m => sum(m, '지출')), backgroundColor: famChartColor('exp'), borderRadius: 6, maxBarThickness: 22 });
+        if (ana.types['수입'] && ana.types['지출']) ds.push({ type: 'line', label: '손익', data: labels.map(m => sum(m, '수입') - sum(m, '지출')), borderColor: '#64748b', backgroundColor: '#1e40af', tension: .3, pointRadius: 3 });
         anaChart = new Chart(cv.getContext('2d'), { data: { labels: labels.map(m => m.slice(2).replace('-', '.')), datasets: ds }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { boxWidth: 10, font: { size: 11 } } } }, scales: { y: { ticks: { font: { size: 10 }, callback: v => Math.abs(v) >= 10000 ? Math.round(v / 10000) + '만' : v } }, x: { ticks: { font: { size: 10 } } } } } });
     }
     async function anaAI() {

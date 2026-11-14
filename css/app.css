@@ -852,3 +852,8 @@ header button .fi { color:#fff; }
 /* 홈: 날짜 칸·바·타일 좌우 맞춤 */
 .home-today{padding-left:0!important;padding-right:0!important}
 .pg-acts .pg-sel{width:auto!important;flex:none;min-width:0}.pg-acts .pg-btn,.pg-acts .pg-more,.pg-acts .btn-home{flex:none;white-space:nowrap;min-width:34px}
+.pg-btn.pri{background:var(--month-header);border-color:var(--month-header);color:#fff}
+/* 글자만 있는 뒤로 버튼은 글자 유지 */
+.btn-home:not(:has(svg)){width:auto;padding:0 12px!important;font-size:12px!important}
+.sum-box{min-width:0}
+.sum-box>b{display:block;font-size:15px;font-weight:800;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

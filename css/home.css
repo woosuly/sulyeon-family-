@@ -93,3 +93,6 @@
         .ff-ai-acts{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
         .ff-ai-acts button{border:1px solid #e2e8f0;background:#fff;border-radius:16px;padding:5px 12px;font-size:12px;font-weight:600;color:#475569;cursor:pointer;font-family:inherit}
 
+        /* 쇼핑몰: 목록 아래에 한 줄 6개, 작게 */
+        .shop-sub{font-size:12px;font-weight:700;color:#94a3b8;margin:14px 2px 8px}
+        @media(max-width:560px){.shop-grid{grid-template-columns:repeat(6,1fr);gap:6px}.shop-btn{padding:8px 2px;font-size:10px;gap:4px;border:none;background:none}.shop-btn i{width:36px;height:36px;font-size:13px;border-radius:11px}}
