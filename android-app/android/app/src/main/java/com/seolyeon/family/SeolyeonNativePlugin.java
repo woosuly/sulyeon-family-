@@ -465,6 +465,25 @@ public class SeolyeonNativePlugin extends Plugin {
         call.resolve();
     }
 
+    // ═══ 카톡 "읽어드릴까요?" ═══
+    /** 앱이 열려 있으면 웹화면 팝업으로 (true면 알림 팝업은 안 띄움) */
+    static boolean fireKakaoIn(String room, String from, String text, int n) {
+        if (instance == null) return false;
+        JSObject r = new JSObject();
+        r.put("room", room); r.put("from", from); r.put("text", text); r.put("n", n);
+        instance.notifyListeners("kakaoIn", r, false);
+        return true;
+    }
+    @PluginMethod
+    public void kakaoRead(PluginCall call) { KakaoAsk.read(getContext(), call.getString("room", "")); call.resolve(); }
+    @PluginMethod
+    public void kakaoClear(PluginCall call) { String room = call.getString("room", ""); KakaoAsk.clear(room); KakaoAsk.cancel(getContext(), room); KakaoAsk.stop(); call.resolve(); }
+    @PluginMethod
+    public void kakaoAsk(PluginCall call) {
+        if (call.hasOption("on")) KakaoAsk.setOn(getContext(), Boolean.TRUE.equals(call.getBoolean("on", true)));
+        JSObject r = new JSObject(); r.put("on", KakaoAsk.on(getContext())); r.put("n", KakaoAsk.count(call.getString("room", ""))); call.resolve(r);
+    }
+
     /** 파일을 폰 '다운로드' 폴더에 저장하고 (open:true면) 바로 열기 — {name, data(base64), mime} */
     @PluginMethod
     public void saveFile(PluginCall call) {

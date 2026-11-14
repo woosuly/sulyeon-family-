@@ -292,7 +292,7 @@ function ibSetHtml() {
         <div class="fam-note" style="margin:0 0 10px">이 폰의 문자를 읽어 카드 결제는 가계부 반영 대기로, 택배·예약 등은 요약·일정·답장 초안으로 올립니다. 반영은 확인을 눌러야 됩니다. 인증번호 문자는 저장하지 않습니다.</div>
         <div id="ib-state" class="fam-note" style="margin:0 0 8px">상태 확인 중…</div>
         <div class="fam-btns" style="margin-top:0"><button class="fam-btn" onclick="ibN().openCardListenerSettings()">알림 읽기 허용</button><button class="fam-btn" onclick="ibAskSms()">문자함 읽기 허용</button>${ibN().lookupContacts ? '<button class="fam-btn" onclick="ibAskContacts()">연락처 허용</button>' : ''}</div>
-        ${ibN().kakaoRooms ? `<span class="fam-lbl">카톡: 받을 대화방</span><div id="ib-rooms" class="fam-note" style="margin:0">불러오는 중…</div><div class="fam-note">예약·택배 같은 업체 알림톡은 방을 고르지 않아도 받습니다.</div>` : ''}
+        ${ibN().kakaoRooms ? `<span class="fam-lbl">카톡: 받을 대화방</span><div id="ib-rooms" class="fam-note" style="margin:0">불러오는 중…</div><div class="fam-note">예약·택배 같은 업체 알림톡은 방을 고르지 않아도 받습니다.</div>${typeof kkSetHtml === 'function' ? kkSetHtml() : ''}` : ''}
         <span class="fam-lbl">문자: 안 받을 사람</span>
         <div class="fam-note" style="margin:0;display:flex;align-items:center;gap:8px"><span style="flex:1">${ibBlockList().length ? '안 받는 번호·발신자 <b>' + ibBlockList().length + '</b>개' : '모든 문자를 받습니다 (광고는 AI가 걸러냄)'}</span><button class="fam-btn" style="flex:none" onclick="ibBlockOpen()">편집</button></div>
         <span class="fam-lbl">가계부에 넣을 카드 (끝 4자리 · 사용자)</span>

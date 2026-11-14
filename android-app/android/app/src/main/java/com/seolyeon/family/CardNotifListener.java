@@ -60,6 +60,7 @@ public class CardNotifListener extends NotificationListenerService {
                 if (allow || (!group && CardQueue.ALIMTALK.matcher(t).find() && CardQueue.HAS_WHEN.matcher(t).find())) {
                     CardQueue.add(this, t, sbn.getPostTime(), from, "kakao", room);
                 }
+                if (allow) KakaoAsk.incoming(this, room, from, t);   // 받는 방이면 "읽어드릴까요?" 팝업
                 return;
             }
 
@@ -71,6 +72,8 @@ public class CardNotifListener extends NotificationListenerService {
                     CardQueue.add(this, t, sbn.getPostTime(), from, "sms");   // 택배·예약 등: 앱을 열 때 비서가 정리
                 }
             }
+            // 연락처에 저장된 사람의 문자면 "읽어드릴까요?" 팝업
+            if (smsApp && added == 0) { CharSequence body = x.getCharSequence(Notification.EXTRA_TEXT); if (body != null) KakaoAsk.incomingSms(this, from, body.toString()); }
             if (added > 0) {
                 int total = CardQueue.size(this);
                 Map<String, String> d = new HashMap<>();
