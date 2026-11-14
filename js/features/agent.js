@@ -13,6 +13,7 @@ const agLocalInput = ms => { const d = new Date(ms - new Date().getTimezoneOffse
 // ── 말 거는 방식 판단 (assistant.js famRun에서 호출) ──
 function agRoute(raw) {
     const t = raw.trim();
+    if (typeof mediaRoute === 'function' && mediaRoute(t)) return true;   // 음악·영상
     if (/(기억\s*해\s*(줘|둬|놔)|기억해|메모\s*해\s*(줘|둬)|적어\s*(줘|둬))[.!]?$/.test(t)) { agNoteSave(t); return true; }
     // 알림 요청: '~에 알려줘'(시각 + 에) 또는 할 일 동사가 있을 때만. '주말 날씨 알려줘' 같은 정보 요청은 AI 답변으로
     const askEnd = /(알려\s*줘|알림\s*(줘|해\s*줘)|리마인드|깨워\s*줘|말해\s*줘)[.!]?$/.test(t);

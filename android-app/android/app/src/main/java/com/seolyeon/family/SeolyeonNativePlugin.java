@@ -488,4 +488,19 @@ public class SeolyeonNativePlugin extends Plugin {
             JSObject r = new JSObject(); r.put("uri", String.valueOf(uri)); call.resolve(r);
         } catch (Exception e) { call.reject(String.valueOf(e.getMessage())); }
     }
+
+    /** 다른 앱으로 열기 (유튜브 뮤직·유튜브 등) — {url, pkg}: pkg 앱이 없으면 기본 앱·브라우저 */
+    @PluginMethod
+    public void openUrl(PluginCall call) {
+        Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(call.getString("url", "")));
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        String pkg = call.getString("pkg", "");
+        if (pkg != null && !pkg.isEmpty()) i.setPackage(pkg);
+        try { getContext().startActivity(i); }
+        catch (Exception e) {
+            i.setPackage(null);
+            try { getContext().startActivity(i); } catch (Exception e2) { call.reject(String.valueOf(e2.getMessage())); return; }
+        }
+        call.resolve();
+    }
 }

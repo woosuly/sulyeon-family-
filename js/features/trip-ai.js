@@ -108,7 +108,7 @@ async function tpDraft(dest, start, end, note) {
             ${(j.bookings || []).length ? `<div class="fam-box"><h4>예약 할 일</h4>${j.bookings.map(x => `<div class="tp-l"><small>${x.by ? tpMD(x.by) + '까지' : ''}</small><b>${famEsc(x.what)}</b> ${famEsc(x.tip || '')}</div>`).join('')}</div>` : ''}
             ${j.supplies ? `<div class="fam-box"><h4>준비물</h4><div class="tp-l">${famEsc(j.supplies)}</div></div>` : ''}
             ${(j.tips || []).length ? `<div class="fam-box"><h4>알아둘 것</h4>${j.tips.map(t => `<div class="tp-l">- ${famEsc(t)}</div>`).join('')}</div>` : ''}
-            <div class="fam-btns"><button class="fam-btn pri" onclick="tpSave()">여행 계획으로 저장</button>${(j.bookings || []).length ? '<button class="fam-btn" onclick="tpBookRemind()">예약 마감 알림</button>' : ''}<button class="fam-btn" onclick="famShare(tpDraftText())">공유</button></div>`);
+            <div class="fam-btns"><button class="fam-btn pri" onclick="tpSave()">여행 계획으로 저장</button>${(j.bookings || []).length ? '<button class="fam-btn" onclick="tpBookRemind()">예약 마감 알림</button>' : ''}<button class="fam-btn" onclick="famShare(tpDraftText())">공유</button><button class="fam-btn" onclick="famSheetClose();showSection('main-section');videoSearch(_tpDraft.dest+' 여행')">영상 보기</button></div>`);
     } catch (e) { famSheet(`<div class="fam-h"><b>여행 초안</b><button class="fam-x" onclick="famSheetClose()">✕</button></div><div class="fam-note">⚠️ ${famEsc(e.message)}</div>`); }
 }
 function tpDraftText() {

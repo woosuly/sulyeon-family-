@@ -886,3 +886,11 @@ header button .fi { color:#fff; }
 .snap-bars{display:flex;align-items:flex-end;gap:10px;height:76px;margin:10px 0 6px;padding:0 2px}.snap-bars>div{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}.snap-bars i{display:block;width:100%;max-width:26px;border-radius:6px 6px 2px 2px;background:var(--month-header);opacity:.8}.snap-bars small{font-size:10.5px;color:#94a3b8}
 .snap-row{display:grid;grid-template-columns:1.3fr 1fr 1.2fr 28px;gap:6px;margin-bottom:6px;align-items:center}.snap-row input,.snap-row select{padding:8px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;min-width:0}
 [data-theme="dark"] .tp-op{background:#1e293b;border-color:#334155}[data-theme="dark"] .tp-l{color:#cbd5e1}
+/* 유튜브 */
+.yt-list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.yt-item{display:flex;gap:10px;align-items:center;border:none;background:#fff;border-radius:12px;padding:6px;text-align:left;cursor:pointer;font-family:inherit}
+.yt-item img{width:120px;height:68px;object-fit:cover;border-radius:8px;flex:none;background:#e2e8f0}
+.yt-item span{min-width:0;display:flex;flex-direction:column;gap:3px}.yt-item b{font-size:13px;font-weight:600;color:#1e293b;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.yt-item small{font-size:11.5px;color:#94a3b8}
+.yt-frame{position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden;background:#000}.yt-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.yt-alt{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;font-size:12px;color:#94a3b8}.yt-alt button{border:1px solid #e2e8f0;background:#fff;border-radius:14px;padding:4px 10px;font-size:12px;color:#334155;cursor:pointer}
+[data-theme="dark"] .yt-item{background:#1e293b}[data-theme="dark"] .yt-item b{color:#e2e8f0}
