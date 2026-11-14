@@ -44,8 +44,8 @@ exports.stSetup = onRequest({region: REGION}, async (req, res) => {
       const r = await fetch(`${API}/apps`, {method: 'POST', headers: {authorization: 'Bearer ' + pat, 'content-type': 'application/json'},
         body: JSON.stringify({appName, displayName: '설연 가족 앱', description: '설연 가족 앱에서 집 기기 제어', appType: 'API_ONLY', classifications: ['CONNECTED_SERVICE'], singleInstance: true,
           apiOnly: {targetUrl: null}, oauth: {clientName: '설연', scope: SCOPES, redirectUris: [CALLBACK]}})});
-      const j = await r.json();
-      if (!r.ok) throw new Error('앱 등록 실패: ' + (j.error && (j.error.message || j.error.code) || r.status));
+      const txt = await r.text(); let j = {}; try { j = JSON.parse(txt); } catch (e) {}
+      if (!r.ok) throw new Error(`앱 등록 실패 (${r.status}${r.status === 401 ? ' 토큰 오류·만료' : r.status === 403 ? ' 토큰 권한 부족: 앱(Apps) 권한 필요' : ''}) ` + ((j.error && (j.error.message || j.error.code)) || txt.slice(0, 120)));
       clientId = j.oauthClientId; secret = j.oauthClientSecret;
       await ref().set({clientId, secret, appId: j.app && j.app.appId, at: Date.now()}, {merge: true});
     }
