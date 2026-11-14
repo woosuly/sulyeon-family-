@@ -29,19 +29,27 @@ function stConnectForm() {
     famSheet(`<div class="fam-h"><b>스마트싱스 연결</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
         <div class="fam-note" style="margin:0 0 8px">
         ① 아래 버튼으로 토큰 페이지를 열고 삼성 계정으로 로그인<br>
-        ② <b>새 토큰 생성</b> → 이름 아무거나 → 권한은 <b>기기(Devices)·장면(Scenes)·위치(Locations)</b> 전부 체크 → 생성<br>
+        ② <b>새 토큰 생성</b> → 이름 아무거나 → 권한은 <b>전부 체크</b> (특히 <b>앱(Apps)</b>·기기·장면·위치) → 생성<br>
         ③ 나온 토큰을 복사해 아래 칸에 붙여넣고 <b>연결</b><br>
         ④ 삼성 로그인 화면이 뜨면 <b>허용</b> → "연결 완료"가 보이면 앱으로 돌아오기<br>
         <small>토큰은 하루 뒤 만료되지만, 연결 후에는 서버가 오래 쓰는 열쇠로 바꿔 보관합니다.</small></div>
         <div class="fam-btns" style="margin-top:0"><button class="fam-btn" onclick="ytOpen('https://account.smartthings.com/tokens','')">토큰 페이지 열기</button></div>
         <div class="ff-form"><div class="full"><label>토큰</label><input id="st-pat" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="붙여넣기"></div></div>
-        <div class="fam-btns"><button class="fam-btn pri" onclick="stConnect(this)">연결</button></div>`);
+        <div class="fam-btns"><button class="fam-btn pri" onclick="stConnect(this)">연결</button></div>
+        <div id="st-err" class="fam-note" style="color:#b91c1c"></div>`);
 }
 async function stConnect(btn) {
     const pat = document.getElementById('st-pat').value.trim(); if (!pat) return famToast('토큰을 붙여넣어 주세요');
     btn.disabled = true; btn.textContent = '등록 중…';
     try { const r = await stCall('stSetup', { pat }); famSheetClose(); famToast('삼성 계정 화면에서 허용을 눌러 주세요'); ytOpen(r.url, ''); }
-    catch (e) { famToast('연결 실패: ' + e.message); btn.disabled = false; btn.textContent = '연결'; }
+    catch (e) {
+        const m = e.message || '', el = document.getElementById('st-err');
+        const hint = /Failed to fetch|404|응답 오류/.test(m) ? '서버가 아직 배포되지 않았습니다. Cloud Shell 배포를 먼저 해 주세요.'
+            : /403|권한|scope|forbidden|insufficient/i.test(m) ? '토큰 권한이 부족합니다. 토큰을 새로 만들 때 권한을 전부(특히 앱 Apps) 체크해 주세요.'
+            : /401|unauthor|invalid/i.test(m) ? '토큰이 맞지 않거나 만료됐습니다. 새로 만들어 붙여넣어 주세요.' : '';
+        if (el) el.innerHTML = '연결 실패: ' + famEsc(m) + (hint ? '<br><b>' + hint + '</b>' : '');
+        btn.disabled = false; btn.textContent = '연결';
+    }
 }
 
 // ── 기기 목록·제어 ──
