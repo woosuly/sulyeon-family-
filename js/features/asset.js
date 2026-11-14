@@ -1,4 +1,6 @@
         // ── 가계부 ──────────────────────────────────────────────────
+        // 달력 칸이 좁아 만 단위로 줄여 표시 (520만, 3.9만, 8,790)
+        function asShort(n) { n = Math.abs(Number(n) || 0); if (n >= 1e6) return Math.round(n / 1e4).toLocaleString('ko-KR') + '만'; if (n >= 1e4) return (Math.round(n / 1e3) / 10) + '만'; return n.toLocaleString('ko-KR'); }
         function renderAssetCal() {
             const grid = document.getElementById('asset-cal-grid');
             if (!grid) return;
@@ -52,15 +54,15 @@
 
                 if (inc > 0) {
                     const b = document.createElement('div');
-                    b.style.cssText = 'font-size:9px;color:#166534;background:#f0fdf4;border-radius:4px;padding:1px 3px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
-                    b.textContent = '+' + inc.toLocaleString();
+                    b.style.cssText = 'font-size:10px;font-weight:700;color:#166534;background:#f0fdf4;border-radius:4px;padding:1px 3px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+                    b.textContent = '+' + asShort(inc); b.title = inc.toLocaleString() + '원';
                     b.onclick = ev => { ev.stopPropagation(); openAssetDayModal(ds); };
                     cell.appendChild(b);
                 }
                 if (exp > 0) {
                     const b = document.createElement('div');
-                    b.style.cssText = 'font-size:9px;color:#991b1b;background:#fef2f2;border-radius:4px;padding:1px 3px;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
-                    b.textContent = '-' + exp.toLocaleString();
+                    b.style.cssText = 'font-size:10px;font-weight:700;color:#991b1b;background:#fef2f2;border-radius:4px;padding:1px 3px;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+                    b.textContent = '-' + asShort(exp); b.title = exp.toLocaleString() + '원';
                     b.onclick = ev => { ev.stopPropagation(); openAssetDayModal(ds); };
                     cell.appendChild(b);
                 }
@@ -70,13 +72,25 @@
             }
         }
 
+        // ── 입력 도우미: 금액 쉼표, 빠른 금액, 내용 보고 분류 자동 선택 ──
+        let asCatTouched = false;
+        function asAmtFmt(el) { const v = String(el.value).replace(/[^\d]/g, ''); el.value = v ? Number(v).toLocaleString('ko-KR') : ''; }
+        function asAmtAdd(n) { const el = document.getElementById('as-amt'); const v = Number(String(el.value).replace(/[^\d]/g, '')) || 0; el.value = n ? (v + n).toLocaleString('ko-KR') : ''; }
+        function asMemoCat(memo) {
+            if (asCatTouched || document.getElementById('as-type').value !== '지출' || !memo.trim()) return;
+            const c = (typeof famHistCat === 'function' && famHistCat(memo, '지출')) || (typeof famGuessCat === 'function' ? famGuessCat(memo, '지출') : '');
+            if (!c || c === '기타지출') return;
+            resetChips('as-expense-cat-group', c, 'as-expense-cat');
+            document.getElementById('as-cat-hint').textContent = '· 내용 보고 자동 선택';
+        }
+
         function openAssetEntryModal(data, date) {
             // 일별 모달 닫기
             const dm = document.getElementById('asset-day-modal');
             if (dm && !dm.classList.contains('hidden')) dm.classList.add('hidden');
             resetModal();
 
-            document.getElementById('modal-title').innerText = data ? '💰 항목 수정' : `💰 ${date} 항목 추가`;
+            document.getElementById('modal-title').innerText = data ? '가계부 수정' : '가계부 입력';
             document.getElementById('btn-save').innerText     = data ? '수정' : '저장';
             document.getElementById('asset-entry-fields').classList.remove('hidden');
             activeDateStr = date;
@@ -104,26 +118,35 @@
                     resetChips('as-pay-group', data.pay || '카드', 'as-pay');
                 }
 
-                document.getElementById('as-amt').value  = data.amt  || '';
+                document.getElementById('as-amt').value  = data.amt ? Number(data.amt).toLocaleString('ko-KR') : '';
                 document.getElementById('as-memo').value = data.memo || '';
                 document.getElementById('btn-del').classList.remove('hidden');
+                asCatTouched = true;
             } else {
-                // 신규 입력: 기본값 세팅
-                resetChips('as-member-group',    '정우설',  'as-member');
-                resetChips('as-type-group',      '수입',    'as-type');
+                // 신규 입력: 지출이 기본 (대부분 지출), 구성원은 입력하는 사람
+                const me = (typeof famUser === 'function' && famUser()) || '정우설';
+                resetChips('as-member-group',    ['정우설', '한미연'].includes(me) ? me : '정우설', 'as-member');
+                resetChips('as-type-group',      '지출',    'as-type');
                 resetChips('as-income-cat-group','급여',    'as-income-cat');
+                resetChips('as-expense-cat-group','생활비', 'as-expense-cat');
                 resetChips('as-pay-group',       '카드',    'as-pay');
-                document.getElementById('as-income-section').style.display  = '';
-                document.getElementById('as-expense-section').style.display = 'none';
+                document.getElementById('as-income-section').style.display  = 'none';
+                document.getElementById('as-expense-section').style.display = '';
                 document.getElementById('as-amt').value  = '';
                 document.getElementById('as-memo').value = '';
+                asCatTouched = false;
             }
+            document.getElementById('as-date').value = (data && data.date) || date;
+            document.getElementById('as-cat-hint').textContent = '';
+            document.getElementById('as-expense-cat-group').onclick = () => { asCatTouched = true; document.getElementById('as-cat-hint').textContent = ''; };
+            if (!data) setTimeout(() => { const a = document.getElementById('as-amt'); if (a) a.focus(); }, 250);
 
             document.getElementById('btn-save').onclick = async () => {
                 const id       = document.getElementById('edit-id').value || 'as_' + Date.now();
                 const member   = document.getElementById('as-member').value   || '정우설';
                 const type     = document.getElementById('as-type').value     || '수입';
-                const amt      = Number(document.getElementById('as-amt').value) || 0;
+                const amt      = Number(String(document.getElementById('as-amt').value).replace(/[^\d-]/g, '')) || 0;
+                const dsave    = document.getElementById('as-date').value || activeDateStr;
                 const memo     = document.getElementById('as-memo').value     || '';
                 const category = type === '수입'
                     ? (document.getElementById('as-income-cat').value  || '급여')
@@ -135,7 +158,7 @@
                 if (!amt) { alert('금액을 입력해주세요.'); return; }
 
                 await db.collection('assets').doc(id).set({
-                    id, member, date: activeDateStr,
+                    id, member, date: dsave,
                     type, category, pay, amt, memo,
                     ...(typeof famTripVals === 'function' ? famTripVals('as') : {})
                 });

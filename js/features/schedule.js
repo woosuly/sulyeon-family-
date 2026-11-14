@@ -145,13 +145,14 @@
             if (ev.planId && !SCH_F.trip) return false;
             return SCH_F.show[schKey(ev)] !== false;
         }
-        function schMaxEv(){ return window.innerWidth >= 1024 ? 4 : 2; }
+        function schMaxEv(){ return window.innerWidth >= 1024 ? 4 : 3; }
         function schToggle(who,on){ SCH_F.show[who]=on; schSet('show',SCH_F.show); }
         function schSet(k,v){ SCH_F[k]=v; try{ localStorage.setItem('schFilter2',JSON.stringify(SCH_F)); }catch(e){} renderSch(); if (typeof renderMainDashboard==='function') renderMainDashboard(); }
         function schRenderChips(){
             const el=document.getElementById('sch-filter-chips'); if(!el) return;
-            el.innerHTML = [['정우설','👨'],['한미연','👩'],['공통','👨‍👩‍👧']].map(([k,ic])=>`<label class="sch-fchip ${SCH_F.show[k]!==false?'':'off'}"><input type="checkbox" ${SCH_F.show[k]!==false?'checked':''} onchange="schToggle('${k}',this.checked)"> ${ic} ${k}</label>`).join('') + `
-                <label class="sch-fchip ${SCH_F.trip?'':'off'}"><input type="checkbox" ${SCH_F.trip?'checked':''} onchange="schSet('trip',this.checked)"> ✈️ 여행·여가 표시</label>`;
+            // 구성원 색 점 = 달력 막대 색 (누르면 켜고 끔)
+            el.innerHTML = [['정우설','#93c5fd'],['한미연','#f9a8d4'],['공통','#86efac']].map(([k,c])=>`<label class="sch-fchip ${SCH_F.show[k]!==false?'':'off'}"><input type="checkbox" ${SCH_F.show[k]!==false?'checked':''} onchange="schToggle('${k}',this.checked)"><i class="sch-dot" style="background:${c}"></i>${k}</label>`).join('') + `
+                <label class="sch-fchip ${SCH_F.trip?'':'off'}"><input type="checkbox" ${SCH_F.trip?'checked':''} onchange="schSet('trip',this.checked)">여행·여가</label>`;
         }
         function schAddPlan(ds){
             closeSchDetail();
@@ -178,7 +179,7 @@
             // 그리드 스타일: W#(28px) + 일~토 7열
             grid.style.cssText = `
                 display:grid;
-                grid-template-columns:${window.innerWidth < 420 ? 20 : 28}px repeat(7,minmax(0,1fr));
+                grid-template-columns:${window.innerWidth < 520 ? 0 : 28}px repeat(7,minmax(0,1fr));
                 background:#e2e8f0;
                 gap:1px;
                 min-width:0; width:100%;
@@ -199,7 +200,8 @@
                 el.textContent = text;
                 return el;
             };
-            grid.appendChild(mkHdr('W#','#c0ccda'));
+            const narrow = window.innerWidth < 520;   // 폰: 주차 칸 숨기고 날짜 칸을 넓게
+            grid.appendChild(mkHdr(narrow ? '' : 'W#','#c0ccda'));
             ['일','월','화','수','목','금','토'].forEach((d,i) => {
                 grid.appendChild(mkHdr(d, i===0?'#ef4444':i===6?'#3b82f6':'#64748b'));
             });
@@ -221,7 +223,7 @@
                 // 주차 셀
                 const wCell = document.createElement('div');
                 wCell.style.cssText = 'background:#f8fafc;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#94a3b8;';
-                wCell.textContent = `W${wn}`;
+                wCell.textContent = narrow ? '' : `W${wn}`;
                 grid.appendChild(wCell);
 
                 // 7일
@@ -267,7 +269,7 @@
                     row.appendChild(dNum);
 
                     // 일요일 음력 (주차 레이블 제거, 음력만 유지)
-                    if (dayW === 0 && isCur) {
+                    if (dayW === 0 && isCur && !narrow) {
                         const lun = getLunarDate(dy, dm, dd);
                         const ls = document.createElement('span');
                         ls.style.cssText = 'font-size:9px;color:#c0ccda;overflow:hidden;text-overflow:ellipsis;';
@@ -278,33 +280,40 @@
 
                     /* ── 이벤트 바 (현재 달만) ── */
                     if (isCur) {
-                        const dayEvs = schData.filter(s => s.date === ds && schShow(s));
+                        // 연속 일정을 먼저(시작일 순) 그려 날마다 같은 줄에 이어지게
+                        const dayEvs = schData.filter(s => s.date === ds && schShow(s))
+                            .sort((a, b) => (b.span ? 1 : 0) - (a.span ? 1 : 0) || String(a.span?.start || '').localeCompare(String(b.span?.start || '')) || String(a.startTime || '').localeCompare(String(b.startTime || '')));
                         dayEvs.slice(0, schMaxEv()).forEach(ev => {
                             const isImpt = ev.priority === '중요';
                             const bar = document.createElement('div');
+                            const sp = ev.span, contL = sp && sp.idx > 0 && dayW !== 0, contR = sp && sp.idx < sp.n - 1 && dayW !== 6;
+                            const bg = ev.member==='정우설'?'#dbeafe':ev.member==='한미연'?'#fce7f3':ev.member==='가족'||!ev.member||ev.planId?'#dcfce7':'#f1f5f9';
                             bar.style.cssText = `
                                 display:flex; align-items:center; gap:2px;
-                                font-size:10px; padding:2px 5px; border-radius:5px; margin-top:2px;
-                                font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-                                background:${ev.member==='정우설'?'#dbeafe':ev.member==='한미연'?'#fce7f3':ev.member==='가족'||!ev.member||ev.planId?'#f0fdf4':'#f1f5f9'};
+                                font-size:${narrow ? 10 : 11}px; line-height:1.25; padding:2px ${narrow ? 3 : 5}px; margin-top:2px;
+                                border-radius:${contL ? 0 : 5}px ${contR ? 0 : 5}px ${contR ? 0 : 5}px ${contL ? 0 : 5}px;
+                                margin-left:${contL ? -6 : 0}px; margin-right:${contR ? -6 : 0}px;
+                                font-weight:600; overflow:hidden; min-height:${narrow ? 15 : 17}px;
+                                background:${bg};
                                 cursor:pointer;
-                                border-left:3px solid ${isImpt?'#f59e0b':'transparent'};
+                                border-left:${contL ? 0 : 3}px solid ${isImpt?'#f59e0b':sp?'rgba(0,0,0,.18)':'transparent'};
                             `;
-                            if (isImpt) {
+                            if (isImpt && !narrow) {
                                 const star = document.createElement('span');
                                 star.textContent = '⭐';
                                 star.style.cssText = 'font-size:9px;flex-shrink:0;';
                                 bar.appendChild(star);
                             }
-                            if (ev.repeat) {
+                            if (ev.repeat && !narrow) {
                                 const rep = document.createElement('span');
                                 rep.textContent = ev.repeat.cal === 'lunar' ? '🌙' : '🔁';
                                 rep.style.cssText = 'font-size:8px;flex-shrink:0;opacity:.7;';
                                 bar.appendChild(rep);
                             }
                             const txt = document.createElement('span');
-                            txt.style.cssText = 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
-                            txt.textContent = ev.memo || '';
+                            txt.style.cssText = 'overflow:hidden;flex:1;min-width:0;' + (narrow ? 'display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-all;white-space:normal;' : 'text-overflow:ellipsis;white-space:nowrap;') + (contL ? 'opacity:.55;' : '');
+                            // 연속 일정은 첫날·주 시작(일요일)에만 글자, 나머지는 막대만 이어짐
+                            txt.textContent = sp && sp.idx > 0 && dayW !== 0 && !narrow ? '' : (ev.startTime && !narrow ? ev.startTime + ' ' : '') + (ev.memo || '');
                             bar.appendChild(txt);
                             bar.onclick = e => { e.stopPropagation(); openDayDetail(ds); };
                             cell.appendChild(bar);
@@ -542,10 +551,17 @@
             const isEdit = !!(data && data.id);
 
             document.getElementById('modal-title').innerText = isEdit
-                ? (editAll ? '✏️ 반복 전체 수정' : `✏️ 일정 수정  ${activeDateStr}`)
-                : `＋ 일정 추가  ${activeDateStr}`;
+                ? (editAll ? '반복 일정 전체 수정' : '일정 수정')
+                : '일정 추가';
             document.getElementById('btn-save').innerText = isEdit ? '수정 저장' : '저장';
             document.getElementById('sch-fields').classList.remove('hidden');
+            // 날짜: 시작일~종료일 (연속 일정이면 묶음의 처음~끝)
+            const spanOf = data && data.span ? data.span : null;
+            document.getElementById('sch-date').value = spanOf ? spanOf.start : activeDateStr;
+            document.getElementById('sch-date-end').value = spanOf ? spanOf.end : '';
+            const rpOn = !!(data && data.repeat);
+            document.getElementById('sch-date-end').disabled = rpOn;   // 반복 일정은 하루 단위
+            schDateSync();
 
             if (isEdit) {
                 document.getElementById('edit-id').value   = data.id;
@@ -574,8 +590,15 @@
 
             document.getElementById('btn-save').onclick = async () => {
                 const memo = document.getElementById('sch-memo').value.trim();
-                if (!memo) { alert('메모(내용)를 입력해주세요.'); return; }
+                if (!memo) { alert('내용을 입력해주세요.'); return; }
                 const id = document.getElementById('edit-id').value || 'sch_' + Date.now();
+                const dStart = document.getElementById('sch-date').value || activeDateStr;
+                let dEnd = document.getElementById('sch-date-end').value || '';
+                if (dEnd && dEnd < dStart) { alert('종료일이 시작일보다 앞입니다.'); return; }
+                if (dEnd === dStart) dEnd = '';
+                const days = dEnd ? schDaysBetween(dStart, dEnd) : [dStart];
+                if (days.length > 60) { alert('연속 일정은 60일까지 됩니다.'); return; }
+                activeDateStr = dStart;
 
                 const updatedFields = {
                     priority:  document.getElementById('sch-priority').value,
@@ -603,11 +626,30 @@
                         schData.filter(s => s.repeat?.groupId === groupId).forEach(s => {
                             batch.update(db.collection('schedules').doc(s.id), updatedFields);
                         });
+                    } else if (isEdit && !(schData.find(s => s.id === id) || {}).repeat) {
+                        // 일반·연속 일정 수정: 묶음 전체를 지우고 새 날짜 범위로 다시 만듦
+                        const orig = schData.find(s => s.id === id) || {};
+                        const olds = orig.span ? schData.filter(s => s.span && s.span.groupId === orig.span.groupId) : [orig];
+                        olds.forEach(s => s.id && batch.delete(db.collection('schedules').doc(s.id)));
+                        const { span: _s, id: _i, date: _d, ...keep } = orig;
+                        const gid = orig.span ? orig.span.groupId : id;
+                        days.forEach((ds, i) => {
+                            const did = days.length === 1 ? (orig.span ? gid : id) : (i === 0 ? gid : `${gid}_d${i}`);
+                            batch.set(db.collection('schedules').doc(did), { ...keep, ...updatedFields, id: did, date: ds,
+                                span: days.length > 1 ? { groupId: gid, start: dStart, end: dEnd, idx: i, n: days.length } : null });
+                        });
                     } else if (isEdit) {
-                        // 이 일정만 수정
+                        // 반복 일정 중 이 날만 수정
                         const orig = schData.find(s => s.id === id);
                         batch.set(db.collection('schedules').doc(id), {
                             ...orig, ...updatedFields,
+                        });
+                    } else if (days.length > 1) {
+                        // 연속 일정 신규: 하루마다 한 건, 같은 묶음 번호로 연결
+                        days.forEach((ds, i) => {
+                            const did = i === 0 ? id : `${id}_d${i}`;
+                            batch.set(db.collection('schedules').doc(did), { id: did, date: ds, ...updatedFields, repeat: null,
+                                span: { groupId: id, start: dStart, end: dEnd, idx: i, n: days.length } });
                         });
                     } else {
                         // 신규 등록
@@ -637,6 +679,10 @@
                 if (target?.repeat?.groupId) {
                     closeModal();
                     openRepeatScope('delete', target);
+                } else if (target && target.span) {
+                    if (!confirm(`연속 일정 ${target.span.n}일(${target.span.start} ~ ${target.span.end})을 모두 삭제할까요?`)) return;
+                    const b = db.batch(); schData.filter(s => s.span && s.span.groupId === target.span.groupId).forEach(s => b.delete(db.collection('schedules').doc(s.id)));
+                    await b.commit(); closeModal(); closeSchDetail(); renderSch();
                 } else {
                     if (!confirm('이 일정을 삭제할까요?')) return;
                     await doDeleteOne(delId);
@@ -644,6 +690,24 @@
             };
 
             openModal();
+        }
+
+        // 시작일~종료일 사이 날짜 목록
+        function schDaysBetween(a, b) {
+            const out = []; let d = new Date(a + 'T00:00:00'); const e = new Date(b + 'T00:00:00');
+            while (d <= e && out.length < 400) { out.push(famDs(d)); d.setDate(d.getDate() + 1); }
+            return out;
+        }
+        // 날짜 입력이 바뀌면 제목·안내 갱신 (반복 일정과 연속 일정은 같이 못 씀)
+        function schDateSync() {
+            const s = document.getElementById('sch-date'), e = document.getElementById('sch-date-end'), info = document.getElementById('sch-span-info');
+            if (!s) return;
+            if (e.value && s.value && e.value < s.value) e.value = s.value;
+            const n = e.value && s.value && e.value > s.value ? schDaysBetween(s.value, e.value).length : 1;
+            info.textContent = n > 1 ? `${n}일 연속 일정으로 등록됩니다.` : '';
+            const rp = document.getElementById('sch-repeat-chk');
+            if (rp) { rp.disabled = n > 1; if (n > 1 && rp.checked) { rp.checked = false; toggleRepeatBox(); } }
+            if (s.value) activeDateStr = s.value;
         }
 
         function togglePlanTimeSection() {
@@ -681,7 +745,7 @@
             const lm = +document.getElementById('sch-lunar-m').value, ld = +document.getElementById('sch-lunar-d').value, now = new Date();
             const base = +activeDateStr.slice(0, 4) || now.getFullYear();
             const sol = famLunarToSolar(base, lm, ld) || famLunarToSolar(now.getFullYear(), lm, ld);
-            if (sol) { activeDateStr = famDs(sol); const t = document.getElementById('modal-title'); if (t) t.innerText = t.innerText.replace(/\d{4}-\d{2}-\d{2}/, activeDateStr); }
+            if (sol) { activeDateStr = famDs(sol); const sd = document.getElementById('sch-date'); if (sd) sd.value = activeDateStr; const t = document.getElementById('modal-title'); if (t) t.innerText = t.innerText.replace(/\d{4}-\d{2}-\d{2}/, activeDateStr); }
             famLunarInfo();
         }
         document.addEventListener('change', e => { if (e.target && (e.target.name === 'sch-repeat-unit' || e.target.name === 'sch-repeat-cal')) famRepeatUI(); });

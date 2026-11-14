@@ -819,3 +819,8 @@ header button .fi { color:#fff; }
 [data-theme="dark"] .ib-bar,[data-theme="dark"] .ib-item{background:#1e293b;border-color:#334155;color:#e2e8f0}
 [data-theme="dark"] .ib-sheet{background:#0f172a}[data-theme="dark"] .ib-name,[data-theme="dark"] .ib-amt{color:#e2e8f0}[data-theme="dark"] .ib-sch{background:#334155}
 .ib-wrap{flex-wrap:wrap}.ib-room{display:flex;align-items:center;gap:6px;padding:6px 0;border:none;background:none}
+/* 가계부 입력: 지출/수입 큰 토글, 큰 금액칸, 빠른 금액 */
+.as-type-seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:4px}.as-type-seg .sch-chip{justify-content:center;padding:10px 0;font-size:15px}
+.as-amt-in{font-size:22px!important;font-weight:800;text-align:right;letter-spacing:.3px}
+.as-quick{display:flex;gap:6px;margin:6px 0 2px;flex-wrap:wrap}.as-quick button{flex:1;min-width:52px;padding:7px 0;border-radius:10px;border:1px solid #e2e8f0;background:#f8fafc;font-size:12px;font-weight:700;color:#475569}
+.as-date-in{width:100%;padding:9px 10px;border-radius:10px;border:1.5px solid #e2e8f0;font-size:14px;background:#fff}

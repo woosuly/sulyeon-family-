@@ -968,12 +968,14 @@
 
             <!-- 일정 -->
             <div id="sch-fields" class="field-group hidden">
-                <label class="field-label">중요도</label>
-                <div class="sch-chip-group" id="sch-priority-group">
-                    <button type="button" class="sch-chip active" data-val="일반" onclick="selectChip(this,'sch-priority-group')">일반</button>
-                    <button type="button" class="sch-chip"        data-val="중요" onclick="selectChip(this,'sch-priority-group')">중요</button>
+                <label class="field-label">내용</label>
+                <input type="text" id="sch-memo" placeholder="예: 치과 검진, 제주 여행" autocomplete="off">
+
+                <div class="sch-dates">
+                    <div><label class="field-label">시작일</label><input type="date" id="sch-date" onchange="schDateSync()"></div>
+                    <div><label class="field-label">종료일 <span class="sch-hint">(여러 날이면)</span></label><input type="date" id="sch-date-end" onchange="schDateSync()"></div>
                 </div>
-                <input type="hidden" id="sch-priority" value="일반">
+                <div id="sch-span-info" class="sch-hint" style="margin-top:4px"></div>
 
                 <label class="field-label">구성원</label>
                 <div class="sch-chip-group" id="sch-member-group">
@@ -982,6 +984,13 @@
                     <button type="button" class="sch-chip" data-val="한미연" onclick="selectChip(this,'sch-member-group')">한미연</button>
                 </div>
                 <input type="hidden" id="sch-member" value="정우설">
+
+                <label class="field-label">중요도</label>
+                <div class="sch-chip-group" id="sch-priority-group">
+                    <button type="button" class="sch-chip active" data-val="일반" onclick="selectChip(this,'sch-priority-group')">일반</button>
+                    <button type="button" class="sch-chip"        data-val="중요" onclick="selectChip(this,'sch-priority-group')">중요</button>
+                </div>
+                <input type="hidden" id="sch-priority" value="일반">
 
                 <label class="field-label">카테고리</label>
                 <div class="sch-chip-group" id="sch-category-group">
@@ -1012,8 +1021,6 @@
                 <label class="field-label">장소</label>
                 <input type="text" id="sch-place" placeholder="장소를 입력하세요 (선택)">
 
-                <label class="field-label">메모</label>
-                <textarea id="sch-memo" rows="3" placeholder="일정 내용을 입력하세요"></textarea>
 
                 <!-- 반복 일정 박스 -->
                 <div style="margin-top:18px; border:1.5px solid #e2e8f0; border-radius:14px; overflow:hidden;">
@@ -1115,24 +1122,24 @@
 
             <!-- 가계부 항목 -->
             <div id="asset-entry-fields" class="field-group hidden">
-                <label class="field-label">구성원</label>
-                <div class="sch-chip-group" id="as-member-group">
-                    <button type="button" class="sch-chip" data-val="공통" onclick="selectChip(this,'as-member-group')">공통</button>
-                    <button type="button" class="sch-chip active" data-val="정우설" onclick="selectChip(this,'as-member-group')">정우설</button>
-                    <button type="button" class="sch-chip" data-val="한미연" onclick="selectChip(this,'as-member-group')">한미연</button>
+                <div class="sch-chip-group as-type-seg" id="as-type-group">
+                    <button type="button" class="sch-chip active" data-val="지출" onclick="selectChip(this,'as-type-group');toggleAssetCat()">지출</button>
+                    <button type="button" class="sch-chip"        data-val="수입" onclick="selectChip(this,'as-type-group');toggleAssetCat()">수입</button>
                 </div>
-                <input type="hidden" id="as-member" value="정우설">
+                <input type="hidden" id="as-type" value="지출">
 
-                <label class="field-label">수입 / 지출</label>
-                <div class="sch-chip-group" id="as-type-group">
-                    <button type="button" class="sch-chip active" data-val="수입" onclick="selectChip(this,'as-type-group');toggleAssetCat()">수입</button>
-                    <button type="button" class="sch-chip"        data-val="지출" onclick="selectChip(this,'as-type-group');toggleAssetCat()">지출</button>
-                </div>
-                <input type="hidden" id="as-type" value="수입">
+                <label class="field-label">금액</label>
+                <input type="text" inputmode="numeric" id="as-amt" class="as-amt-in" placeholder="0" autocomplete="off" oninput="asAmtFmt(this)">
+                <div class="as-quick"><button type="button" onclick="asAmtAdd(1000)">+1천</button><button type="button" onclick="asAmtAdd(10000)">+1만</button><button type="button" onclick="asAmtAdd(50000)">+5만</button><button type="button" onclick="asAmtAdd(100000)">+10만</button><button type="button" onclick="asAmtAdd(0)">지우기</button></div>
+
+                <label class="field-label">내용</label>
+                <input type="text" id="as-memo" placeholder="예: 이마트, 점심, 주유" autocomplete="off" oninput="asMemoCat(this.value)">
+                <label class="field-label">날짜</label>
+                <input type="date" id="as-date" class="as-date-in">
 
                 <!-- 수입 분류 (기본 표시) -->
-                <div id="as-income-section">
-                    <label class="field-label">수입 구분</label>
+                <div id="as-income-section" style="display:none;">
+                    <label class="field-label">분류</label>
                     <div class="sch-chip-group" id="as-income-cat-group">
                         <button type="button" class="sch-chip active" data-val="급여"    onclick="selectChip(this,'as-income-cat-group')">급여</button>
                         <button type="button" class="sch-chip"        data-val="상여"    onclick="selectChip(this,'as-income-cat-group')">상여</button>
@@ -1143,8 +1150,8 @@
                 </div>
 
                 <!-- 지출 분류 (기본 숨김) -->
-                <div id="as-expense-section" style="display:none;">
-                    <label class="field-label">지출 유형</label>
+                <div id="as-expense-section">
+                    <label class="field-label">분류 <span class="sch-hint" id="as-cat-hint"></span></label>
                     <div class="sch-chip-group" id="as-expense-cat-group">
                         <button type="button" class="sch-chip" data-val="생활비"  onclick="selectChip(this,'as-expense-cat-group')">생활비</button>
                         <button type="button" class="sch-chip" data-val="의료비"  onclick="selectChip(this,'as-expense-cat-group')">의료비</button>
@@ -1166,10 +1173,13 @@
                     <input type="hidden" id="as-pay" value="카드">
                 </div>
 
-                <label class="field-label">금액</label>
-                <input type="number" id="as-amt" placeholder="금액 입력 (원)">
-                <label class="field-label">메모</label>
-                <input type="text" id="as-memo" placeholder="내용을 입력하세요">
+                <label class="field-label">구성원</label>
+                <div class="sch-chip-group" id="as-member-group">
+                    <button type="button" class="sch-chip" data-val="공통" onclick="selectChip(this,'as-member-group')">공통</button>
+                    <button type="button" class="sch-chip active" data-val="정우설" onclick="selectChip(this,'as-member-group')">정우설</button>
+                    <button type="button" class="sch-chip" data-val="한미연" onclick="selectChip(this,'as-member-group')">한미연</button>
+                </div>
+                <input type="hidden" id="as-member" value="정우설">
                 <div id="as-trip-box"></div>
             </div>
 

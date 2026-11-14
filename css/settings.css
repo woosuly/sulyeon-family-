@@ -45,3 +45,11 @@
         .news-head div{font-size:15px;font-weight:800;line-height:1.5}
         .fam-spin{display:inline-block;width:14px;height:14px;border:2px solid #cbd5e1;border-top-color:var(--month-header);border-radius:50%;animation:famspin .8s linear infinite;vertical-align:middle;margin-right:6px}
         @keyframes famspin{to{transform:rotate(360deg)}}
+        /* 일정 필터: 체크박스 대신 색 점 (꺼지면 흐리게) */
+        .sch-fchip input{position:absolute;opacity:0;width:0;height:0}
+        .sch-fchip{position:relative}
+        .sch-dot{display:inline-block;width:10px;height:10px;border-radius:50%;font-style:normal}
+        /* 일정 모달: 시작일·종료일 */
+        .sch-dates{display:flex;gap:8px}.sch-dates>div{flex:1;min-width:0}
+        .sch-dates input[type=date]{width:100%;padding:9px 10px;border-radius:10px;border:1.5px solid #e2e8f0;font-size:14px;background:#fff}
+        .sch-hint{font-size:11px;color:#94a3b8;font-weight:500}
