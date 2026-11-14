@@ -133,7 +133,12 @@ async function runReminders(now) {
     const r = d.data();
     await pushTo(r.owner, {k: 'remind', id: d.id, title: '⏰ ' + (r.title || '알림'), body: r.text && r.text !== r.title ? r.text : '', tag: 'remind-' + d.id});
     await d.ref.delete();
-    if (r.repeat === 'yearly') { const nid = d.id + '_y'; await db().collection('reminders').doc(nid).set({...r, id: nid, at: r.at + 365 * 864e5}); }
+    if (r.keepId && (r.repeat === 'monthly' || r.repeat === 'yearly')) {
+      // 정기결제 알림: 같은 id로 다음 달(해) 같은 날에 다시 (말일 넘으면 그 달 마지막 날)
+      const k = new Date(r.at + 9 * 3600e3), y = k.getUTCFullYear(), m = k.getUTCMonth() + (r.repeat === 'monthly' ? 1 : 12), day = r.day || k.getUTCDate();
+      const last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+      await db().collection('reminders').doc(d.id).set({...r, at: Date.UTC(y, m, Math.min(day, last), k.getUTCHours(), k.getUTCMinutes()) - 9 * 3600e3});
+    } else if (r.repeat === 'yearly') { const nid = d.id + '_y'; await db().collection('reminders').doc(nid).set({...r, id: nid, at: r.at + 365 * 864e5}); }
   }
 }
 

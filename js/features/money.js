@@ -31,20 +31,79 @@ function subDetect() {
     });
     return out.sort((a, b) => b.amt - a.amt);
 }
+// ── 정기결제 목록: 직접 등록(추가·수정·삭제) + 카드 내역 자동 감지 ──
+//   subs/{id} {name, amt, cycle(월|년), day, month(매년일 때), pay, memo, remind(하루 전 알림), by, at}
+//   subs/hide_{이름} {hide:true, key} : 자동 감지에서 뺀 것
+let subsList = [];
+function subListen() { try { db.collection('subs').onSnapshot(s => { subsList = s.docs.map(d => ({ id: d.id, ...d.data() })); subRender(); }, () => {}); } catch (e) {} }
+const subMon = x => x.cycle === '년' ? Math.round((+x.amt || 0) / 12) : +x.amt || 0;
+function subNext(x) {
+    const n = new Date(), d = +x.day || 1, last = (y, m) => new Date(y, m + 1, 0).getDate();
+    if (x.cycle === '년') { const m = (+x.month || 1) - 1; let t = new Date(n.getFullYear(), m, Math.min(d, last(n.getFullYear(), m))); if (t < new Date(mnYmd(n) + 'T00:00:00')) t = new Date(n.getFullYear() + 1, m, Math.min(d, last(n.getFullYear() + 1, m))); return mnYmd(t); }
+    let t = new Date(n.getFullYear(), n.getMonth(), Math.min(d, last(n.getFullYear(), n.getMonth())));
+    if (t < new Date(mnYmd(n) + 'T00:00:00')) t = new Date(n.getFullYear(), n.getMonth() + 1, Math.min(d, last(n.getFullYear(), n.getMonth() + 1)));
+    return mnYmd(t);
+}
 function subRender() {
     const el = document.getElementById('sub-list'); if (!el) return;
-    const subs = subDetect(), tot = subs.reduce((s, x) => s + x.amt, 0);
-    if (!subs.length) { el.innerHTML = '<div class="fam-note" style="margin:0">카드 내역이 2개월 이상 쌓이면 매달 반복되는 결제(구독·통신·보험 등)를 찾아 보여 줍니다.</div>'; return; }
-    el.innerHTML = `<div class="fam-note" style="margin:0 0 6px">월 약 <b>${mnW(tot)}</b> · ${subs.length}건 (카드 결제로 이미 가계부에 들어가므로 정기 이체로 따로 넣지 않아도 됩니다)</div>` +
-        subs.map((x, i) => `<div class="ag-li"><span>매월 ${x.day}일</span><b>${famEsc(x.name)}${x.changed ? ` <em class="ib-tag warn">금액 변경 ${mnW(x.prev)}→${mnW(x.last)}</em>` : ''}</b><span>${mnW(x.amt)}</span><button class="fam-btn" style="padding:4px 8px;font-size:11px" onclick="subRemind(${i})">알림</button></div>`).join('');
+    const mine = subsList.filter(x => !x.hide).sort((a, b) => subNext(a).localeCompare(subNext(b)));
+    const hidden = new Set(subsList.filter(x => x.hide).map(x => x.key)), have = new Set(mine.map(x => mnNorm(x.name)));
+    const auto = subDetect().filter(x => !hidden.has(mnNorm(x.name)) && !have.has(mnNorm(x.name)));
+    const tot = mine.reduce((s, x) => s + subMon(x), 0) + auto.reduce((s, x) => s + x.amt, 0);
+    window._subAuto = auto;
+    el.innerHTML = `<div class="fam-note" style="margin:0 0 6px">월 약 <b>${mnW(tot)}</b> · ${mine.length + auto.length}건</div>` +
+        mine.map(x => `<div class="ag-li" onclick="subForm('${x.id}')" style="cursor:pointer"><span>${x.cycle === '년' ? `매년 ${+x.month || 1}/${x.day}` : `매월 ${x.day}일`}</span><b>${famEsc(x.name)}${x.remind ? ' <small>⏰</small>' : ''}${x.pay ? `<br><small style="color:#64748b;font-weight:500">${famEsc(x.pay)}${x.memo ? ' · ' + famEsc(x.memo) : ''}</small>` : ''}</b><span>${mnW(x.amt)}${x.cycle === '년' ? '<br><small style="color:#94a3b8">/년</small>' : ''}</span></div>`).join('') +
+        (auto.length ? `<span class="fam-lbl">카드 내역에서 찾은 정기결제 <small style="color:#94a3b8;font-weight:500">· 등록하면 수정·알림 가능</small></span>` + auto.map((x, i) => `<div class="ag-li"><span>매월 ${x.day}일</span><b>${famEsc(x.name)}${x.changed ? ` <em class="ib-tag warn">금액 변경 ${mnW(x.prev)}→${mnW(x.last)}</em>` : ''}</b><span>${mnW(x.amt)}</span><button class="fam-btn" style="padding:4px 8px;font-size:11px" onclick="subAdopt(${i})">등록</button><button class="fam-x" style="width:24px;height:24px;font-size:10px;flex:none" title="목록에서 빼기" onclick="subHide(${i})">✕</button></div>`).join('') : '') +
+        (!mine.length && !auto.length ? '<div class="fam-note" style="margin:0">구독·통신·보험 등 매달 나가는 돈을 등록하세요. 카드 내역이 2개월 이상 쌓이면 반복 결제를 찾아 보여 줍니다.</div>' : '');
 }
-async function subRemind(i) {
-    const x = subDetect()[i]; if (!x || typeof agRemindAdd !== 'function') return;
-    const at = new Date(x.next + 'T09:00:00'); at.setDate(at.getDate() - 1);
-    await agRemindAdd({ at: Math.max(at.getTime(), Date.now() + 10 * 6e4), title: `내일 ${x.name} 결제 예정 (약 ${mnW(x.amt)})`, kind: 'sub' });
-    famToast(`${x.next.slice(5).replace('-', '/')} 결제 하루 전에 알려드립니다`);
+function subForm(id, pre) {
+    const x = (id && subsList.find(s => s.id === id)) || pre || { cycle: '월', day: new Date().getDate(), remind: true };
+    famSheet(`<div class="fam-h"><b>${id ? '정기결제 수정' : '정기결제 추가'}</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
+        <div class="ff-form">
+            <div class="full"><label>이름</label><input id="sb-name" value="${famEsc(x.name || '')}" placeholder="예: 넷플릭스, 휴대폰 요금, 실손보험"></div>
+            <div><label>금액 (원)</label><input id="sb-amt" type="number" inputmode="numeric" value="${x.amt || ''}"></div>
+            <div><label>주기</label><select id="sb-cycle" onchange="document.getElementById('sb-mw').style.display=this.value==='년'?'':'none'">${['월', '년'].map(c => `<option value="${c}"${x.cycle === c ? ' selected' : ''}>매${c}</option>`).join('')}</select></div>
+            <div id="sb-mw" style="${x.cycle === '년' ? '' : 'display:none'}"><label>결제 월</label><input id="sb-month" type="number" min="1" max="12" inputmode="numeric" value="${x.month || new Date().getMonth() + 1}"></div>
+            <div><label>결제일</label><input id="sb-day" type="number" min="1" max="31" inputmode="numeric" value="${x.day || 1}"></div>
+            <div><label>결제 수단 (선택)</label><input id="sb-pay" value="${famEsc(x.pay || '')}" placeholder="예: 1089 카드, 자동이체"></div>
+            <div class="full"><label>메모 (선택)</label><input id="sb-memo" value="${famEsc(x.memo || '')}" placeholder="예: 해지 예정, 가족 요금제"></div>
+        </div>
+        <label class="fs-tog" style="margin-top:10px"><div><b>결제 하루 전 알림</b><small>전날 아침 9시${famUser() ? ', ' + famEsc(famUser()) + '에게' : ''}</small></div><input type="checkbox" id="sb-rem" ${x.remind ? 'checked' : ''}></label>
+        <div class="fam-btns">${id ? `<button class="fam-btn" style="color:#dc2626" onclick="subDel('${id}')">삭제</button>` : ''}<button class="fam-btn pri" onclick="subSave('${id || ''}',this)">저장</button></div>`);
 }
-
+async function subSave(id, btn) {
+    const g = k => (document.getElementById('sb-' + k) || {}).value || '';
+    const v = { name: g('name').trim(), amt: Math.round(+g('amt') || 0), cycle: g('cycle') || '월', day: Math.min(31, Math.max(1, +g('day') || 1)), month: Math.min(12, Math.max(1, +g('month') || 1)), pay: g('pay').trim(), memo: g('memo').trim(), remind: !!(document.getElementById('sb-rem') || {}).checked };
+    if (!v.name || !v.amt) return famToast('이름과 금액을 넣어 주세요');
+    btn.disabled = true;
+    try {
+        id = id || 'sub_' + Date.now();
+        await db.collection('subs').doc(id).set({ id, ...v, by: famUser(), at: Date.now() });
+        await subRemindSet(id, v);
+        famSheetClose(); famToast('저장했습니다');
+    } catch (e) { btn.disabled = false; famToast(e.message); }
+}
+// 하루 전 알림: 같은 id로 매달(매년) 반복 (서버가 보낸 뒤 다음 달로 다시 걸어 둠)
+async function subRemindSet(id, v) {
+    const rid = 'subrm_' + id;
+    await db.collection('reminders').doc(rid).delete().catch(() => {});
+    if (!v || !v.remind || typeof agRemindAdd !== 'function') return;
+    const at = new Date(subNext(v) + 'T09:00:00'); at.setDate(at.getDate() - 1);
+    let t = at.getTime(); if (t < Date.now()) { const n = new Date(at); n.setMonth(n.getMonth() + (v.cycle === '년' ? 12 : 1)); t = n.getTime(); }
+    await db.collection('reminders').doc(rid).set({ id: rid, owner: famUser() || '정우설', at: t, title: `내일 ${v.name} 결제 (${mnW(v.amt)})`, text: v.pay || '', kind: 'sub', repeat: v.cycle === '년' ? 'yearly' : 'monthly', keepId: true, day: Math.max(1, v.day - 1), createdAt: Date.now() });
+}
+async function subDel(id) {
+    if (!confirm('이 정기결제를 지울까요?')) return;
+    await subRemindSet(id, null);
+    await db.collection('subs').doc(id).delete().catch(e => famToast(e.message));
+    famSheetClose();
+}
+function subAdopt(i) { const x = (window._subAuto || [])[i]; if (x) subForm('', { name: x.name, amt: x.last || x.amt, cycle: '월', day: x.day, pay: '카드', remind: true }); }
+async function subHide(i) {
+    const x = (window._subAuto || [])[i]; if (!x) return;
+    const key = mnNorm(x.name); await db.collection('subs').doc('hide_' + key.slice(0, 60).replace(/[\/]/g, '_')).set({ hide: true, key, name: x.name, at: Date.now() });
+    famToast('목록에서 뺐습니다');
+}
 // ── 차량: 보험 만기·자동차 검사·정기 점검 → 알림, 이번 달 충전·주유비 ──
 let carCfg = {};
 function carListen() { try { db.collection('config').doc('vehicle').onSnapshot(d => { carCfg = d.exists ? d.data() : {}; carRender(); }, () => {}); } catch (e) {} }
@@ -131,7 +190,7 @@ async function famSaveFile(name, b64, mime) {
 }
 
 (function mnBoot() {
-    const wait = () => { if (window.firebase && firebase.auth) firebase.auth().onAuthStateChanged(u => { if (u) setTimeout(carListen, 1500); }); else setTimeout(wait, 1000); };
+    const wait = () => { if (window.firebase && firebase.auth) firebase.auth().onAuthStateChanged(u => { if (u) { setTimeout(carListen, 1500); setTimeout(subListen, 1550); } }); else setTimeout(wait, 1000); };
     window.addEventListener('load', () => setTimeout(wait, 700));
 })();
 
