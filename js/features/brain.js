@@ -227,6 +227,7 @@ async function famAgent(q) {
 - 사용자가 '잡아줘·넣어줘·알려줘·기억해'처럼 실행을 원하면 묻지 말고 합리적으로 정해서 저장한다. 고른 이유를 답에 짧게 밝힌다.
 - 추천·조사만 원하면 저장하지 않는다. 돈 기록·메시지 전송은 propose_ledger·draft_message로 카드만 띄운다.
 - 날짜·사실은 도구로 확인한 것만 쓴다. 모르면 '확인 필요'.
+- 도구는 반드시 함수 호출로 실행한다. 답 글에 도구 이름·링크·'카드를 띄웠다'를 쓰는 것으로 대신하지 않는다. 호출하지 않았으면 했다고 말하지 않는다.
 - 답은 한국어, 결론 먼저, 짧은 문단과 '- ' 목록. 과장 없이. 마크다운 제목(#) 쓰지 않음.
 [집안 현황]
 ${brSnapshot() || '(없음)'}
@@ -236,7 +237,12 @@ ${typeof agNotesCtx === 'function' ? agNotesCtx() : ''}${hist ? '[앞선 대화]
     try {
         for (let i = 0; i < BR_MAX_STEPS; i++) {
             const r = await brCall(p, key, famModel(p), system, msgs);
-            if (!r.calls.length) { text = r.text; break; }
+            // 모델이 도구를 호출하지 않고 글에 'propose_ledger?text=…' 같은 흉내만 낸 경우 대신 실행
+            if (!r.calls.length) {
+                const fake = [...String(r.text || '').matchAll(/(propose_ledger|draft_message)\?text=([^)\n]+)/g)];
+                fake.forEach(f => { const t = decodeURIComponent(f[2]).trim(); if (f[1] === 'propose_ledger') brUi.push(() => famAssetCard(t)); else brUi.push(() => brDraftCard('', t)); done.push(f[1]); });
+                text = String(r.text || '').replace(/\s*[-•]?\s*\[[^\]]*\]\((propose_ledger|draft_message)\?[^)]*\)/g, '').trim(); break;
+            }
             const res = [];
             for (const call of r.calls) {
                 if (stepEl()) stepEl().textContent = (BR_STEP[call.name] || call.name) + ' 중…';

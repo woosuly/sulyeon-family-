@@ -279,6 +279,8 @@
         if (typeof agRoute === 'function' && agRoute(raw)) return;
         // 말하듯 쓴 문장 해석 → 자동 분류
         if (famIntent(raw)) return;
+        // 카드 결제·취소 문자를 붙여 넣은 경우 → 가계부 확인 대기 (AI 거치지 않음)
+        if (typeof ibParseCard === 'function' && ibParseCard(raw)) { ibCardFromText(raw).catch(e => famFeedAdd('⚠️ ' + famEsc(e.message))); return; }
         // 나머지는 비서 두뇌(brain.js)가 도구를 골라 여러 단계로 처리. 짧은 기록 문장('점심 12000', '내일 3시 치과')만 바로 카드로
         const AG = typeof famAgent === 'function' ? famAgent : famAsk;
         if (famAskHist.length && Date.now() - famAskAt < 15 * 60 * 1000 && !(raw.length <= 20 && famParseAmount(raw).amt >= 100)) return AG(raw);

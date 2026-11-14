@@ -31,6 +31,18 @@ function ibParseCard(text, ts) {
     r.key = 'c_' + ibHash([r.card, r.cancel ? 'x' : 'o', r.date, r.hm, r.amt, r.merchant.replace(/\s/g, '')].join('|'));
     return r;
 }
+// 홈 입력창에 카드 문자를 붙여 넣으면: 문자로 받은 것과 똑같이 가계부 확인 대기로 (RCS라 자동으로 못 받은 문자 등)
+async function ibCardFromText(raw) {
+    const c = ibParseCard(raw); if (!c) return false;
+    const ref = db.collection('inbox').doc(c.key), old = await ref.get().catch(() => null);
+    if (old && old.exists && old.data().status !== 'pending') { famFeedAdd(`이 카드 문자는 이미 ${old.data().status === 'done' ? '가계부에 반영' : '처리'}했습니다. (${ibMD(c.date)} ${famEsc(c.merchant)} ${c.cancel ? '-' : ''}${c.amt.toLocaleString('ko-KR')}원)`); return true; }
+    await ref.set({ id: c.key, kind: 'card', owner: famUser() || '정우설', status: 'pending', at: Date.now(), ts: Date.now(),
+        card: c.card, member: ibCards[c.card] || famUser() || '정우설', date: c.date, amt: c.cancel ? -c.amt : c.amt, cancel: c.cancel,
+        merchant: c.merchant, category: ibCardCat(c.merchant), raw: ibNorm(raw), hm: c.hm || '', warn: c.cancel ? '' : ibCardWarn(c, [c]) });
+    famFeedAdd(`💳 카드 문자를 읽었습니다: <b>${ibMD(c.date)} ${famEsc(c.merchant)} ${c.cancel ? '취소 -' : ''}${c.amt.toLocaleString('ko-KR')}원</b>. 확인 대기에서 반영해 주세요.`);
+    setTimeout(() => typeof ibOpen === 'function' && ibOpen(), 300);
+    return true;
+}
 // 이상 결제: 새벽 결제, 같은 가맹점·금액이 10분 안에 두 번, 평소보다 훨씬 큰 금액
 function ibCardWarn(c, batch) {
     const w = [], h = c.hm ? +c.hm.split(':')[0] : -1;
