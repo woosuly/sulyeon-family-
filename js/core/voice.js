@@ -40,8 +40,26 @@
             }
             async _listen() {
                 active = true;
-                try { return await SR.start({ language: this.lang || 'ko-KR', maxResults: 1, partialResults: false, popup: false }); }
+                try { return await SR.start({ language: this.lang || 'ko-KR', maxResults: 1, partialResults: true, popup: false }); }
                 finally { active = false; lastEnd = Date.now(); }
+            }
+            // 이어 듣기: 폰 인식기는 1~2초만 쉬어도 끝내 버림 → 결과가 나오면 바로 다시 들어 말을 이어 붙임
+            //   다시 듣기 시작 후 2.5초 안에 말소리(중간 결과)가 없으면 끝난 것으로 봄. 최대 4번 이어 붙임
+            async _more(acc) {
+                for (let k = 0; k < 4 && !this._done && !this._stopReq; k++) {
+                    await sleep(Math.max(0, 250 - (Date.now() - lastEnd)));
+                    if (this._done || this._stopReq) break;
+                    let heard = false; const sub = await SR.addListener('partialResults', d => { const t = (d.matches || [])[0]; if (t) { heard = true; clearTimeout(g); this._fire((acc + ' ' + t).trim(), false); } }).catch(() => null);
+                    let g = setTimeout(() => { if (!heard) SR.stop().catch(() => {}); }, 2500);
+                    let r = null;
+                    try { r = await this._listen(); } catch (e) { r = null; }
+                    clearTimeout(g); if (sub) try { sub.remove(); } catch (e) {}
+                    const t = r && r.matches && r.matches[0];
+                    if (!t) break;
+                    acc = (acc + ' ' + t).trim(); this._fire(acc, false);
+                    if (!heard) break;
+                }
+                return acc;
             }
             async start() {
                 if (!this._done) return;
@@ -60,6 +78,7 @@
                     if (this._done) return;
                     try { this._sub = await SR.addListener('partialResults', d => { const t = (d.matches || [])[0]; if (t && this.interimResults) this._fire(t, false); }); } catch (e) {}
                     if (this.onstart) this.onstart();
+                    this._stopReq = false;
                     this._t = setTimeout(() => { SR.stop().catch(() => {}); this._end('no-speech'); }, 15000);   // 15초 안에 결과가 없으면 끔
                     let r;
                     try { r = await this._listen(); }
@@ -70,7 +89,12 @@
                         if (this._done) return;
                         r = await this._listen();
                     }
-                    const t = r && r.matches && r.matches[0];
+                    let t = r && r.matches && r.matches[0];
+                    if (t && !this._done && !this._stopReq) {
+                        clearTimeout(this._t); this._t = setTimeout(() => { this._stopReq = true; SR.stop().catch(() => {}); }, 40000);   // 이어 듣기 전체 40초까지
+                        if (this._sub) { try { this._sub.remove(); } catch (e) {} this._sub = null; }   // 첫 세션의 중간 결과 듣기는 끝냄 (이어 듣기는 따로)
+                        t = await this._more(t);
+                    }
                     if (t) {
                         this._fire(t, true);
                         // 중지 버튼으로 먼저 끝난 뒤 결과가 늦게 오면 화면 상태만 다시 맞춤
@@ -83,7 +107,7 @@
                 }
             }
             // 중지: 말이 끝난 것으로 보고 결과를 기다림 (2.5초 안에 안 오면 끔)
-            stop() { SR.stop().catch(() => {}); clearTimeout(this._t); this._t = setTimeout(() => this._end(), 2500); }
+            stop() { this._stopReq = true; SR.stop().catch(() => {}); clearTimeout(this._t); this._t = setTimeout(() => this._end(), 2500); }
             abort() { SR.stop().catch(() => {}); this._end(); }
         }
         window.SpeechRecognition = NativeSR;
