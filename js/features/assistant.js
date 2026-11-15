@@ -128,6 +128,12 @@
         const b = document.getElementById('home-cmd-go'), v = (document.getElementById('home-cmd-input') || {}).value || ''; if (!b) return;
         b.innerHTML = famRec ? '■' : (!v.trim() && FamSR) ? fi('mic') : fi('send'); b.classList.toggle('rec', !!famRec);
     }
+    // 위젯 마이크·빅스비로 열렸을 때: 이전 듣기가 남아 있으면 정리하고 새로 시작
+    function famVoiceStart() {
+        const el = document.getElementById('home-cmd-input'); if (el) el.value = '';   // 먼저 비워야 정리하면서 실행되지 않음
+        if (famRec) { const r = famRec; famRec = null; r.onend = null; r.onresult = null; try { r.abort(); } catch (e) {} famMicSwap(); }
+        famGoBtn();
+    }
     function famGoBtn() {
         const el = document.getElementById('home-cmd-input');
         if (famRec) { try { famRec.stop(); } catch (e) {} return; }

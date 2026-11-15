@@ -112,6 +112,58 @@
         window.webkitSpeechRecognition = NativeSR;
     }
 
+    // ── 새 앱(1.37~): 설연이 직접 듣기 — 말하는 동안 글자가 바로 보이고, 잠깐 쉬어도 이어 들음 (2초 말이 없으면 끝) ──
+    const NE = P.SeolyeonNative;
+    if (NE && NE.listenStart && NE.addListener) {
+        let seq = 0, cur = null;
+        NE.addListener('ear', d => { if (cur && d && d.sid === cur._sid) cur._on(d); });
+        class EarSR {
+            constructor() { this.lang = 'ko-KR'; this.interimResults = true; this.continuous = false; this._done = true; this._t = null; }
+            _fire(text, final) {
+                if (!this.onresult || !text) return;
+                const alt = { transcript: text, confidence: 1 }, res = [alt]; res.isFinal = final;
+                this.onresult({ results: [res], resultIndex: 0 });
+            }
+            _on(d) {
+                if (d.type === 'partial') this._fire(d.text, false);
+                else if (d.type === 'final') this._fire(d.text, true);
+                else if (d.type === 'error') this._err = d.err;
+                else if (d.type === 'end') this._end(this._got ? null : this._err);
+                if (d.type === 'partial' || d.type === 'final') this._got = true;
+            }
+            _end(err) {
+                if (this._done) return; this._done = true; if (cur === this) cur = null;
+                clearTimeout(this._t); if (this._af) { this._af = false; focus(false); }
+                if (err && this.onerror) this.onerror({ error: err });
+                if (this.onend) this.onend();
+            }
+            async start() {
+                if (!this._done) return;
+                this._done = false; this._got = false; this._err = null;
+                if (cur && cur !== this) cur._end();
+                cur = this; this._sid = ++seq;
+                try {
+                    if (SR) {
+                        let pm = await SR.checkPermissions().catch(() => ({}));
+                        if (pm.speechRecognition !== 'granted') pm = await SR.requestPermissions().catch(() => ({}));
+                        if (pm.speechRecognition !== 'granted') return this._end('not-allowed');
+                    }
+                    try { if (window.speechSynthesis && window.speechSynthesis.speaking) window.speechSynthesis.cancel(); } catch (e) {}
+                    if (this._done) return;
+                    this._af = true; focus(true);
+                    if (this.onstart) this.onstart();
+                    this._t = setTimeout(() => this._end('no-speech'), 75000);
+                    await NE.listenStart({ lang: this.lang || 'ko-KR', sid: this._sid });
+                } catch (e) { this._end('no-speech'); }
+            }
+            // 중지: 지금까지 말한 것으로 마침
+            stop() { NE.listenStop().catch(() => {}); clearTimeout(this._t); this._t = setTimeout(() => this._end(), 3000); }
+            abort() { NE.listenAbort().catch(() => {}); this._end(); }
+        }
+        window.SpeechRecognition = EarSR;
+        window.webkitSpeechRecognition = EarSR;
+    }
+
     // ── 읽어주기 ──
     const N = P.SeolyeonNative;
     if (N && N.speak) {

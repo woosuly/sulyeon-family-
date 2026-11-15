@@ -519,6 +519,22 @@ public class SeolyeonNativePlugin extends Plugin {
         call.resolve(r);
     }
 
+    // ═══ 설연 듣기: 말하는 동안 글자 표시 + 잠깐 쉬어도 이어 듣기 (Ears) ═══
+    private Ears ears;
+    private Ears ears() {
+        if (ears == null) ears = new Ears(getContext(), (type, text, err, sid) -> {
+            JSObject r = new JSObject(); r.put("type", type); r.put("text", text); r.put("err", err); r.put("sid", sid);
+            notifyListeners("ear", r);
+        });
+        return ears;
+    }
+    @PluginMethod
+    public void listenStart(PluginCall call) { ears().start(call.getString("lang", "ko-KR"), call.getInt("sid", 0)); call.resolve(); }
+    @PluginMethod
+    public void listenStop(PluginCall call) { ears().stop(); call.resolve(); }
+    @PluginMethod
+    public void listenAbort(PluginCall call) { ears().abort(); call.resolve(); }
+
     // ═══ 알림 받을 앱(위챗·회사 메신저 등) · 알림 답장 칸으로 바로 보내기 ═══
     @PluginMethod
     public void msgApps(PluginCall call) {
