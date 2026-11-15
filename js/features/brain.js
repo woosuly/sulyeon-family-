@@ -70,9 +70,9 @@ async function brRun(name, a) {
             const ap = String(a.app || ''), days = Math.min(30, Math.max(1, +a.days || 7)), cut = Date.now() - days * 864e5, me = famUser();
             // 와이프·남편 같은 호칭은 이름·저장명 후보로 넓힘
             let who = String(a.who || a.room || '').trim(); const spouse = me === '정우설' ? ['한미연', '미연'] : ['정우설', '우설'];
-            const keys = !who ? [] : /^(와이프|아내|집사람|마누라|부인|남편|신랑|여보|자기)$/.test(who.replace(/(님|씨|한테|에게|이|가)$/, '')) ? [...spouse, '여보', '와이프', '아내', '남편', '자기', '♥', '❤'] : [who.replace(/(님|씨|한테|에게|방)$/, '')];
+            const keys = (!who ? [] : /^(와이프|아내|집사람|마누라|부인|남편|신랑|여보|자기|wife|husband)$/i.test(who.replace(/(님|씨|한테|에게|이|가)$/, '')) ? [...spouse, '여보', '와이프', '아내', '남편', '자기', 'wife', 'husband', 'honey', '♥', '❤'] : [who.replace(/(님|씨|한테|에게|방)$/, '')]).map(k => k.toLowerCase());
             const appOf = x => x.app || (x.kind === 'kakao' ? '카톡' : '문자');
-            const okApp = x => !ap || appOf(x).includes(ap) || ap.includes(appOf(x)), okWho = x => !keys.length || keys.some(k => [x.room, x.from].some(v => String(v || '').includes(k)));
+            const okApp = x => !ap || appOf(x).includes(ap) || ap.includes(appOf(x)), okWho = x => !keys.length || keys.some(k => [x.room, x.from].some(v => String(v || '').toLowerCase().includes(k)));
             let L = [];
             try { const q = await db.collection('msgLog').where('ts', '>', cut).get(); q.forEach(d => { const x = d.data(); if (x.owner === me) L.push(x); }); } catch (e) {}
             // 기록 전부터 쌓인 확인 대기 메시지도 함께
@@ -230,7 +230,11 @@ async function brTargetFor(to) {
     const k = s => String(s || '').replace(/[\s·.,()\[\]]/g, '').toLowerCase(), t = k(to).replace(/(님|씨|한테|에게|방)$/, '');
     if (!t) return null;
     const list = ((await N.replyTargets().catch(() => ({}))).items || []);
-    return list.find(x => k(x.room) === t) || list.find(x => k(x.room).includes(t) || t.includes(k(x.room))) || null;
+    // 와이프·아내·여보·한미연 → 카톡 저장명(wife 등)까지
+    const me = famUser(), sp = /^(와이프|아내|집사람|여보|자기|wife|남편|신랑|husband|미연|한미연|우설|정우설)$/.test(t);
+    const cand = sp ? (me === '정우설' ? ['wife', '와이프', '아내', '여보', '한미연', '미연'] : ['husband', '남편', '신랑', '여보', '정우설', '우설']) : [t];
+    for (const c of cand) { const f = list.find(x => k(x.room) === c) || list.find(x => k(x.room).includes(c)); if (f) return f; }
+    return list.find(x => t.includes(k(x.room))) || null;
 }
 async function brDirectSend(id, pkg, room, btn) {
     const text = document.getElementById(id).value.trim(); if (!text) return;
@@ -241,7 +245,7 @@ async function brDirectSend(id, pkg, room, btn) {
 }
 async function brDraftCard(to, text) {
     const fam = !to || /(아내|남편|여보|가족|채팅|미연|우설)/.test(to), id = 'dm' + Date.now();
-    const tg = fam ? null : await brTargetFor(to);
+    const tg = await brTargetFor(to);   // 아내·남편이면 카톡 방(wife 등)으로 바로 보내기도 함께
     famFeedAdd(`<h5>✉️ ${famEsc(tg ? `${tg.app} '${tg.room}'` : to || '가족 채팅')}에게 보낼 초안</h5><textarea id="${id}" class="fam-in" rows="3" style="width:100%">${famEsc(text)}</textarea>
         <div class="fam-btns">${tg ? `<button class="fam-btn pri" onclick="brDirectSend('${id}',${JSON.stringify(tg.pkg).replace(/"/g, '&quot;')},${JSON.stringify(tg.room).replace(/"/g, '&quot;')},this)">${famEsc(tg.app)}로 보내기</button>` : ''}${fam ? `<button class="fam-btn pri" onclick="famChatSend(document.getElementById('${id}').value);this.closest('.ff-card').remove()">가족 채팅으로 보내기</button>` : ''}
         <button class="fam-btn" onclick="(window.Capacitor&&Capacitor.Plugins.SeolyeonNative&&Capacitor.Plugins.SeolyeonNative.kakaoShare?Capacitor.Plugins.SeolyeonNative.kakaoShare({text:document.getElementById('${id}').value}):famShare(document.getElementById('${id}').value))">카톡으로</button>
