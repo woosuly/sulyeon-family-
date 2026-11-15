@@ -66,6 +66,24 @@ function ibCardCat(merchant) {
 }
 
 // ── 폰에서 문자 가져와 정리 ──────────────────────────────
+// 받은 메시지 원문 기록 (30일): "와이프한테 일주일 동안 온 카톡 정리해 줘" 같은 질문에 답하려고
+//   AI가 '할 일 없음'으로 넘긴 대화도 남김. 받는 사람 본인 화면·질문에만 씀. 인증번호류는 남기지 않음
+//   msgLog/{key} {owner, ts, kind(kakao|sms|app), app, room, from, text}
+async function ibLogSave(list, me) {
+    const SECRET = /인증\s*번호|인증\s*코드|verification|OTP|验证码|校验码|비밀번호|password/i;
+    const L = list.filter(x => x.raw && !SECRET.test(x.raw)); if (!L.length) return;
+    try {
+        const b = db.batch();
+        L.forEach(x => b.set(db.collection('msgLog').doc(x.key), { owner: me, ts: x.ts || Date.now(), kind: x.kind, app: x.kind === 'kakao' ? '카톡' : x.kind === 'app' ? (x.app || '메신저') : '문자', room: x.room || '', from: x.name || x.from || '', text: x.raw.slice(0, 1500) }));
+        await b.commit();
+    } catch (e) {}
+    // 하루 한 번 30일 지난 내 기록 지우기
+    try {
+        const day = famYmd(new Date()); if (localStorage.getItem('msgLogClean') === day) return; localStorage.setItem('msgLogClean', day);
+        const old = await db.collection('msgLog').where('ts', '<', Date.now() - 30 * 864e5).limit(300).get();
+        const b = db.batch(); let n = 0; old.forEach(d => { if (d.data().owner === me) { b.delete(d.ref); n++; } }); if (n) await b.commit();
+    } catch (e) {}
+}
 async function ibDrain(opt) {
     opt = opt || {};
     const N = ibN(), me = typeof famUser === 'function' ? famUser() : '';
@@ -115,6 +133,7 @@ async function ibDrain(opt) {
         ibSendersNote(smss.filter(s => s.kind === 'sms'));
         const blk = ibBlockList();
         for (let i = smss.length - 1; i >= 0; i--) if (smss[i].kind === 'sms' && ibBlocked(smss[i], blk)) { seen.add(smss[i].key); smss.splice(i, 1); }
+        await ibLogSave(smss, me);
         for (let i = 0; i < smss.length; i += 15) {
             const part = smss.slice(i, i + 15);
             let out = null;

@@ -37,7 +37,7 @@ function brSnapshot() {
 const brS = (props, req) => ({ type: 'object', properties: props, required: req || [] });
 const brStr = d => ({ type: 'string', description: d }), brNum = d => ({ type: 'number', description: d });
 const BR_TOOLS = [
-    { name: 'list_messages', description: '받은 카톡·문자·위챗·회사 메신저 메시지 정리본 (확인 대기 중인 것, 요약·번역 포함). "오늘 위챗 뭐 왔어?", "그린센터 방 소식" 등', params: brS({ app: brStr('선택: 카톡|문자|위챗|앱 이름'), room: brStr('선택: 대화방·보낸 사람 이름 일부') }, []) },
+    { name: 'list_messages', description: '받은 카톡·문자·위챗·회사 메신저 메시지 원문 (최근 30일까지, 받는 방으로 고른 카톡방·알림 받을 앱만). "와이프한테 일주일 동안 온 카톡 정리", "오늘 위챗 뭐 왔어?", "그린센터 방 소식" 등. 받은 원문을 보고 요약·정리해서 답한다', params: brS({ app: brStr('선택: 카톡|문자|위챗|앱 이름'), who: brStr('선택: 대화방·보낸 사람 (와이프·아내·남편도 됨)'), days: { type: 'number', description: '며칠 전부터 (기본 7)' } }, []) },
     { name: 'list_schedules', description: '기간 안의 가족 일정 조회', params: brS({ from: brStr('YYYY-MM-DD'), to: brStr('YYYY-MM-DD'), keyword: brStr('선택: 내용·장소 검색어') }, ['from', 'to']) },
     { name: 'free_days', description: '기간 안에서 일정이 없는 날·주말·공휴일 찾기 (여행·산행 날짜 고를 때)', params: brS({ from: brStr('YYYY-MM-DD'), to: brStr('YYYY-MM-DD') }, ['from', 'to']) },
     { name: 'query_ledger', description: '가계부 조회: 기간 합계, 분류별 합계, 큰 지출. keyword로 가맹점·내용 검색', params: brS({ from: brStr('YYYY-MM-DD'), to: brStr('YYYY-MM-DD'), type: brStr('지출|수입|전체'), keyword: brStr('선택'), member: brStr('정우설|한미연|공통|전체') }, ['from', 'to']) },
@@ -67,12 +67,20 @@ async function brRun(name, a) {
     const me = famUser() || '정우설';
     switch (name) {
         case 'list_messages': {
-            const ap = String(a.app || ''), rm = String(a.room || '');
-            const L = (brG('ibItems') || []).filter(x => x.status === 'pending' && x.kind !== 'card').filter(x => {
-                const appName = x.kind === 'kakao' ? '카톡' : x.kind === 'app' ? (x.app || '') : '문자';
-                return (!ap || appName.includes(ap) || ap.includes(appName)) && (!rm || [x.room, x.name, x.from].some(v => String(v || '').includes(rm)));
-            }).sort((p, q) => q.ts - p.ts).slice(0, 30);
-            return { count: L.length, items: L.map(x => ({ app: x.kind === 'kakao' ? '카톡' : x.kind === 'app' ? x.app : '문자', room: x.room || '', from: x.name || x.from || '', at: new Date(x.ts).toLocaleString('ko-KR'), type: x.type, summary: x.summary, schedule: x.schedule || null, reply_draft: x.reply || '' })) };
+            const ap = String(a.app || ''), days = Math.min(30, Math.max(1, +a.days || 7)), cut = Date.now() - days * 864e5, me = famUser();
+            // 와이프·남편 같은 호칭은 이름·저장명 후보로 넓힘
+            let who = String(a.who || a.room || '').trim(); const spouse = me === '정우설' ? ['한미연', '미연'] : ['정우설', '우설'];
+            const keys = !who ? [] : /^(와이프|아내|집사람|마누라|부인|남편|신랑|여보|자기)$/.test(who.replace(/(님|씨|한테|에게|이|가)$/, '')) ? [...spouse, '여보', '와이프', '아내', '남편', '자기', '♥', '❤'] : [who.replace(/(님|씨|한테|에게|방)$/, '')];
+            const appOf = x => x.app || (x.kind === 'kakao' ? '카톡' : '문자');
+            const okApp = x => !ap || appOf(x).includes(ap) || ap.includes(appOf(x)), okWho = x => !keys.length || keys.some(k => [x.room, x.from].some(v => String(v || '').includes(k)));
+            let L = [];
+            try { const q = await db.collection('msgLog').where('ts', '>', cut).get(); q.forEach(d => { const x = d.data(); if (x.owner === me) L.push(x); }); } catch (e) {}
+            // 기록 전부터 쌓인 확인 대기 메시지도 함께
+            (brG('ibItems') || []).filter(x => x.kind !== 'card' && (!x.owner || x.owner === me) && x.ts > cut && x.raw).forEach(x => { if (!L.some(y => y.text === x.raw && Math.abs(y.ts - x.ts) < 60e3)) L.push({ ts: x.ts, kind: x.kind, app: x.kind === 'kakao' ? '카톡' : x.kind === 'app' ? x.app : '문자', room: x.room || '', from: x.name || x.from || '', text: x.raw }); });
+            L = L.filter(x => okApp(x) && okWho(x)).sort((p, q) => p.ts - q.ts);
+            const rooms = [...new Set(L.map(x => `${appOf(x)}:${x.room || x.from}`))].slice(0, 30);
+            const note = L.length ? '' : '해당 메시지가 없음. 카톡은 설정 > 문자·카톡 비서 > 카톡 받을 방으로 고른 방만, 위챗·회사 메신저는 알림 받을 앱으로 고른 앱만 기록되고, 기록은 이 기능을 넣은 뒤부터 쌓인다고 안내할 것';
+            return { days, count: L.length, rooms, note, messages: L.slice(-250).map(x => `${new Date(x.ts).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })} [${appOf(x)}${x.room && x.room !== x.from ? ' · ' + x.room : ''}] ${x.from}: ${String(x.text).replace(/\s+/g, ' ').slice(0, 300)}`) };
         }
         case 'list_schedules': {
             const k = (a.keyword || '').toLowerCase();
