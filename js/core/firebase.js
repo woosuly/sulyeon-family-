@@ -20,6 +20,9 @@
         let aChart = null, activeDateStr = "", currentMember = "", currentFolderId = null;
 
         // ── 초기화 ──────────────────────────────────────────────────
+        // 시계·날씨는 화면 뼈대가 준비되면 바로 시작 (window.onload는 이미지·외부 스크립트가 다 받아질 때까지 기다려서, 하나만 느려도 날씨가 안 뜸)
+        let famEarlyBoot = false;
+        document.addEventListener('DOMContentLoaded', () => { famEarlyBoot = true; try { initClock(); } catch (e) {} try { initWeather(); } catch (e) {} });
         window.onload = () => {
             // 커스텀 테마 색상 복원
             const saved = localStorage.getItem('customThemeColor');
@@ -32,8 +35,7 @@
             }
             // 헤더 투명도 복원
             applyHeaderColor(saved || null);
-            initClock();
-            initWeather();
+            if (!famEarlyBoot) { initClock(); initWeather(); }
             famAuthGate(() => { initRealtimeSync(); setTimeout(initChatListener, 1000); }); // 로그인 후 데이터 연결
             initProfile(); // 프로필 초기화 (저장값 없으면 모달 표시)
         };
