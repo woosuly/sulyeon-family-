@@ -26,7 +26,7 @@ public class Ears {
     private final Context ctx; private final Out out;
     private final Handler h = new Handler(Looper.getMainLooper());
     private SpeechRecognizer sr; private String acc = "", lang = "ko-KR";
-    private boolean stopReq = false, running = false, spoke = false; private int round = 0, sid = 0, busyRetry = 0;
+    private boolean stopReq = false, running = false, spoke = false; private int round = 0, sid = 0, busyRetry = 0; private long startAt = 0;
     private final Runnable noSpeech = () -> finish();
     private final Runnable hardStop = () -> { stopReq = true; try { if (sr != null) sr.stopListening(); } catch (Exception ignored) { } h.postDelayed(this::finish, 2000); };
 
@@ -37,7 +37,7 @@ public class Ears {
             if (running) cleanup();
             if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) { out.emit("error", "", "not-allowed", id); out.emit("end", "", "", id); return; }
             if (!SpeechRecognizer.isRecognitionAvailable(ctx)) { out.emit("error", "", "unavailable", id); out.emit("end", "", "", id); return; }
-            sid = id; lang = language == null || language.isEmpty() ? "ko-KR" : language; acc = ""; stopReq = false; round = 0; busyRetry = 0; running = true;
+            sid = id; lang = language == null || language.isEmpty() ? "ko-KR" : language; acc = ""; stopReq = false; round = 0; busyRetry = 0; running = true; startAt = System.currentTimeMillis();
             h.postDelayed(hardStop, 60000);   // 한 번에 최대 1분
             listen();
             out.emit("start", "", "", sid);
@@ -82,8 +82,12 @@ public class Ears {
             @Override public void onError(int e) {
                 h.removeCallbacks(noSpeech);
                 if (!running) return;
-                if ((e == SpeechRecognizer.ERROR_RECOGNIZER_BUSY || e == SpeechRecognizer.ERROR_CLIENT) && busyRetry < 2 && acc.isEmpty() && !stopReq) {
-                    busyRetry++; try { sr.cancel(); } catch (Exception ignored) { } h.postDelayed(() -> { if (running) listen(); }, 400); return;
+                // 빅스비·다른 앱이 마이크를 막 놓는 중이면 처음 몇 초 동안 바로 실패함 → 말을 시작하기 전이면 0.5초 뒤 다시 (최대 4번, 4초 안)
+                boolean early = acc.isEmpty() && !spoke && round == 0 && !stopReq && System.currentTimeMillis() - startAt < 4000;
+                boolean micBusy = e == SpeechRecognizer.ERROR_RECOGNIZER_BUSY || e == SpeechRecognizer.ERROR_CLIENT || e == SpeechRecognizer.ERROR_AUDIO
+                        || e == SpeechRecognizer.ERROR_NO_MATCH || e == SpeechRecognizer.ERROR_SPEECH_TIMEOUT;
+                if (early && micBusy && busyRetry < 4) {
+                    busyRetry++; try { sr.cancel(); } catch (Exception ignored) { } h.postDelayed(() -> { if (running) listen(); }, 500); return;
                 }
                 if (!acc.isEmpty()) { finish(); return; }
                 String err = e == SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS ? "not-allowed"

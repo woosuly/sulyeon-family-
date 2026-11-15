@@ -189,6 +189,13 @@ try {
         await wait(2500);
         ok(!(await page.evaluate(() => window.__nativeCalls.some(c => c[0] === 'N.callNumber'))), '취소했는데 걸었음');
     });
+    await test('말로 물은 답: 팝업으로 보여 주고 읽어드릴까요?', async () => {
+        await page.evaluate(() => { famVoiceMark(); famAnswerHook('가계부 요약해 줘', '**이번 달 지출** 120만 원입니다.'); });
+        const r = await page.evaluate(() => { const m = document.getElementById('va-pop'); return m && m.style.display === 'flex' ? m.querySelector('.va-t').textContent : ''; });
+        ok(r.includes('이번 달 지출 120만 원'), '팝업 내용 ' + r);
+        await page.evaluate(() => { vaHide(); famAnswerHook('x', '손으로 친 요청'); });
+        ok(await page.evaluate(() => document.getElementById('va-pop').style.display !== 'flex'), '말로 묻지 않았는데 팝업이 뜸');
+    });
     await test('위젯: 데이터 보내기', async () => {
         await page.evaluate(() => { window.__nativeCalls.length = 0; wgPush(true); });
         const d = await page.evaluate(() => (window.__nativeCalls.find(c => c[0] === 'N.widgetSet') || [])[1]);

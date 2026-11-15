@@ -349,6 +349,7 @@ ${typeof agNotesCtx === 'function' ? agNotesCtx() : ''}${hist ? '[앞선 대화]
         c.dataset.run = rid;
         if (typeof famAskHist !== 'undefined') { famAskHist.push({ q, a: text }); famAskAt = Date.now(); }
         brUi.forEach(f => { try { f(); } catch (e) {} });
+        if (typeof famAnswerHook === 'function') famAnswerHook(q, text);   // 말로 물었으면 답을 팝업으로
     }
     // 실행 기록 (고칠 곳 찾기용)
     try { await db.collection('agentRuns').doc(c.dataset.run || 'br' + Date.now()).set({ q: q.slice(0, 300), tools: done, ok: !err, err: err.slice(0, 300), ms: Date.now() - t0, prov: p, by: me, at: Date.now(), answer: String(text).slice(0, 600) }); } catch (e) {}
