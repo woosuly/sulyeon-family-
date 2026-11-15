@@ -87,7 +87,7 @@ async function docReminders(id, v) {
     if (!v) return;
     for (const o of owners) for (const n of DOC_AHEAD) {
         const at = new Date(v.expire + 'T09:00:00'); at.setDate(at.getDate() - n);
-        if (at.getTime() > Date.now()) await agRemindAdd({ id: `${id}_${o}_${n}`, owner: o, at: at.getTime(), title: `${v.owner === '공통' ? '' : v.owner + ' '}${v.name} 만료 ${n}일 전 (만료일 ${v.expire.slice(2).replace(/-/g, '.')})`, text: v.note || '', kind: 'doc' });
+        if (at.getTime() > Date.now()) await agRemindAdd({ id: `${id}_${o}_${n}`, owner: o, at: at.getTime(), title: `${v.owner === '공통' ? '' : v.owner + ' '}${v.name} 만료 ${n}일 전 알림 (만료일 ${v.expire.slice(2).replace(/-/g, '.')})`, text: v.note || '', kind: 'doc' });
     }
 }
 async function docDel(id) {
