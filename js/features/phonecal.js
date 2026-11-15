@@ -10,6 +10,21 @@ const pcLS = (k, v) => { try { if (v === undefined) return JSON.parse(localStora
 const pcYmd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const pcHm = d => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 let pcBusy = false;
+const PC_HOLI_CAL = /휴일|공휴일|holiday|국경일|기념일|절기/i;   // 공휴일 캘린더는 설연에 이미 있어 가져오지 않음
+// 생일 중복 판단: 제목 → 사람 키 (호칭 통일). 같은 날이거나, 같은 사람이 40일 안(음력·양력 차이)이면 같은 생일로 봄
+const famBdRe = /생일|생신|birthday|탄신/i;
+function famBdKey(t) {
+    let k = String(t || '').toLowerCase().replace(/\[[^\]]*\]|\([^)]*\)|happy\s*birthday|생일|생신|탄신|축하|🎂|님|의\b|[\s.,!~'"·-]/g, '');
+    const syn = [[/^(장모|어머님|처모)$/, '장모'], [/^(장인|장인어른|아버님|처부)$/, '장인'], [/^(아내|와이프|미연|한미연|큰딸)$/, '한미연'], [/^(남편|우설|정우설|큰사위)$/, '정우설']];
+    for (const [re, v] of syn) if (re.test(k)) return v;
+    return k;
+}
+function famBdDup(title, date, own) {
+    if (!famBdRe.test(title || '')) return false;
+    const k = famBdKey(title), t = new Date(date + 'T00:00:00').getTime();
+    return own.some(o => (o.date === date && (!k || !famBdKey(o.memo) || famBdKey(o.memo) === k)) || (k && famBdKey(o.memo) === k && Math.abs(new Date(o.date + 'T00:00:00').getTime() - t) <= 40 * 864e5));
+}
+
 
 function pcSetHtml() {
     const N = pcN(); if (!N || !N.calList) return '';
@@ -25,7 +40,7 @@ async function pcOpen() {
     const byAcc = {}; cals.forEach(c => (byAcc[c.account || '기타'] = byAcc[c.account || '기타'] || []).push(c));
     famSheet(`<div class="fam-h"><b>📆 가져올 캘린더</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
         <div class="fam-note" style="margin:0 0 8px">체크한 캘린더 일정을 설연 달력에 <b>${famEsc(famUser() || '')}</b> 일정으로 넣습니다. 회사 계정 캘린더는 체크하지 마세요. 이 폰에만 저장됩니다.</div>
-        <div style="max-height:50vh;overflow-y:auto">${Object.entries(byAcc).map(([acc, list]) => `<span class="fam-lbl">${famEsc(acc)}</span>` + list.map(c => `<label class="fs-tog" style="margin-top:6px"><div><b><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${famEsc(c.color)};margin-right:6px"></span>${famEsc(c.name || '(이름 없음)')}</b></div><input type="checkbox" class="pc-chk" value="${c.id}" ${sel.has(String(c.id)) ? 'checked' : ''}></label>`).join('')).join('') || '<div class="fam-note">폰에 캘린더가 없습니다.</div>'}</div>
+        <div style="max-height:50vh;overflow-y:auto">${Object.entries(byAcc).map(([acc, list]) => `<span class="fam-lbl">${famEsc(acc)}</span>` + list.map(c => PC_HOLI_CAL.test(c.name || '') ? `<div class="fs-tog" style="margin-top:6px;opacity:.5"><div><b>${famEsc(c.name)}</b><small>공휴일은 설연 달력에 이미 있어 가져오지 않습니다</small></div></div>` : `<label class="fs-tog" style="margin-top:6px"><div><b><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${famEsc(c.color)};margin-right:6px"></span>${famEsc(c.name || '(이름 없음)')}</b></div><input type="checkbox" class="pc-chk" value="${c.id}" ${sel.has(String(c.id)) ? 'checked' : ''}></label>`).join('')).join('') || '<div class="fam-note">폰에 캘린더가 없습니다.</div>'}</div>
         <div class="fam-btns">${sel.size ? '<button class="fam-btn" onclick="pcOff()">가져오기 끄기</button>' : ''}<button class="fam-btn pri" onclick="pcSaveSel(this)">저장하고 지금 맞추기</button></div>`);
 }
 async function pcSaveSel(btn) {
@@ -48,7 +63,11 @@ async function pcSync(force) {
     pcBusy = true;
     try {
         const from = Date.now() - 30 * 864e5, to = Date.now() + 183 * 864e5;
-        const evs = ids.length ? ((await N.calEvents({ from, to, ids })).events || []) : [];
+        // 공휴일 캘린더는 빼고, 설연에 이미 있는 생일과 겹치면 뺌
+        let holiCals = new Set(); try { holiCals = new Set(((await N.calList({})).calendars || []).filter(c => PC_HOLI_CAL.test(c.name || '')).map(c => String(c.id))); } catch (e) {}
+        let own = []; try { own = (schData || []).filter(x => x.src !== 'phone' && x.src !== 'han' && famBdRe.test(x.memo || '')); } catch (e) {}
+        const evs = (ids.length ? ((await N.calEvents({ from, to, ids: ids.filter(i => !holiCals.has(String(i))) })).events || []) : [])
+            .filter(e => !famBdDup(e.title, e.allDay ? new Date(e.start).toISOString().slice(0, 10) : pcYmd(new Date(e.start)), own));
         const want = new Map(), tag = me === '한미연' ? 'h' : 'j';
         for (const e of evs) {
             const s = new Date(e.start), en = new Date(e.end);

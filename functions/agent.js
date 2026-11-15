@@ -289,6 +289,20 @@ async function parcelNotify(p, item, done, level) {
   if (done && !p.done) await pushTo(owner, {k: 'remind', id: 'pc' + p.invoice, title: '📦 택배 도착', body: `${item || p.company || '택배'} 배달 완료`, tag: 'parcel-' + p.invoice});
   else if (level === 5 && (+p.level || 0) < 5) await pushTo(owner, {k: 'remind', id: 'pc' + p.invoice, title: '📦 오늘 도착 예정', body: `${item || p.company || '택배'} 배달 출발`, tag: 'parcel-' + p.invoice});
 }
+// 생일 중복 판단: 제목 → 사람 키 (호칭 통일). 같은 날이거나, 같은 사람이 40일 안(음력·양력 차이)이면 같은 생일로 봄
+const famBdRe = /생일|생신|birthday|탄신/i;
+function famBdKey(t) {
+    let k = String(t || '').toLowerCase().replace(/\[[^\]]*\]|\([^)]*\)|happy\s*birthday|생일|생신|탄신|축하|🎂|님|의\b|[\s.,!~'"·-]/g, '');
+    const syn = [[/^(장모|어머님|처모)$/, '장모'], [/^(장인|장인어른|아버님|처부)$/, '장인'], [/^(아내|와이프|미연|한미연|큰딸)$/, '한미연'], [/^(남편|우설|정우설|큰사위)$/, '정우설']];
+    for (const [re, v] of syn) if (re.test(k)) return v;
+    return k;
+}
+function famBdDup(title, date, own) {
+    if (!famBdRe.test(title || '')) return false;
+    const k = famBdKey(title), t = new Date(date + 'T00:00:00').getTime();
+    return own.some(o => (o.date === date && (!k || !famBdKey(o.memo) || famBdKey(o.memo) === k)) || (k && famBdKey(o.memo) === k && Math.abs(new Date(o.date + 'T00:00:00').getTime() - t) <= 40 * 864e5));
+}
+
 // ⑧ 한씨네(처가 가족 앱) 일정 가져오기 — config/aiShared.hanfeed (한씨네 앱 관리자 설정에서 만든 주소)
 //    schedules/han_… {src:'han'}, 공통 일정으로. 설연에 이미 있는 생일(같은 날 '생일·생신' 일정)은 뺌. 주소를 지우면 가져온 일정도 지움
 async function runHan() {
@@ -298,10 +312,13 @@ async function runHan() {
   if (/^https:\/\/[\w.-]+\/calFeed\?t=/.test(url)) {
     const r = await fetch(url), j = await r.json().catch(() => ({}));
     if (!r.ok || !Array.isArray(j.items)) throw new Error('한씨네 피드 ' + r.status + ' ' + (j.error || ''));
-    const bd = new Set((await db().collection('schedules').where('date', '>=', j.from).get()).docs.map(d => d.data()).filter(s => s.src !== 'han' && /생일|생신/.test(s.memo || '')).map(s => s.date));
+    // 설연 쪽 생일 (폰 캘린더에서 온 것 포함, 한씨네 것 제외) — 같은 날이거나 같은 사람이 40일 안이면 중복
+    const own = (await db().collection('schedules').where('date', '>=', addDays(j.from, -40)).get()).docs.map(d => d.data()).filter(s => s.src !== 'han' && famBdRe.test(s.memo || ''));
     const hid = s => require('crypto').createHash('md5').update(s).digest('hex').slice(0, 16);
     for (const it of j.items) {
-      if ((it.type === 'bday' || /생일|생신/.test(it.title || '')) && bd.has(it.date)) continue;   // 설연에 이미 있는 생일
+      // 한씨네의 '아버지·어머니' = 우리에겐 장인어른·장모님
+      if (it.type === 'bday') it.title = String(it.title || '').replace(/^아버지/, '장인어른').replace(/^어머니/, '장모님');
+      if (famBdDup(it.title, it.date, own)) continue;   // 설연에 이미 있는 생일
       const id = 'han_' + hid(String(it.id));
       want.set(id, {id, date: it.date, priority: '일반', member: '공통', category: '가족', timeType: it.time ? 'timed' : 'allday', startTime: it.time || '', endTime: '',
         place: it.place || '', memo: '[한씨네] ' + (it.title || ''), repeat: null, span: null, src: 'han', srcKey: String(it.id), by: '한씨네'});
