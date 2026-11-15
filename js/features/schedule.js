@@ -122,7 +122,22 @@
             add(famLunarToSolar(y, 1, 15), '정월대보름'); add(famLunarToSolar(y, 5, 5), '단오'); add(famLunarToSolar(y, 7, 7), '칠석');
             const yy = y % 100; add(D(12, Math.floor(yy * 0.2422 + 21.94) - Math.floor((yy - 1) / 4)), '동지');
             const H = famHolidaysOf(y); Object.keys(S).forEach(k => { if (H[k]) delete S[k]; });
+            // 교회 절기 (서방 교회력·한국 개신교 관행). 공휴일과 겹치면 달력엔 공휴일 이름이 먼저 보임
+            const ez = famEaster(y), P = (base, n) => { const d = new Date(base); d.setDate(d.getDate() + n); return d; };
+            const sunOnOrBefore = d => P(d, -d.getDay()), nthSun = (m, k) => { const f = D(m, 1); return P(f, (7 - f.getDay()) % 7 + 7 * (k - 1)); };
+            const C = (d, n) => add(d, '✝ ' + n);
+            C(D(1, 6), '주현절'); C(P(ez, -46), '재의 수요일(사순절 시작)'); C(P(ez, -7), '종려주일'); C(P(ez, -2), '성금요일');
+            C(ez, '부활절'); C(P(ez, 39), '승천일'); C(P(ez, 49), '성령강림절'); C(P(ez, 56), '삼위일체주일');
+            C(nthSun(7, 1), '맥추감사주일'); C(sunOnOrBefore(D(10, 31)), '종교개혁주일'); C(nthSun(11, 3), '추수감사주일');
+            const adv1 = P(sunOnOrBefore(D(12, 24)), -21); for (let i = 0; i < 4; i++) C(P(adv1, 7 * i), `대림절 ${i + 1}주`);
+            C(D(12, 31), '송구영신예배');
             return (famSpecCache[y] = S);
+        }
+        // 부활절 (그레고리력, 서방 교회)
+        function famEaster(y) {
+            const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
+            const h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+            return new Date(y, Math.floor((h + l - 7 * m + 114) / 31) - 1, ((h + l - 7 * m + 114) % 31) + 1);
         }
         const famHoli = ds => famHolidaysOf(+ds.slice(0, 4))[ds] || '';
         const famSpec = ds => famSpecialsOf(+ds.slice(0, 4))[ds] || '';

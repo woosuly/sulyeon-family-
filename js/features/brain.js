@@ -44,7 +44,7 @@ const BR_TOOLS = [
     { name: 'web_search', description: '최신 정보 웹검색 (맛집·숙소·코스·가격·운영시간 등). 질문을 구체적으로', params: brS({ query: brStr('검색해서 알아낼 내용') }, ['query']) },
     { name: 'search_app', description: '앱 안 기록(일정·가계부·여행·채팅·장보기·메모) 검색', params: brS({ keyword: brStr('검색어') }, ['keyword']) },
     { name: 'hike_info', description: '다녀온 산 목록과 안 가 본 100대 명산', params: brS({}) },
-    { name: 'add_schedule', description: '일정 추가 (여러 날이면 end). 바로 저장되고 되돌리기 가능', params: brS({ date: brStr('YYYY-MM-DD'), end: brStr('선택: 마지막 날 YYYY-MM-DD'), time: brStr('선택: HH:MM'), title: brStr('일정 내용'), place: brStr('선택'), member: brStr('정우설|한미연|공통') }, ['date', 'title']) },
+    { name: 'add_schedule', description: '일정 추가 (여러 날이면 end, 매주 반복이면 weekly_until). 바로 저장되고 되돌리기 가능', params: brS({ date: brStr('YYYY-MM-DD'), end: brStr('선택: 마지막 날 YYYY-MM-DD'), weekly_until: brStr('선택: 매주 같은 요일 반복 마지막 날 YYYY-MM-DD (최대 1년)'), time: brStr('선택: HH:MM'), title: brStr('일정 내용'), place: brStr('선택'), member: brStr('정우설|한미연|공통') }, ['date', 'title']) },
     { name: 'add_reminder', description: '특정 시각에 푸시 알림. 바로 저장', params: brS({ at: brStr('YYYY-MM-DDTHH:MM'), title: brStr('알림 내용'), who: brStr('정우설|한미연|둘 다') }, ['at', 'title']) },
     { name: 'save_note', description: '가족이 기억해 달라는 정보 저장 (보험사, 비밀번호 제외 생활 정보 등)', params: brS({ text: brStr('기억할 내용') }, ['text']) },
     { name: 'add_shopping', description: '장보기 목록에 추가', params: brS({ items: { type: 'array', items: { type: 'string' }, description: '물건 이름들' } }, ['items']) },
@@ -118,6 +118,17 @@ async function brRun(name, a) {
         }
         case 'add_schedule': {
             const mem = ['정우설', '한미연', '공통'].includes(a.member) ? a.member : '공통', days = [];
+            if (a.weekly_until) {
+                // 매주 반복: 일정 화면의 반복 일정과 같은 형식 (묶음 수정·삭제 가능)
+                const gid = 'sch_' + Date.now(), end = a.weekly_until > brYmd(Date.now() + 366 * 864e5) ? brYmd(Date.now() + 366 * 864e5) : a.weekly_until, out = [];
+                for (let d = new Date(a.date + 'T00:00:00'), i = 0; brYmd(d) <= end && i < 60; d.setDate(d.getDate() + 7), i++) {
+                    const sid = i === 0 ? gid : `${gid}_r${i - 1}`;
+                    await db.collection('schedules').doc(sid).set({ id: sid, date: brYmd(d), priority: '일반', member: mem, category: mem === '공통' ? '가족' : '개인', timeType: a.time ? 'timed' : 'allday', startTime: a.time || '', endTime: '', place: a.place || '', memo: a.title, by: 'AI', repeat: { unit: 'week', cal: 'solar', groupId: gid }, span: null });
+                    brLog.push({ col: 'schedules', id: sid, label: i === 0 ? `🔁 매주 ${'일월화수목금토'[d.getDay()]} ${a.time || ''} ${a.title} (${a.date} ~ ${end})` : '' }); out.push(brYmd(d));
+                }
+                for (let i = brLog.length - 1; i >= 0; i--) if (!brLog[i].label) brLog[i].label = null;
+                return { ok: true, weekly: out.length + '회', first: out[0], last: out[out.length - 1] };
+            }
             for (let d = new Date(a.date + 'T00:00:00'); brYmd(d) <= (a.end || a.date) && days.length < 14; d.setDate(d.getDate() + 1)) days.push(brYmd(d));
             const gid = days.length > 1 ? 'grp_' + Date.now() : null;
             for (let i = 0; i < days.length; i++) {
@@ -260,7 +271,7 @@ ${typeof agNotesCtx === 'function' ? agNotesCtx() : ''}${hist ? '[앞선 대화]
         const rid = 'br' + Date.now(); c.dataset.raw = text;
         const seen = new Set(), src = brSrc.filter(s => /^https?:/.test(s.url) && !seen.has(s.url) && seen.add(s.url)).slice(0, 5);
         c.innerHTML = `<div class="fam-ai" id="${rid}">${famMd(text || '처리했습니다.')}</div>
-            ${brLog.length ? `<div class="br-done">${brLog.map(x => `<div>✅ ${famEsc(x.label)}</div>`).join('')}<button class="fam-btn" style="padding:4px 9px;font-size:12px;margin-top:4px" onclick="brUndo(this,'${famEsc(JSON.stringify(brLog.map(x => [x.col, x.id])))}')">모두 되돌리기</button></div>` : ''}
+            ${brLog.length ? `<div class="br-done">${brLog.filter(x => x.label).map(x => `<div>✅ ${famEsc(x.label)}</div>`).join('')}<button class="fam-btn" style="padding:4px 9px;font-size:12px;margin-top:4px" onclick="brUndo(this,'${famEsc(JSON.stringify(brLog.map(x => [x.col, x.id])))}')">모두 되돌리기</button></div>` : ''}
             ${src.length ? `<div style="margin-top:8px;border-top:1px solid #e2e8f0;padding-top:6px">${src.map(s => `<a href="${famEsc(s.url)}" target="_blank" rel="noopener" style="display:block;font-size:11.5px;color:#2563eb;padding:2px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">↗ ${famEsc(s.title)}</a>`).join('')}</div>` : ''}
             <div class="fam-note" style="display:flex;align-items:center;gap:6px">${famEsc(FAM_NAMES[p])}${done.length ? ' · ' + done.length + '단계' : ''}<button onclick="famSpeak(this,'${rid}','ko-KR')" style="margin-left:auto;border:none;background:none;font-size:15px;cursor:pointer;padding:2px 4px">🔊</button></div>
             <div class="ff-ai-acts"><button onclick="brCopy(famAiText(this))">복사</button><button onclick="famShare(famAiText(this))">공유</button><button onclick="brRate(this,'${rid}',1)">👍</button><button onclick="brRate(this,'${rid}',-1)">👎</button></div>`;
