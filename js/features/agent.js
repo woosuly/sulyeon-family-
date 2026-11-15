@@ -72,6 +72,21 @@ async function agRemindAdd(r) {
     await db.collection('reminders').doc(id).set({ id, owner: r.owner || agMe(), at: r.at, title: r.title, text: r.text || '', kind: r.kind || 'user', repeat: r.repeat || null, createdAt: Date.now() });
     return id;
 }
+function agHanForm() {
+    const cur = (typeof famKeys === 'function' && famKeys().hanfeed) || '';
+    famSheet(`<div class="fam-h"><b>한씨네 일정 가져오기</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
+        <div class="fam-note" style="margin:0 0 8px">한씨네 앱 → 설정 → 관리자 → '설연(부부 앱)으로 일정 보내기'에서 만든 주소를 붙여 넣으세요. 우리 가구가 볼 수 있는 일정과 가족 생일이 <b>[한씨네]</b> 공통 일정으로 들어옵니다. 설연에 이미 있는 생일은 빼고, 수정은 한씨네 앱에서 합니다.</div>
+        <input class="fam-in" id="han-url" value="${famEsc(cur)}" placeholder="https://…/calFeed?t=…" autocomplete="off">
+        <div class="fam-btns">${cur ? '<button class="fam-btn" onclick="agHanSave(\'\')">연결 끊기</button>' : ''}<button class="fam-btn pri" onclick="agHanSave(document.getElementById(\'han-url\').value.trim())">저장하고 지금 맞추기</button></div>`);
+}
+async function agHanSave(url) {
+    if (url && !/^https:\/\/[\w.-]+\/calFeed\?t=/.test(url)) return famToast('주소 형식이 다릅니다. 한씨네 앱에서 복사한 주소를 그대로 넣어 주세요');
+    if (!url && !confirm('연결을 끊고 가져온 한씨네 일정을 설연에서 지울까요?')) return;
+    famSetKey('hanfeed', url);
+    await db.collection('config').doc('aiShared').set({ hanfeed: url }, { merge: true });   // 서버가 바로 읽도록 먼저 저장
+    await db.collection('briefReq').add({ owner: agMe(), type: 'han', at: Date.now() });
+    famSheetClose(); famToast(url ? '맞추는 중… 1분 안에 알림이 옵니다' : '연결을 끊었습니다');
+}
 async function agRemindDel(id) { await db.collection('reminders').doc(id).delete().catch(() => {}); }
 
 // ── 기억 노트 ─────────────────────────────────────────────
@@ -129,6 +144,7 @@ function agSetHtml() {
         <div class="fam-btns" style="margin-top:0"><button class="fam-btn" onclick="Capacitor.Plugins.SeolyeonNative.openAssistantSettings()">기본 어시스턴트 앱 설정 열기</button></div>` : ''}
         ${typeof stSetHtml === 'function' ? stSetHtml() : ''}
         ${typeof pcSetHtml === 'function' ? pcSetHtml() : ''}
+        <div class="fs-row"><div><b>한씨네 일정</b><small>${(typeof famKeys === 'function' && famKeys().hanfeed) ? '연결됨 · 1시간마다 맞춤 (설연에 있는 생일은 제외)' : '한씨네 앱 관리자 설정의 주소를 붙여 넣기'}</small></div><button class="fam-btn" onclick="agHanForm()">설정</button></div>
         <div class="fs-row"><div><b>비서 실행 기록</b><small>실패·👎 요청 모아 보기 (복사해서 Claude에게)</small></div><button class="fam-btn" onclick="brRunsOpen()">보기</button></div>
         <span class="fam-lbl">예정된 알림 ${rems.length}건</span>
         ${rems.length ? rems.map(r => `<div class="ag-li"><span>${famEsc(agFmt(r.at))}</span><b>${famEsc(r.title)}</b><button class="fam-x" onclick="agRemindDel('${r.id}').then(()=>famRenderSettings())">✕</button></div>`).join('') : '<div class="fam-note" style="margin:0">홈에서 "내일 8시에 ○○ 알려줘"라고 입력하세요.</div>'}

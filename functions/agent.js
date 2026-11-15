@@ -289,6 +289,31 @@ async function parcelNotify(p, item, done, level) {
   if (done && !p.done) await pushTo(owner, {k: 'remind', id: 'pc' + p.invoice, title: '📦 택배 도착', body: `${item || p.company || '택배'} 배달 완료`, tag: 'parcel-' + p.invoice});
   else if (level === 5 && (+p.level || 0) < 5) await pushTo(owner, {k: 'remind', id: 'pc' + p.invoice, title: '📦 오늘 도착 예정', body: `${item || p.company || '택배'} 배달 출발`, tag: 'parcel-' + p.invoice});
 }
+// ⑧ 한씨네(처가 가족 앱) 일정 가져오기 — config/aiShared.hanfeed (한씨네 앱 관리자 설정에서 만든 주소)
+//    schedules/han_… {src:'han'}, 공통 일정으로. 설연에 이미 있는 생일(같은 날 '생일·생신' 일정)은 뺌. 주소를 지우면 가져온 일정도 지움
+async function runHan() {
+  const url = String(((await db().collection('config').doc('aiShared').get()).data() || {}).hanfeed || '').trim();
+  const have = (await db().collection('schedules').where('src', '==', 'han').get()).docs;
+  const want = new Map();
+  if (/^https:\/\/[\w.-]+\/calFeed\?t=/.test(url)) {
+    const r = await fetch(url), j = await r.json().catch(() => ({}));
+    if (!r.ok || !Array.isArray(j.items)) throw new Error('한씨네 피드 ' + r.status + ' ' + (j.error || ''));
+    const bd = new Set((await db().collection('schedules').where('date', '>=', j.from).get()).docs.map(d => d.data()).filter(s => s.src !== 'han' && /생일|생신/.test(s.memo || '')).map(s => s.date));
+    const hid = s => require('crypto').createHash('md5').update(s).digest('hex').slice(0, 16);
+    for (const it of j.items) {
+      if ((it.type === 'bday' || /생일|생신/.test(it.title || '')) && bd.has(it.date)) continue;   // 설연에 이미 있는 생일
+      const id = 'han_' + hid(String(it.id));
+      want.set(id, {id, date: it.date, priority: '일반', member: '공통', category: '가족', timeType: it.time ? 'timed' : 'allday', startTime: it.time || '', endTime: '',
+        place: it.place || '', memo: '[한씨네] ' + (it.title || ''), repeat: null, span: null, src: 'han', srcKey: String(it.id), by: '한씨네'});
+    }
+  }
+  const ops = [];
+  have.forEach(d => { if (!want.has(d.id)) ops.push(b => b.delete(d.ref)); });
+  want.forEach((v, id) => { const o = have.find(d => d.id === id), x = o && o.data(); if (!x || x.date !== v.date || x.memo !== v.memo || x.startTime !== v.startTime || x.place !== v.place) ops.push(b => b.set(db().collection('schedules').doc(id), v)); });
+  for (let i = 0; i < ops.length; i += 400) { const b = db().batch(); ops.slice(i, i + 400).forEach(f => f(b)); await b.commit(); }
+  return want.size;
+}
+
 async function runParcels() {
   const cfg = (await db().collection('config').doc('aiShared').get()).data() || {};
   const key = cfg.sweettracker, td = String(cfg.trackerdelivery || '').trim();
@@ -352,6 +377,7 @@ exports.agentTick = onSchedule({schedule: 'every 5 minutes', timeZone: 'Asia/Seo
   const cfg = {users: ['정우설', '한미연'], lat: 36.6424, lon: 127.489, city: '청주', off: {}, ...((await db().collection('config').doc('agent').get()).data() || {})};
   await runReminders(now).catch(e => console.error('reminders', e));
   if (k.getUTCMinutes() < 5 && hm >= 7 * 60 && hm < 23 * 60 && await once('parcel_' + day + '_' + k.getUTCHours())) await runParcels().catch(e => console.error('parcels', e));
+  if (k.getUTCMinutes() >= 30 && k.getUTCMinutes() < 35 && hm >= 6 * 60 && await once('han_' + day + '_' + k.getUTCHours())) await runHan().catch(e => console.error('han', e));
   // 하루 한 번 정리: 14일 지난 브리핑·기록, 처리 끝난 30일 지난 확인 대기
   if (hm >= 3 * 60 && hm < 3 * 60 + 15 && await once('cleanup_' + day)) {
     for (const [col, field, ms] of [['briefs', 'at', 14 * 864e5], ['agentLog', 'at', 14 * 864e5], ['briefReq', 'at', 7 * 864e5], ['agentRuns', 'at', 60 * 864e5]]) {
@@ -382,6 +408,7 @@ exports.briefNow = onDocumentCreated({document: 'briefReq/{id}', region: 'asia-n
     else if (r.type === 'weekend') await weekend(r.owner, day, cfg);
     else if (r.type === 'hike') await hikeSuggest(r.owner, day, cfg);
     else if (r.type === 'flight') await runFlights(r.owner, r.fid || '');
+    else if (r.type === 'han') { const n = await runHan().catch(e => { pushTo(r.owner, {k: 'remind', id: 'han', title: '한씨네 일정 가져오기 실패', body: e.message, tag: 'han'}); return -1; }); if (n >= 0) await pushTo(r.owner, {k: 'remind', id: 'han', title: '한씨네 일정 맞춤', body: `${n}건`, tag: 'han'}); }
     else if (r.type === 'weekly') await weekly(r.owner, day);
     else await morning(r.owner, day, cfg);
     await ev.data.ref.update({done: true});
