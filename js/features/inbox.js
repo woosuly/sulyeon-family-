@@ -123,6 +123,8 @@ async function ibDrain(opt) {
                 const s = part[k], a = out ? (out.find(o => +o.i === k) || { skip: true }) : { type: '문자', summary: s.raw.slice(0, 80) };
                 if (a.parcel && a.parcel.invoice && typeof parcelAdd === 'function') await parcelAdd({ ...a.parcel, item: a.parcel.item || '' }).catch(() => {});
                 if (a.bill && +a.bill.amount > 0 && typeof billSave === 'function') await billSave(a.bill, '문자').catch(() => {});
+                // 할 일이 없는 대화라도 받는 카톡방·연락처 사람의 메시지는 '메시지'로 남김 (설연 알림을 누르고 들어왔을 때 빈 화면이 되지 않게)
+                if (a.skip && ((s.kind === 'kakao' && s.room) || (s.kind === 'sms' && s.name)) && out) { a.skip = false; a.type = '메시지'; a.summary = `${s.kind === 'kakao' && s.room !== s.from ? s.room + ' · ' : ''}${s.name || s.from || ''}: ${s.raw.replace(/\s+/g, ' ').slice(0, 90)}`; }
                 if (!a.skip) await db.collection('inbox').doc(s.key).set({
                     id: s.key, kind: s.kind, owner: me, status: 'pending', at: Date.now(), ts: s.ts, from: s.from, name: s.name || '', number: s.number || '', room: s.room || '', raw: s.raw,
                     type: a.type || '문자', summary: a.summary || '', schedule: a.schedule && a.schedule.date ? a.schedule : null, reply: a.reply || '',
