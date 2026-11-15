@@ -525,6 +525,22 @@ public class SeolyeonNativePlugin extends Plugin {
         call.resolve();
     }
 
+    // ═══ 소리 우선권: 듣기·읽어주기 동안 음악을 잠깐 멈추고 끝나면 다시 재생 ═══
+    private static android.media.AudioFocusRequest afr;
+    @PluginMethod
+    public void audioFocus(PluginCall call) {
+        try {
+            android.media.AudioManager am = (android.media.AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
+            if (am != null && Build.VERSION.SDK_INT >= 26) {
+                if (afr == null) afr = new android.media.AudioFocusRequest.Builder(android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE)
+                        .setAudioAttributes(new android.media.AudioAttributes.Builder().setUsage(android.media.AudioAttributes.USAGE_ASSISTANT)
+                                .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SPEECH).build()).build();
+                if (Boolean.TRUE.equals(call.getBoolean("on", true))) am.requestAudioFocus(afr); else am.abandonAudioFocusRequest(afr);
+            }
+        } catch (Exception ignored) { }
+        call.resolve();
+    }
+
     // ═══ 카톡 "읽어드릴까요?" ═══
     /** 앱이 열려 있으면 웹화면 팝업으로 (true면 알림 팝업은 안 띄움) */
     static boolean fireKakaoIn(String room, String from, String text, int n) {

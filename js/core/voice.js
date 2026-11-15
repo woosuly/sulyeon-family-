@@ -10,6 +10,11 @@
     const C = window.Capacitor;
     if (!C || !C.isNativePlatform || !C.isNativePlatform()) return;
     const P = (C.Plugins || {});
+    // 음악 재생 중에도 듣기·읽어주기가 되도록 그동안 소리 우선권을 받아 음악을 잠깐 멈춤 (끝나면 다시 재생)
+    let afN = 0, afT = null;
+    const focus = on => { const S = P.SeolyeonNative; if (!S || !S.audioFocus) return;
+        if (on) { afN++; clearTimeout(afT); S.audioFocus({ on: true }).catch(() => {}); }
+        else { afN = Math.max(0, afN - 1); clearTimeout(afT); afT = setTimeout(() => { if (!afN) S.audioFocus({ on: false }).catch(() => {}); }, 1200); } };
 
     // ── 음성 인식 ──
     const SR = P.SpeechRecognition;
@@ -28,7 +33,7 @@
                 this.onresult({ results: [res], resultIndex: 0 });
             }
             _end(err) {
-                if (this._done) return; this._done = true;
+                if (this._done) return; this._done = true; if (this._af) { this._af = false; focus(false); }
                 clearTimeout(this._t); if (this._sub) { try { this._sub.remove(); } catch (e) {} this._sub = null; }
                 if (err && this.onerror) this.onerror({ error: err });
                 if (this.onend) this.onend();
@@ -50,6 +55,8 @@
                     // 이전 인식이 아직 돌거나 방금 끝났으면 정리 후 시작
                     if (active) { await SR.stop().catch(() => {}); await sleep(400); }
                     else if (Date.now() - lastEnd < 400) await sleep(400 - (Date.now() - lastEnd));
+                    if (this._done) return;
+                    this._af = true; focus(true); await sleep(250);   // 음악이 멈출 틈
                     if (this._done) return;
                     try { this._sub = await SR.addListener('partialResults', d => { const t = (d.matches || [])[0]; if (t && this.interimResults) this._fire(t, false); }); } catch (e) {}
                     if (this.onstart) this.onstart();
@@ -90,14 +97,14 @@
             window.SpeechSynthesisUtterance = function (text) { this.text = text || ''; this.lang = 'ko-KR'; this.rate = 1; this.pitch = 1; this.voice = null; };
         }
         let cur = null, timer = null, seq = 0;
-        const finish = (u) => { if (!u || u !== cur) return; clearTimeout(timer); cur = null; ss.speaking = false; if (u.onend) try { u.onend({}); } catch (e) {} };
+        const finish = (u) => { if (!u || u !== cur) return; clearTimeout(timer); cur = null; ss.speaking = false; focus(false); if (u.onend) try { u.onend({}); } catch (e) {} };
         if (N.addListener) N.addListener('ttsDone', d => { if (cur && d && d.id === cur._id) finish(cur); });
         const ss = {
             speaking: false, pending: false, paused: false,
             getVoices: () => [],
             speak(u) {
                 if (cur) this.cancel();
-                cur = u; u._id = 'u' + (++seq); this.speaking = true;
+                cur = u; u._id = 'u' + (++seq); this.speaking = true; focus(true);
                 const lang = (u.voice && u.voice.lang) || u.lang || 'ko-KR', rate = Math.max(.5, Math.min(1.6, (u.rate || 1) * .95));
                 N.speak({ text: String(u.text || ''), lang, rate, id: u._id }).then(() => { if (u.onstart) try { u.onstart({}); } catch (e) {} })
                     .catch(() => { finish(u); if (u.onerror) try { u.onerror({ error: 'synthesis-failed' }); } catch (e) {} });
