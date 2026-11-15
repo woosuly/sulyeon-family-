@@ -45,7 +45,8 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 @CapacitorPlugin(name = "SeolyeonNative",
     permissions = { @Permission(alias = "sms", strings = { Manifest.permission.READ_SMS }),
                     @Permission(alias = "contacts", strings = { Manifest.permission.READ_CONTACTS }),
-                    @Permission(alias = "calendar", strings = { Manifest.permission.READ_CALENDAR }) })
+                    @Permission(alias = "calendar", strings = { Manifest.permission.READ_CALENDAR }),
+                    @Permission(alias = "phone", strings = { Manifest.permission.CALL_PHONE }) })
 public class SeolyeonNativePlugin extends Plugin {
     private static SeolyeonNativePlugin instance;
     private static String pendK = null, pendId = null;
@@ -463,6 +464,53 @@ public class SeolyeonNativePlugin extends Plugin {
         JSObject r = new JSObject();
         r.put("names", names);
         call.resolve(r);
+    }
+
+    /** 연락처에서 이름으로 찾기 {names:[...]} → {items:[{name, number}]} (이름 일부만 맞아도, 최대 10개) */
+    @PluginMethod
+    public void findContact(PluginCall call) {
+        if (getPermissionState("contacts") != PermissionState.GRANTED) { requestPermissionForAlias("contacts", call, "findContactCb"); return; }
+        doFind(call);
+    }
+    @PermissionCallback
+    private void findContactCb(PluginCall call) {
+        if (getPermissionState("contacts") == PermissionState.GRANTED) doFind(call); else call.reject("denied");
+    }
+    private void doFind(PluginCall call) {
+        JSArray out = new JSArray(); java.util.Set<String> seen = new java.util.HashSet<>();
+        try {
+            JSArray names = call.getArray("names", new JSArray());
+            for (int i = 0; i < names.length() && out.length() < 10; i++) {
+                String q = names.getString(i); if (q == null || q.trim().isEmpty()) continue;
+                try (Cursor c = getContext().getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        new String[]{ ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME, ContactsContract.CommonDataKinds.Phone.NUMBER, ContactsContract.CommonDataKinds.Phone.IS_SUPER_PRIMARY },
+                        ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " LIKE ?", new String[]{ "%" + q.trim() + "%" }, ContactsContract.CommonDataKinds.Phone.IS_SUPER_PRIMARY + " DESC")) {
+                    while (c != null && c.moveToNext() && out.length() < 10) {
+                        String nm = c.getString(0), num = c.getString(1); if (num == null) continue;
+                        String key = nm + "|" + num.replaceAll("\\D", ""); if (!seen.add(key)) continue;
+                        JSObject o = new JSObject(); o.put("name", nm); o.put("number", num); o.put("q", q); out.put(o);
+                    }
+                }
+            }
+        } catch (Exception ignored) { }
+        JSObject r = new JSObject(); r.put("items", out); call.resolve(r);
+    }
+
+    /** 바로 전화 걸기 {number} — 전화 걸기 권한이 없으면 한 번 묻고, 거절하면 전화 앱에 번호만 넣어 엶 */
+    @PluginMethod
+    public void callNumber(PluginCall call) {
+        if (getPermissionState("phone") != PermissionState.GRANTED) { requestPermissionForAlias("phone", call, "callNumberCb"); return; }
+        doCall(call, true);
+    }
+    @PermissionCallback
+    private void callNumberCb(PluginCall call) { doCall(call, getPermissionState("phone") == PermissionState.GRANTED); }
+    private void doCall(PluginCall call, boolean direct) {
+        try {
+            Intent i = new Intent(direct ? Intent.ACTION_CALL : Intent.ACTION_DIAL, Uri.parse("tel:" + call.getString("number", "").replaceAll("[^0-9+*#]", "")));
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(i);
+            JSObject r = new JSObject(); r.put("direct", direct); call.resolve(r);
+        } catch (Exception e) { call.reject(String.valueOf(e.getMessage())); }
     }
 
     /** 전화 앱에 번호를 넣어 열기 (통화는 직접 누름) */

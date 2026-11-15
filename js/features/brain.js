@@ -37,6 +37,7 @@ function brSnapshot() {
 const brS = (props, req) => ({ type: 'object', properties: props, required: req || [] });
 const brStr = d => ({ type: 'string', description: d }), brNum = d => ({ type: 'number', description: d });
 const BR_TOOLS = [
+    { name: 'call_phone', description: '전화 걸기 (연락처에서 찾아 바로 걸기). "와이프한테 전화해 줘", "장모님께 전화 연결"', params: brS({ who: brStr('누구에게 (와이프·아내·남편 또는 연락처 이름)') }, ['who']) },
     { name: 'list_messages', description: '받은 카톡·문자·위챗·회사 메신저 메시지 원문 (최근 30일까지, 받는 방으로 고른 카톡방·알림 받을 앱만). "와이프한테 일주일 동안 온 카톡 정리", "오늘 위챗 뭐 왔어?", "그린센터 방 소식" 등. 받은 원문을 보고 요약·정리해서 답한다', params: brS({ app: brStr('선택: 카톡|문자|위챗|앱 이름'), who: brStr('선택: 대화방·보낸 사람 (와이프·아내·남편도 됨)'), days: { type: 'number', description: '며칠 전부터 (기본 7)' } }, []) },
     { name: 'list_schedules', description: '기간 안의 가족 일정 조회', params: brS({ from: brStr('YYYY-MM-DD'), to: brStr('YYYY-MM-DD'), keyword: brStr('선택: 내용·장소 검색어') }, ['from', 'to']) },
     { name: 'free_days', description: '기간 안에서 일정이 없는 날·주말·공휴일 찾기 (여행·산행 날짜 고를 때)', params: brS({ from: brStr('YYYY-MM-DD'), to: brStr('YYYY-MM-DD') }, ['from', 'to']) },
@@ -66,6 +67,7 @@ async function brRun(name, a) {
     a = a || {};
     const me = famUser() || '정우설';
     switch (name) {
+        case 'call_phone': return typeof callPerson === 'function' ? await callPerson(a.who) : { ok: false };
         case 'list_messages': {
             const ap = String(a.app || ''), days = Math.min(30, Math.max(1, +a.days || 7)), cut = Date.now() - days * 864e5, me = famUser();
             // 와이프·남편 같은 호칭은 이름·저장명 후보로 넓힘

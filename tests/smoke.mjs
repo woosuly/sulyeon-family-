@@ -28,7 +28,9 @@ const NATIVE = `(() => {
     cardQueueTake: () => ({ items: window.__queue.splice(0) }), readCardSms: () => { throw new Error('no'); },
     kakaoRooms: () => ({ allow: ['wife'], seen: [] }), msgApps: () => ({ allow: ['com.tencent.mm'], seen: [] }),
     replyTargets: () => ({ items: window.__targets }), replySend: () => ({ sent: true }), takeLaunchPush: () => ({}),
-    cardState: () => ({}), lookupContacts: () => ({ names: {} }), apkInfo: () => ({ version: '1.37' })
+    cardState: () => ({}), lookupContacts: () => ({ names: {} }), apkInfo: () => ({ version: '1.37' }),
+    findContact: a => ({ items: (a.names || []).includes('wife') ? [{ name: 'wife', number: '010-1234-5678', q: 'wife' }] : (a.names || []).includes('장모님') ? [{ name: '장모님', number: '010-2222-3333', q: '장모님' }] : [] }),
+    callNumber: () => ({ direct: true })
   };
   const mk = name => new Proxy({}, { get: (t, k) => {
     if (typeof k === 'symbol' || k === 'then' || k === 'toJSON') return undefined;
@@ -71,7 +73,7 @@ async function spyRoutes() {
     await page.evaluate(() => {
         window.__hits = [];
         const leaf = ['famAgent', 'famAsk', 'famSchCard', 'famAssetCard', 'agRemind', 'agNoteSave', 'flOpen', 'billAnswer', 'docAnswer', 'hikeM100Sheet', 'agBriefNow',
-            'kurlyCart', 'baeminOpen', 'famShopAdd', 'ibCardFromText', 'musicPlay', 'videoSearch', 'famGo', 'showSection', 'famTranslateText', 'famSearch', 'mapOpen', 'famChatSend', 'stOpen', 'roborockOpen', 'parcelLook'];
+            'kurlyCart', 'baeminOpen', 'famShopAdd', 'ibCardFromText', 'musicPlay', 'videoSearch', 'famGo', 'showSection', 'famTranslateText', 'famSearch', 'mapOpen', 'famChatSend', 'callPerson', 'stOpen', 'roborockOpen', 'parcelLook'];
         leaf.forEach(n => { if (typeof window[n] === 'function') { const o = window[n]; window['__o_' + n] = o; window[n] = function () { window.__hits.push(n); return n === 'famShopAdd' ? Promise.resolve() : true; }; } });
     });
 }
@@ -109,6 +111,9 @@ try {
         ['와이프한테 최근 일주일 카톡 정리해 줘', 'famAgent'],
         ['오늘 위챗 뭐 왔어?', 'famAgent'],
         ['다음 주 제주도 2박 3일 여행 일정 짜줘', 'famAgent'],
+        ['와이프한테 전화해 줘', 'callPerson'],
+        ['헬로 설연 장모님께 전화 연결해 줘', 'callPerson'],
+        ['내일 저녁 7시에 장모님께 전화하라고 알려줘', 'agRemind'],
     ];
     for (const [t, want] of R) await test(`입력 "${t}" → ${want}`, async () => eq(await route(t), want));
     await test('입력 처리: 한 기능이 오류를 내도 다음으로 넘어감', async () => {
@@ -171,6 +176,18 @@ try {
     await test('바로 보내기: 와이프 → wife 카톡방', async () => {
         const r = await page.evaluate(async () => { window.__targets = [{ pkg: 'com.kakao.talk', app: '카카오톡', room: 'wife', ts: Date.now() }]; return brTargetFor('와이프'); });
         ok(r && r.room === 'wife', '대상 못 찾음');
+    });
+    await test('전화: "와이프한테 전화해 줘" → wife 연락처로 2초 뒤 걸기', async () => {
+        await page.evaluate(() => { window.__nativeCalls.length = 0; famRun('와이프한테 전화해 줘'); });
+        await page.waitForFunction(() => window.__nativeCalls.some(c => c[0] === 'N.callNumber'), null, { timeout: 5000 });
+        eq(await page.evaluate(() => window.__nativeCalls.find(c => c[0] === 'N.callNumber')[1].number), '010-1234-5678');
+    });
+    await test('전화: 취소하면 걸지 않음', async () => {
+        await page.evaluate(() => { window.__nativeCalls.length = 0; famRun('장모님께 전화 걸어 줘'); });
+        await page.waitForFunction(() => document.querySelector('[id^="call"] button'), null, { timeout: 5000 });
+        await page.evaluate(() => document.querySelector('[id^="call"] button').click());
+        await wait(2500);
+        ok(!(await page.evaluate(() => window.__nativeCalls.some(c => c[0] === 'N.callNumber'))), '취소했는데 걸었음');
     });
     await test('위젯: 데이터 보내기', async () => {
         await page.evaluate(() => { window.__nativeCalls.length = 0; wgPush(true); });
