@@ -12,7 +12,7 @@
             android:textColor="@color/w_fg" android:textSize="16sp" android:maxLines="1" android:ellipsize="end" android:fontFamily="sans-serif-medium" />
         <LinearLayout android:id="@+id/w_more" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical"
             android:layout_marginTop="8dp" android:visibility="gone">
-            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/w_line" />
+            <FrameLayout android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/w_line" />
             <TextView android:id="@+id/w_l1" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp"
                 android:textColor="@color/w_fg" android:textSize="13.5sp" android:maxLines="1" android:ellipsize="end" />
             <TextView android:id="@+id/w_l2" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp"
