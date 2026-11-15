@@ -49,6 +49,10 @@ const BR_TOOLS = [
     { name: 'save_note', description: '가족이 기억해 달라는 정보 저장 (보험사, 비밀번호 제외 생활 정보 등)', params: brS({ text: brStr('기억할 내용') }, ['text']) },
     { name: 'add_shopping', description: '장보기 목록에 추가', params: brS({ items: { type: 'array', items: { type: 'string' }, description: '물건 이름들' } }, ['items']) },
     { name: 'add_wish', description: '가고 싶은 곳 목록에 추가', params: brS({ name: brStr('장소'), note: brStr('선택'), abroad: { type: 'boolean', description: '해외면 true' } }, ['name']) },
+    { name: 'add_subscription', description: '정기결제(구독·통신·보험 등) 등록. 하루 전 알림 포함', params: brS({ name: brStr('이름'), amt: brNum('금액(원)'), cycle: brStr('월|년'), day: brNum('결제일 1~31'), month: brNum('매년이면 결제 월') }, ['name', 'amt', 'day']) },
+    { name: 'add_doc', description: '생활 서류 만료·갱신 기한 등록 (여권·운전면허 갱신·국가건강검진·실손보험 갱신 등). 90·30·7일 전 알림', params: brS({ name: brStr('서류 종류'), owner: brStr('정우설|한미연|공통'), expire: brStr('YYYY-MM-DD'), note: brStr('선택. 번호류는 쓰지 말 것') }, ['name', 'expire']) },
+    { name: 'add_bill', description: '관리비·공과금 금액 기록', params: brS({ kind: brStr('관리비|전기|가스|수도|통신|기타'), ym: brStr('청구 월 YYYY-MM'), amount: brNum('원') }, ['kind', 'ym', 'amount']) },
+    { name: 'add_parcel', description: '택배 운송장 등록 (자동 조회·도착 알림)', params: brS({ invoice: brStr('운송장 번호'), company: brStr('택배사'), item: brStr('선택: 물건') }, ['invoice']) },
     { name: 'watch_flight', description: '항공권 가격 지켜보기 등록 (매주 확인·알림)', params: brS({ dest: brStr('도착 도시'), from: brStr('출발 공항, 기본 인천'), when: brStr('여행 시기'), nights: brNum('몇 박'), target: brNum('선택: 1인 왕복 목표가(원)') }, ['dest', 'when']) },
     { name: 'propose_ledger', description: '가계부 기록 확인 카드 띄우기 (사용자가 눌러야 저장)', params: brS({ text: brStr('예: 점심 김밥천국 12000 카드') }, ['text']) },
     { name: 'draft_message', description: '가족 채팅·문자·카톡 보낼 말 초안 카드 (사용자가 눌러야 전송)', params: brS({ to: brStr('아내|남편|가족채팅|사람 이름'), text: brStr('보낼 내용') }, ['text']) },
@@ -157,10 +161,36 @@ async function brRun(name, a) {
             const id = 'w_' + Date.now(); await db.collection('wishes').doc(id).set({ id, name: a.name, note: a.note || '', kind: a.abroad ? '해외' : '국내', type: '', from: 'AI', by: me, at: Date.now() });
             brLog.push({ col: 'wishes', id, label: `📍 가고 싶은 곳: ${a.name}` }); return { ok: true };
         }
+        case 'add_subscription': {
+            const id = 'sub_' + Date.now(), v = { name: a.name, amt: Math.round(+a.amt || 0), cycle: a.cycle === '년' ? '년' : '월', day: Math.min(31, Math.max(1, +a.day || 1)), month: Math.min(12, Math.max(1, +a.month || 1)), pay: '', memo: '', remind: true };
+            if (!v.name || !v.amt) return { error: '이름과 금액 필요' };
+            await db.collection('subs').doc(id).set({ id, ...v, by: me, at: Date.now() });
+            if (typeof subRemindSet === 'function') await subRemindSet(id, v).catch(() => {});
+            brLog.push({ col: 'subs', id, label: `💳 정기결제 ${v.name} ${brW(v.amt)} (매${v.cycle} ${v.cycle === '년' ? v.month + '/' : ''}${v.day}일)` }); return { ok: true };
+        }
+        case 'add_doc': {
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(a.expire || '')) return { error: '기한 날짜 형식 YYYY-MM-DD' };
+            const id = 'doc_' + Date.now(), v = { name: a.name, owner: ['정우설', '한미연', '공통'].includes(a.owner) ? a.owner : me, expire: a.expire, note: String(a.note || '').replace(/\d{6,}/g, ''), at: Date.now() };
+            await db.collection('lifeDocs').doc(id).set({ id, ...v });
+            if (typeof docReminders === 'function') await docReminders(id, v).catch(() => {});
+            brLog.push({ col: 'lifeDocs', id, label: `🪪 ${v.owner} ${v.name} 기한 ${v.expire} (알림 포함)` }); return { ok: true };
+        }
+        case 'add_bill': {
+            if (typeof billSave !== 'function') return { error: '관리비 기능 없음' };
+            await billSave({ kind: a.kind, ym: a.ym, amount: a.amount }, '말로');
+            brLog.push({ col: 'bills', id: `${a.kind}_${a.ym}`, label: `🧾 ${a.kind} ${a.ym} ${brW(a.amount)}` }); return { ok: true };
+        }
+        case 'add_parcel': {
+            if (typeof parcelAdd !== 'function') return { error: '택배 기능 없음' };
+            const inv = String(a.invoice || '').replace(/[^\d]/g, ''); if (inv.length < 8) return { error: '운송장 번호 확인' };
+            await parcelAdd({ invoice: inv, company: a.company || '', item: a.item || '' });
+            brLog.push({ col: 'parcels', id: inv, label: `📦 택배 ${a.company || ''} ${inv}${a.item ? ' · ' + a.item : ''}` }); return { ok: true };
+        }
         case 'watch_flight': {
             const id = 'fl_' + Date.now(); await db.collection('flightWatch').doc(id).set({ id, dest: a.dest, from: a.from || '인천', when: a.when || '', nights: +a.nights || 0, pax: 2, target: +a.target || 0, by: me, at: Date.now(), hist: [] });
             await db.collection('briefReq').add({ owner: me, type: 'flight', fid: id, at: Date.now() });
-            brLog.push({ col: 'flightWatch', id, label: `✈️ ${a.dest} 항공권 지켜보기` }); return { ok: true, note: '가격 확인은 1분 안에 알림으로' };
+            brLog.push({ col: 'flightWatch', id, label: `✈️ ${a.dest} 항공권 지켜보기` }); brUi.push(() => typeof flOpen === 'function' && flOpen());
+            return { ok: true, note: '등록 완료. 가격은 1분 안에 항공권 화면과 알림으로. 사용자에게 다시 입력하라고 하지 말 것' };
         }
         case 'propose_ledger': brUi.push(() => famAssetCard(a.text)); return { ok: true, note: '확인 카드를 띄움. 사용자가 저장해야 기록됨' };
         case 'draft_message': brUi.push(() => brDraftCard(a.to, a.text)); return { ok: true, note: '초안 카드를 띄움. 사용자가 눌러야 전송' };
@@ -219,7 +249,7 @@ function brResults(p, msgs, res) {
     else if (p === 'gemini') msgs.push({ role: 'user', parts: res.map(x => ({ functionResponse: { name: x.name, response: { result: x.out } } })) });
     else res.forEach(x => msgs.push({ role: 'tool', tool_call_id: x.id, content: JSON.stringify(x.out).slice(0, 12000) }));
 }
-const BR_STEP = { list_schedules: '일정 확인', free_days: '빈 날 찾기', query_ledger: '가계부 확인', weather: '날씨 확인', web_search: '웹 검색', search_app: '앱 기록 찾기', hike_info: '산행 기록 확인',
+const BR_STEP = { add_subscription: '정기결제 등록', add_doc: '서류 기한 등록', add_bill: '관리비 기록', add_parcel: '택배 등록', list_schedules: '일정 확인', free_days: '빈 날 찾기', query_ledger: '가계부 확인', weather: '날씨 확인', web_search: '웹 검색', search_app: '앱 기록 찾기', hike_info: '산행 기록 확인',
     add_schedule: '일정 저장', add_reminder: '알림 설정', save_note: '메모 저장', add_shopping: '장보기 추가', add_wish: '가볼 곳 추가', watch_flight: '항공권 등록', propose_ledger: '가계부 카드', draft_message: '메시지 초안', open_app: '화면 열기' };
 
 // ── 실행 ──

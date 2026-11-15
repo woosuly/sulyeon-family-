@@ -51,7 +51,7 @@
             <div class="drawer-item" id="di-schedule"          onclick="drawerGo('schedule-section')"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>일정</span></div>
             <div class="drawer-item" id="di-asset"             onclick="drawerGo('asset-section')"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h12v4"/><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M16 13.5h2"/></svg><span>가계부</span></div>
             <div class="drawer-item" id="di-photo" style="display:none"             onclick="drawerGo('photo-section')"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg><span>앨범</span></div>
-            <div class="drawer-item" id="di-travel"            onclick="drawerGo('travel-section')"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 13.5L3 11l1.5-1.5 8 1 4-4.5c1-1 2.6-1.4 3.2-.8s.2 2.2-.8 3.2l-4.5 4 1 8L14 21.5l-2.5-7.5"/><path d="M6 17l-2 .5 1.5 1.5"/></svg><span>여행 &amp; 여가</span></div>
+            <div class="drawer-item" id="di-travel"            onclick="drawerGo('travel-section')"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 13.5L3 11l1.5-1.5 8 1 4-4.5c1-1 2.6-1.4 3.2-.8s.2 2.2-.8 3.2l-4.5 4 1 8L14 21.5l-2.5-7.5"/><path d="M6 17l-2 .5 1.5 1.5"/></svg><span>여행 · 여가 · 출장</span></div>
             <div class="drawer-item" id="di-trans" style="display:none"             onclick="drawerGo('translator-section')"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><span>번역 · 통역</span></div>
             <div class="drawer-item" id="di-chat" style="display:none"              onclick="drawerGo('chat-section')"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg><span>채팅</span><span id="drw-badge" style="display:none;background:#ef4444;color:white;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:800;margin-left:auto;"></span></div>
             <div class="drawer-item" id="di-shop"              onclick="drawerGo('shop-section')"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.5"/><circle cx="17" cy="20" r="1.5"/><path d="M3 4h2l2.4 11h11L21 8H6.2"/></svg><span>장보기 · 배달</span></div>
@@ -375,7 +375,7 @@
                     <div class="sch-header">
                         <div style="display:flex;align-items:center;gap:8px;">
                             <span class="fi-title"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 13.5L3 11l1.5-1.5 8 1 4-4.5c1-1 2.6-1.4 3.2-.8s.2 2.2-.8 3.2l-4.5 4 1 8L14 21.5l-2.5-7.5"/><path d="M6 17l-2 .5 1.5 1.5"/></svg></span>
-                            <h3 style="margin:0;font-size:clamp(15px,2vw,18px);font-weight:800;">여행 &amp; 여가</h3>
+                            <h3 style="margin:0;font-size:clamp(15px,2vw,18px);font-weight:800;">여행 · 여가 · 출장</h3>
                         </div>
                         <div class="pg-acts"><button class="pg-btn pri" onclick="openPlanModal(null)">＋ 추가</button><button class="pg-more" aria-label="더보기" onclick="famMenu(this,[['떠날 수 있는 날 · 어디 갈까',()=>tpOpen()],['AI 여행 초안 만들기',()=>tpDraftForm()],['여행 노트 · 지도',()=>mapOpen()],['산행 기록',()=>hikeLogSheet()],['가고 싶은 곳',()=>mapOpen('wish')],['항공권 지켜보기',()=>flOpen()],['번역 · 통역',()=>showSection('translator-section')]])">⋯</button><button onclick="showSection('main-section')" class="btn-home"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>홈</button></div>
                     </div>
@@ -427,6 +427,7 @@
                         <div class="plan-filter-option" onclick="setPlanFilter('type','골프')">골프</div>
                         <div class="plan-filter-option" onclick="setPlanFilter('type','스크린골프')">스크린골프</div>
                         <div class="plan-filter-option" onclick="setPlanFilter('type','등산')">등산</div>
+                        <div class="plan-filter-option" onclick="setPlanFilter('type','출장')">출장</div>
                         <div class="plan-filter-option" onclick="setPlanFilter('type','기타')">기타</div>
                     </div>
                 </div>
@@ -1088,6 +1089,7 @@
                     <button type="button" class="sch-chip"        data-val="골프"       onclick="selectChip(this,'plan-type-group');togglePlanTimeSection()">골프</button>
                     <button type="button" class="sch-chip"        data-val="스크린골프" onclick="selectChip(this,'plan-type-group');togglePlanTimeSection()">스크린골프</button>
                     <button type="button" class="sch-chip"        data-val="등산"       onclick="selectChip(this,'plan-type-group');togglePlanTimeSection()">등산</button>
+                    <button type="button" class="sch-chip"        data-val="출장"       onclick="selectChip(this,'plan-type-group');togglePlanTimeSection()">출장</button>
                     <button type="button" class="sch-chip"        data-val="기타"       onclick="selectChip(this,'plan-type-group');togglePlanTimeSection()">기타</button>
                 </div>
                 <input type="hidden" id="plan-sub-type" value="여행">

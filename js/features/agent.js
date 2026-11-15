@@ -17,9 +17,14 @@ function agRoute(raw) {
     if (typeof mediaRoute === 'function' && mediaRoute(t)) return true;   // 음악·영상
     if (typeof lifeRoute === 'function' && lifeRoute(t)) return true;     // 길찾기·차·택배
     // 산행: '주말에 어느 산 갈까', '등산 추천해줘' → 서버 산행 추천 / '100대 명산' → 진행 현황
-    if (/(항공권|비행기\s*표|항공\s*가격)/.test(t) && typeof flOpen === 'function') { flOpen(); return true; }
-    if (/(관리비|공과금|전기\s*요금|가스\s*요금)/.test(t) && /(얼마|추이|보여|비교|현황|나왔)/.test(t)) { showSection('save-section'); setTimeout(() => document.getElementById('bill-box')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300); return true; }
-    if (/(여권|면허|건강\s*검진|서류)/.test(t) && /(만료|언제|갱신|기한|남았)/.test(t)) { showSection('save-section'); setTimeout(() => document.getElementById('doc-box')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300); return true; }
+    // 항공권: 목적지·시기를 말했으면 비서가 '지켜보기' 등록과 가격 확인까지 (빈 양식을 다시 채우지 않게)
+    if (/(항공권|비행기\s*(표|값)|항공\s*(가격|요금))/.test(t)) {
+        const rest = t.replace(/(항공권|비행기\s*(표|값)|항공\s*(가격|요금)|가격|요금|얼마|알아\s*봐|찾아|지켜\s*봐|보여|확인|조회|해\s*줘|줘|좀|[?？.!\s])/g, '');
+        if (rest.length >= 2 && typeof famAgent === 'function') { famAgent(t + '\n(목적지·시기를 정리해 watch_flight로 등록하고 바로 가격을 확인해 줘. 출발지를 말하지 않았으면 인천)'); return true; }
+        if (typeof flOpen === 'function') { flOpen(); return true; }
+    }
+    if (/(관리비|공과금|전기\s*요금|가스\s*요금|수도\s*요금)/.test(t) && /(얼마|추이|보여|비교|현황|나왔)/.test(t) && typeof billAnswer === 'function') { billAnswer(t); return true; }
+    if (/(여권|면허|건강\s*검진|서류|보험)/.test(t) && /(만료|언제|갱신|기한|남았)/.test(t) && typeof docAnswer === 'function') { docAnswer(t); return true; }
     if (/100\s*대\s*명산|명산\s*(현황|몇)/.test(t) && typeof hikeM100Sheet === 'function') { hikeM100Sheet(); return true; }
     if (/(등산|산행|어느\s*산|무슨\s*산|어떤\s*산)/.test(t) && /(추천|갈까|가볼까|어디|좋을까)/.test(t)) { agBriefNow('hike'); famFeedAdd('⛰️ 이번 주말 날씨·미세먼지·일몰을 보고 안 가 본 산 위주로 추천을 만드는 중입니다. 완료되면 알림이 옵니다.'); return true; }
     if (/(기억\s*해\s*(줘|둬|놔)|기억해|메모\s*해\s*(줘|둬)|적어\s*(줘|둬))[.!]?$/.test(t)) { agNoteSave(t); return true; }

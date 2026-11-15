@@ -68,6 +68,13 @@ async function docFromImg(input) {
     } catch (e) { famToast('읽지 못했습니다: ' + e.message); }
     lbl.firstChild.textContent = old;
 }
+// 말로 물으면 바로 답: "여권 만료 언제야?" → 해당 서류의 기한과 남은 날
+function docAnswer(t) {
+    const hit = lifeDocs.filter(d => t.includes(d.name.slice(0, 2)) || (/면허/.test(t) && /면허/.test(d.name)) || (/검진/.test(t) && /검진/.test(d.name)) || (/보험/.test(t) && /보험/.test(d.name)));
+    const list = hit.length ? hit : lifeDocs;
+    if (!list.length) return famFeedAdd('등록된 서류가 없습니다. <button class="fam-btn" onclick="docForm()">서류 추가</button> 사진·캡처로도 넣을 수 있습니다.');
+    famFeedAdd(`<h5>🪪 서류 기한</h5>${list.map(d => `<div class="ag-li" style="cursor:pointer" onclick="docForm('${d.id}')"><span>${famEsc(d.owner || '')}</span><b>${famEsc(d.name)}</b><span style="text-align:right">${d.expire}<br><small style="color:#64748b">${docDday(d.expire)}</small></span></div>`).join('')}${hit.length ? '' : '<div class="fam-note">말씀하신 서류가 없어 전체를 보여 드립니다.</div>'}`);
+}
 async function docSave(id, btn) {
     const g = k => document.getElementById('doc-' + k).value.trim();
     const v = { name: g('name'), owner: g('owner'), expire: g('expire'), note: g('note'), at: Date.now() };

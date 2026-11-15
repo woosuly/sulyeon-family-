@@ -7,7 +7,7 @@
             period: { all:'기간' },   // 동적으로 채워짐
             member: { all:'구성원', 공통:'공통', 정우설:'정우설', 한미연:'한미연' },
             area:   { all:'지역', 국내:'국내', 해외:'해외' },
-            type:   { all:'유형', 여행:'여행', 캠핑:'캠핑', 골프:'골프', 스크린골프:'스크린', 등산:'등산', 기타:'기타' },
+            type:   { all:'유형', 여행:'여행', 캠핑:'캠핑', 골프:'골프', 스크린골프:'스크린', 등산:'등산', 출장:'출장', 기타:'기타' },
         };
 
         function togglePlanFilter(key) {
@@ -117,7 +117,7 @@
             return member === '정우설' ? '#1e40af' : member === '한미연' ? '#9d174d' : '#166534';
         }
         function getTypeIcon(type) {
-            const map = { '여행':'✈️','캠핑':'⛺','골프':'⛳','스크린골프':'🏌️','등산':'🏔️','기타':'📌' };
+            const map = { '여행':'✈️','캠핑':'⛺','골프':'⛳','스크린골프':'🏌️','등산':'🏔️','출장':'💼','기타':'📌' };
             return map[type] || '📌';
         }
         function getDday(startDs) {
@@ -129,7 +129,7 @@
         }
 
         // ── 여행 목록: 구성원·유형 체크 + 다가오는/지난 기록(최신순) ──
-        const PLAN_TYPES = [['여행','✈️'],['캠핑','⛺'],['골프','⛳'],['스크린골프','🏌️'],['등산','🏔️'],['기타','📌']];
+        const PLAN_TYPES = [['여행','✈️'],['캠핑','⛺'],['골프','⛳'],['스크린골프','🏌️'],['등산','🏔️'],['출장','💼'],['기타','📌']];
         const PLAN_F = (function(){ try { return JSON.parse(localStorage.getItem('planFilter2')||'null'); } catch(e){ return null; } })() || { m:'all', t:'all' };
         function planSet(g,v){ PLAN_F[g]=v; try{ localStorage.setItem('planFilter2',JSON.stringify(PLAN_F)); }catch(e){} renderPlans(); }
         function planChips(){

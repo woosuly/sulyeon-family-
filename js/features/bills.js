@@ -79,6 +79,15 @@ async function billPendSave(btn) {
     for (let i = 0; i < billPend.length; i++) await billSave({ kind: document.getElementById('bp-k' + i).value, ym: document.getElementById('bp-m' + i).value, amount: document.getElementById('bp-a' + i).value }, '사진').catch(() => {});
     billPend = []; famSheetClose(); famToast('저장했습니다');
 }
+// 말로 물으면 바로 답: "관리비 얼마 나왔어?" → 최근 달 종류별 금액과 전월·전년 비교
+function billAnswer(t) {
+    if (!bills.length) return famFeedAdd('아직 관리비·공과금 기록이 없습니다. 고지 문자가 오거나 사진·캡처로 넣으면 기록됩니다. <button class="fam-btn" onclick="billForm()">추가</button>');
+    const want = BILL_KINDS.filter(k => t.includes(k) || (k === '전기' && /전기/.test(t)) || (k === '가스' && /가스/.test(t)));
+    const kinds = (want.length ? want : BILL_KINDS).filter(k => bills.some(b => b.kind === k));
+    const rows = kinds.map(k => { const ym = bills.filter(b => b.kind === k).map(b => b.ym).sort().pop(), v = billGet(k, ym), pm = billGet(k, blYm(ym, -1)), py = billGet(k, blYm(ym, -12));
+        return `<div class="ag-li"><span>${+ym.slice(5)}월</span><b>${k}</b><span style="text-align:right">${blW(v)}<br>${pm ? '전월 ' + billDiff(v, pm) : ''}${py ? ' 전년 ' + billDiff(v, py) : ''}</span></div>`; }).join('');
+    famFeedAdd(`<h5>🧾 관리비 · 공과금</h5>${rows || '해당 기록이 없습니다.'}<div class="fam-btns"><button class="fam-btn" onclick="famFeedClose();showSection('save-section')">생활 관리에서 보기</button></div>`);
+}
 async function billDel(id) { if (!confirm('지울까요?')) return; await db.collection('bills').doc(id).delete().catch(() => {}); famSheetClose(); }
 
 (function () { famAuthGate(() => setTimeout(billListen, 1600)); })();

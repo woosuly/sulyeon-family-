@@ -89,6 +89,10 @@ function lifeRoute(t) {
         const w = /열어/.test(t) ? '문 열기' : /닫아|잠가|잠궈|잠금/.test(t) ? '문 잠금' : /시동|에어컨|히터/.test(t) ? '공조 시작' : /위치|어디/.test(t) ? '차량 위치' : '';
         bmwOpen(w); return true;
     }
+    // 운송장 번호를 말하면 바로 등록 (택배사 이름이 있으면 같이)
+    { const inv = (t.match(/\d[\d\s-]{8,}\d/) || [''])[0].replace(/[^\d]/g, '');
+      if (/택배|운송장|송장/.test(t) && inv.length >= 10) { const co = (t.match(/(CJ|씨제이|대한통운|한진|롯데|우체국|로젠|쿠팡|경동|대신|GS|CU|편의점)\S*/i) || [''])[0];
+        parcelAdd({ invoice: inv, company: co, item: '' }).then(() => { famFeedAdd(`📦 운송장 <b>${inv}</b>${co ? ' (' + famEsc(co) + ')' : ''}을 등록했습니다. 조회 키가 있으면 1시간마다 확인해 도착 때 알려 드립니다.`); parcelOpen(); }); return true; } }
     if (/택배|배송/.test(t) && /(어디|언제|조회|현황|목록|왔|와|보여)/.test(t)) { parcelOpen(); return true; }
     if (/(로보락|로봇\s*청소기|청소기|청소)/.test(t) && /(시작|돌려|해\s*줘|켜|멈춰|정지|중지|충전|복귀|돌아가|열어|상태)/.test(t) && !/(일정|알려|기억)/.test(t)) { roborockOpen(t); return true; }
     if (/네이버\s*(주문|구매|쇼핑)\s*(내역|목록)?/.test(t)) { naverOrders(); return true; }
