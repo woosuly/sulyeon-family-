@@ -230,39 +230,45 @@
             document.getElementById('weather-desc').textContent = `${timeLabel} · ${userCityName}`;
         }
 
-        // 위치 설정 모달 (날짜카드 클릭 시)
-        function openLocationModal() {
-            resetModal();
-            document.getElementById('modal-title').innerText = "📍 위치 설정";
-            document.getElementById('photo-adjust-fields').classList.remove('hidden');
-            document.getElementById('setting-city').value = userCityName || '';
-            document.getElementById('btn-save').innerText = "저장";
-            document.getElementById('btn-save').onclick = async () => {
-                const city = document.getElementById('setting-city').value.trim();
-                if (!city) { alert('도시 이름을 입력해주세요.'); return; }
-                // geocoding으로 위도/경도/타임존 자동 조회
-                try {
-                    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en`);
-                    const data = await res.json();
-                    const r = data.results?.[0];
-                    if (!r) { alert('도시를 찾을 수 없어요. 영문으로 다시 입력해보세요.'); return; }
-                    userCityName = r.name;
-                    userLat      = r.latitude;
-                    userLon      = r.longitude;
-                    userTimezone = r.timezone || 'Asia/Seoul';
-                    localStorage.setItem('userCityName', userCityName);
-                    localStorage.setItem('userLat',      userLat);
-                    localStorage.setItem('userLon',      userLon);
-                    localStorage.setItem('userTimezone', userTimezone);
-                    initWeather();
-                    closeModal();
-                } catch(e) {
-                    alert('위치 조회 중 오류가 발생했어요. 다시 시도해주세요.');
-                }
-            };
-            openModal();
+        // 위치 설정 (날짜카드 클릭 시): 지금 위치(GPS) 한 번 누르기, 또는 한글로 검색해서 고르기
+        function locSet(name, lat, lon, tz) {
+            userCityName = name; userLat = +lat; userLon = +lon; userTimezone = tz || 'Asia/Seoul';
+            localStorage.setItem('userCityName', userCityName); localStorage.setItem('userLat', userLat); localStorage.setItem('userLon', userLon); localStorage.setItem('userTimezone', userTimezone);
+            weatherAt = 0; initWeather(); try { updateClock(); } catch (e) {}
+            if (typeof famSheetClose === 'function') famSheetClose();
+            if (typeof famToast === 'function') famToast(`위치: ${name}`);
         }
-
+        function openLocationModal() {
+            famSheet(`<div class="fam-h"><b>📍 날씨 위치</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
+                <button class="fam-btn pri" style="width:100%;padding:13px;font-size:15px" onclick="locHere(this)">📍 지금 있는 곳으로</button>
+                <div style="display:flex;gap:6px;margin-top:12px"><input id="loc-q" class="fam-in" style="flex:1;margin:0" placeholder="지역 이름 (예: 청주, 제주, 오사카)" onkeydown="if(event.key==='Enter')locSearch()"><button class="fam-btn" onclick="locSearch()">찾기</button></div>
+                <div id="loc-res" style="margin-top:8px"></div>
+                <div class="fam-note">지금: <b>${famEsc(userCityName || '')}</b> · 한글·영문 모두 됩니다. 해외 여행지도 같은 방법으로 바꿀 수 있습니다.</div>`);
+            setTimeout(() => { const el = document.getElementById('loc-q'); if (el) el.focus(); }, 250);
+        }
+        // 지금 위치: 폰 위치 → 지역 이름(한글)
+        function locHere(btn) {
+            if (!navigator.geolocation) return famToast('이 폰에서는 위치를 쓸 수 없습니다');
+            btn.disabled = true; btn.textContent = '위치 확인 중…';
+            navigator.geolocation.getCurrentPosition(async pos => {
+                const { latitude: la, longitude: lo } = pos.coords; let name = '';
+                try { const r = await (await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${la}&longitude=${lo}&localityLanguage=ko`)).json(); name = r.city || r.locality || r.principalSubdivision || ''; } catch (e) {}
+                locSet(name || '현재 위치', la, lo, Intl.DateTimeFormat().resolvedOptions().timeZone);
+            }, e => { btn.disabled = false; btn.textContent = '📍 지금 있는 곳으로'; famToast(e.code === 1 ? '위치 권한을 허용해 주세요 (폰 설정 → 애플리케이션 → 설연 → 권한)' : '위치를 못 찾았습니다. 아래에서 검색해 주세요'); },
+            { enableHighAccuracy: false, timeout: 12000, maximumAge: 10 * 60e3 });
+        }
+        // 한글로 찾기: 결과 여러 개면 골라서
+        async function locSearch() {
+            const q = (document.getElementById('loc-q') || {}).value?.trim(); const box = document.getElementById('loc-res'); if (!q || !box) return;
+            box.innerHTML = '<div class="fam-note">찾는 중…</div>';
+            const get = async lang => ((await (await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=${lang}`)).json()).results || []);
+            let rs = []; try { rs = await get('ko'); if (!rs.length) rs = await get('en'); } catch (e) {}
+            // '청주시'처럼 끝에 시·군·구를 붙이면 못 찾는 경우가 있어 한 번 더
+            if (!rs.length && /[시군구도]$/.test(q)) { try { const q2 = q.replace(/(특별시|광역시|특별자치시|특별자치도|시|군|구|도)$/, ''); rs = ((await (await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q2)}&count=6&language=ko`)).json()).results || []); } catch (e) {} }
+            if (!rs.length) { box.innerHTML = '<div class="fam-note">못 찾았습니다. 더 큰 지역 이름으로 해 보세요 (예: 오창 → 청주).</div>'; return; }
+            window._locRs = rs;
+            box.innerHTML = rs.map((r, i) => `<div class="ag-li" style="cursor:pointer" onclick="const r=window._locRs[${i}];locSet(r.name,r.latitude,r.longitude,r.timezone)"><span>📍</span><b>${famEsc(r.name)}<br><small style="color:#64748b;font-weight:500">${famEsc([r.admin1, r.country].filter(Boolean).join(' · '))}</small></b><span style="color:#94a3b8">선택 ›</span></div>`).join('');
+        }
 
         // ══════════════════════════════════════════════════════
         // 👤 프로필 (사용자 식별) 관리
