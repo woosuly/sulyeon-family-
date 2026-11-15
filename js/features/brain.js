@@ -75,8 +75,10 @@ async function brRun(name, a) {
             const okApp = x => !ap || appOf(x).includes(ap) || ap.includes(appOf(x)), okWho = x => !keys.length || keys.some(k => [x.room, x.from].some(v => String(v || '').toLowerCase().includes(k)));
             let L = [];
             try { const q = await db.collection('msgLog').where('ts', '>', cut).get(); q.forEach(d => { const x = d.data(); if (x.owner === me) L.push(x); }); } catch (e) {}
-            // 기록 전부터 쌓인 확인 대기 메시지도 함께
-            (brG('ibItems') || []).filter(x => x.kind !== 'card' && (!x.owner || x.owner === me) && x.ts > cut && x.raw).forEach(x => { if (!L.some(y => y.text === x.raw && Math.abs(y.ts - x.ts) < 60e3)) L.push({ ts: x.ts, kind: x.kind, app: x.kind === 'kakao' ? '카톡' : x.kind === 'app' ? x.app : '문자', room: x.room || '', from: x.name || x.from || '', text: x.raw }); });
+            // 기록을 넣기 전에 받은 메시지: 확인 대기에 올라갔던 것(처리한 것 포함, 30일 보관)에서 찾음
+            let IB = [];
+            try { const q = await db.collection('inbox').where('owner', '==', me).get(); q.forEach(d => IB.push(d.data())); } catch (e) { IB = brG('ibItems') || []; }
+            IB.filter(x => x.kind !== 'card' && x.ts > cut && x.raw).forEach(x => { if (!L.some(y => y.text === x.raw && Math.abs(y.ts - x.ts) < 60e3)) L.push({ ts: x.ts, kind: x.kind, app: x.kind === 'kakao' ? '카톡' : x.kind === 'app' ? x.app : '문자', room: x.room || '', from: x.name || x.from || '', text: x.raw }); });
             L = L.filter(x => okApp(x) && okWho(x)).sort((p, q) => p.ts - q.ts);
             const rooms = [...new Set(L.map(x => `${appOf(x)}:${x.room || x.from}`))].slice(0, 30);
             const note = L.length ? '' : '해당 메시지가 없음. 카톡은 설정 > 문자·카톡 비서 > 카톡 받을 방으로 고른 방만, 위챗·회사 메신저는 알림 받을 앱으로 고른 앱만 기록되고, 기록은 이 기능을 넣은 뒤부터 쌓인다고 안내할 것';
