@@ -160,17 +160,36 @@
                 return { temperature: c.temperature_2m, weathercode: c.weather_code, is_day: c.is_day };
             } finally { clearTimeout(tm); }
         }
+        // 예비: Open-Meteo가 안 될 때 wttr.in (날씨 코드는 Open-Meteo 코드로 대략 맞춤)
+        async function weatherFetchWttr() {
+            const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 9000);
+            try {
+                const lat = isFinite(userLat) ? userLat : 37.5665, lon = isFinite(userLon) ? userLon : 126.978;
+                const d = await (await fetch(`https://wttr.in/${lat.toFixed(3)},${lon.toFixed(3)}?format=j1`, { signal: ctl.signal, cache: 'no-store' })).json();
+                const c = d && d.current_condition && d.current_condition[0]; if (!c) throw new Error('no data');
+                const w = +c.weatherCode, code = w === 113 ? 0 : w === 116 ? 2 : w <= 122 ? 3 : w <= 260 && w >= 143 && w <= 248 ? 45 : w >= 386 ? 95 : [179, 182, 185, 227, 230, 323, 326, 329, 332, 335, 338, 350, 368, 371, 374, 377].includes(w) ? 71 : 61;
+                const h = new Date().getHours();
+                return { temperature: +c.temp_C, weathercode: code, is_day: h >= 6 && h < 18 ? 1 : 0 };
+            } finally { clearTimeout(tm); }
+        }
+        let weatherErr = '';
         async function initWeather() {
             if (weatherBusy) return; weatherBusy = true;
             if (!weatherAt) updateWeatherDisplay(null); // 처음에만 로딩 표시
             try {
-                let cw; try { cw = await weatherFetchOnce(); } catch (e) { await new Promise(r => setTimeout(r, 1500)); cw = await weatherFetchOnce(); }
-                updateWeatherDisplay(cw); weatherAt = Date.now();
+                let cw;
+                try { cw = await weatherFetchOnce(); }
+                catch (e) {
+                    weatherErr = e.name === 'AbortError' ? '응답 없음' : (e.message || '오류');
+                    await new Promise(r => setTimeout(r, 1000));
+                    try { cw = await weatherFetchOnce(); } catch (e2) { cw = await weatherFetchWttr(); }
+                }
+                updateWeatherDisplay(cw); weatherAt = Date.now(); weatherErr = '';
             } catch(e) {
                 if (!weatherAt) {
                     document.getElementById('weather-icon').textContent = '↻';
                     document.getElementById('weather-temp').textContent = '';
-                    document.getElementById('weather-desc').textContent = '날씨 다시 시도';
+                    document.getElementById('weather-desc').textContent = '날씨 다시 시도' + (weatherErr ? ` (${weatherErr})` : '');
                 }
             } finally { weatherBusy = false; }
         }
