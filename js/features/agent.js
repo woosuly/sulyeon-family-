@@ -11,32 +11,39 @@ const agFmt = ms => { const d = new Date(ms); return `${d.getFullYear() !== new 
 const agLocalInput = ms => { const d = new Date(ms - new Date().getTimezoneOffset() * 6e4); return d.toISOString().slice(0, 16); };
 
 // ── 말 거는 방식 판단 (assistant.js famRun에서 호출) ──
-function agRoute(raw) {
-    const t = raw.trim();
-    if (typeof iotRoute === 'function' && iotRoute(t)) return true;       // 집 기기(스마트싱스) — '에어컨 틀어줘'가 음악으로 가지 않게 먼저
-    if (typeof mediaRoute === 'function' && mediaRoute(t)) return true;   // 음악·영상
-    if (typeof lifeRoute === 'function' && lifeRoute(t)) return true;     // 길찾기·차·택배
-    // 산행: '주말에 어느 산 갈까', '등산 추천해줘' → 서버 산행 추천 / '100대 명산' → 진행 현황
-    // 항공권: 목적지·시기를 말했으면 비서가 '지켜보기' 등록과 가격 확인까지 (빈 양식을 다시 채우지 않게)
-    if (/(항공권|비행기\s*(표|값)|항공\s*(가격|요금))/.test(t)) {
-        const rest = t.replace(/(항공권|비행기\s*(표|값)|항공\s*(가격|요금)|가격|요금|얼마|알아\s*봐|찾아|지켜\s*봐|보여|확인|조회|해\s*줘|줘|좀|[?？.!\s])/g, '');
-        if (rest.length >= 2 && typeof famAgent === 'function') { famAgent(t + '\n(목적지·시기를 정리해 watch_flight로 등록하고 바로 가격을 확인해 줘. 출발지를 말하지 않았으면 인천)'); return true; }
-        if (typeof flOpen === 'function') { flOpen(); return true; }
-    }
-    if (/(관리비|공과금|전기\s*요금|가스\s*요금|수도\s*요금)/.test(t) && /(얼마|추이|보여|비교|현황|나왔)/.test(t) && typeof billAnswer === 'function') { billAnswer(t); return true; }
-    if (/(여권|면허|건강\s*검진|서류|보험)/.test(t) && /(만료|언제|갱신|기한|남았)/.test(t) && typeof docAnswer === 'function') { docAnswer(t); return true; }
-    if (/100\s*대\s*명산|명산\s*(현황|몇)/.test(t) && typeof hikeM100Sheet === 'function') { hikeM100Sheet(); return true; }
-    if (/(등산|산행|어느\s*산|무슨\s*산|어떤\s*산)/.test(t) && /(추천|갈까|가볼까|어디|좋을까)/.test(t)) { agBriefNow('hike'); famFeedAdd('⛰️ 이번 주말 날씨·미세먼지·일몰을 보고 안 가 본 산 위주로 추천을 만드는 중입니다. 완료되면 알림이 옵니다.'); return true; }
-    if (/(기억\s*해\s*(줘|둬|놔)|기억해|메모\s*해\s*(줘|둬)|적어\s*(줘|둬))[.!]?$/.test(t)) { agNoteSave(t); return true; }
-    // 알림 요청: '~에 알려줘'(시각 + 에) 또는 할 일 동사가 있을 때만. '주말 날씨 알려줘' 같은 정보 요청은 AI 답변으로
+function agRoute(raw) { return !!famRouteRun(raw.trim()); }   // 규칙은 js/core/route.js 길목에 등록 (아래)
+
+// 순서: 집 기기 → 음악·영상 → 생활(길찾기·차·택배·장보기·배달) → 항공권 → 관리비 → 서류 → 산행 → 기억 → 알림 → 기억 찾기
+famRoute('집 기기', 10, t => typeof iotRoute === 'function' && iotRoute(t));        // '에어컨 틀어줘'가 음악으로 가지 않게 먼저
+famRoute('음악·영상', 20, t => typeof mediaRoute === 'function' && mediaRoute(t));
+famRoute('생활', 30, t => typeof lifeRoute === 'function' && lifeRoute(t));         // 길찾기·차·택배·컬리·배민
+// 항공권: 목적지·시기를 말했으면 비서가 '지켜보기' 등록과 가격 확인까지 (빈 양식을 다시 채우지 않게)
+famRoute('항공권', 40, t => {
+    if (!/(항공권|비행기\s*(표|값)|항공\s*(가격|요금))/.test(t)) return false;
+    const rest = t.replace(/(항공권|비행기\s*(표|값)|항공\s*(가격|요금)|가격|요금|얼마|알아\s*봐|찾아|지켜\s*봐|보여|확인|조회|해\s*줘|줘|좀|[?？.!\s])/g, '');
+    if (rest.length >= 2 && typeof famAgent === 'function') { famAgent(t + '\n(목적지·시기를 정리해 watch_flight로 등록하고 바로 가격을 확인해 줘. 출발지를 말하지 않았으면 인천)'); return true; }
+    if (typeof flOpen === 'function') { flOpen(); return true; }
+    return false;
+});
+famRoute('관리비', 50, t => { if (/(관리비|공과금|전기\s*요금|가스\s*요금|수도\s*요금)/.test(t) && /(얼마|추이|보여|비교|현황|나왔)/.test(t) && typeof billAnswer === 'function') { billAnswer(t); return true; } return false; });
+famRoute('서류', 55, t => { if (/(여권|면허|건강\s*검진|서류|보험)/.test(t) && /(만료|언제|갱신|기한|남았)/.test(t) && typeof docAnswer === 'function') { docAnswer(t); return true; } return false; });
+// 산행: '100대 명산' → 진행 현황 / '주말에 어느 산 갈까', '등산 추천해줘' → 서버 산행 추천
+famRoute('100대 명산', 60, t => { if (/100\s*대\s*명산|명산\s*(현황|몇)/.test(t) && typeof hikeM100Sheet === 'function') { hikeM100Sheet(); return true; } return false; });
+famRoute('산행 추천', 61, t => {
+    if (!(/(등산|산행|어느\s*산|무슨\s*산|어떤\s*산)/.test(t) && /(추천|갈까|가볼까|어디|좋을까)/.test(t))) return false;
+    agBriefNow('hike'); famFeedAdd('⛰️ 이번 주말 날씨·미세먼지·일몰을 보고 안 가 본 산 위주로 추천을 만드는 중입니다. 완료되면 알림이 옵니다.'); return true;
+});
+famRoute('기억', 70, t => { if (/(기억\s*해\s*(줘|둬|놔)|기억해|메모\s*해\s*(줘|둬)|적어\s*(줘|둬))[.!]?$/.test(t)) { agNoteSave(t); return true; } return false; });
+// 알림 요청: '~에 알려줘'(시각 + 에) 또는 할 일 동사가 있을 때만. '주말 날씨 알려줘' 같은 정보 요청은 AI 답변으로
+famRoute('알림', 80, t => {
     const askEnd = /(알려\s*줘|알림\s*(줘|해\s*줘)|리마인드|깨워\s*줘|말해\s*줘)[.!]?$/.test(t);
     const timeE = /((오늘|내일|모레|글피|\d+\s*(시|분|일)|\d+시\s*반|[월화수목금토일]요일|아침|점심|저녁|밤|퇴근|출근|주말)\s*(에|쯤|전에|때)|\d+\s*(분|시간|일)\s*(뒤|후))/.test(t);
     const act = /(전화|챙기|가져|사\s*오|사와|보내|먹|복용|납부|입금|예약|하라고|해야|하기|잊지|확인하라|연락)/.test(t);
     const info = /(날씨|뉴스|정보|방법|추천|맛집|얼마|어디|뭐|어떻게|왜|가격|환율|소식|어때)/.test(t);
     if (askEnd && (timeE || (act && /(오늘|내일|모레|\d+\s*시|요일|아침|저녁|밤|퇴근|출근)/.test(t))) && !(info && !act)) { agRemind(t); return true; }
-    if (agNotes.length && /(였지|이었지|더라|뭐였|어디였|언제였|몇\s*번이었)/.test(t)) { famAsk(t); return true; }
     return false;
-}
+});
+famRoute('기억 찾기', 90, t => { if (agNotes.length && /(였지|이었지|더라|뭐였|어디였|언제였|몇\s*번이었)/.test(t)) { famAsk(t); return true; } return false; });
 
 // ── 리마인더 ─────────────────────────────────────────────
 // "N분/시간 뒤"는 바로 계산, 나머지는 AI가 날짜·시각을 해석 → 확인 카드에서 고쳐서 저장

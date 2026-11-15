@@ -120,7 +120,8 @@
     function famCmdFocus() { setTimeout(() => { const sc = document.getElementById('home-scroll'); if (sc) sc.scrollTop = sc.scrollHeight; }, 350); }
     // 키보드가 올라와 화면이 줄어들면 최근 대화가 보이게
     window.addEventListener('resize', () => { if (document.activeElement && document.activeElement.id === 'home-cmd-input') famCmdFocus(); });
-    function famSubmit() { const el = document.getElementById('home-cmd-input'); const v = el.value.trim(); if (!v) return; el.value = ''; el.style.height = ''; document.getElementById('home-sugg').style.display = 'none'; famMicSwap(); famRun(v); }
+    function famSubmit() { const el = document.getElementById('home-cmd-input'); const v = el.value.trim(); if (!v) return; el.value = ''; el.style.height = ''; document.getElementById('home-sugg').style.display = 'none'; famMicSwap();
+        try { famRun(v); } catch (e) { console.warn('[입력 처리 오류]', e); if (typeof famAgent === 'function') famAgent(v); else famToast('처리하지 못했습니다: ' + e.message); } }   // 처리 중 오류가 나도 입력이 사라지지 않게 비서 두뇌로
     // ── 🎤 음성 입력 (크롬 내장) : 입력창이 비면 ➤ 자리에 🎤 ──
     const FamSR = window.SpeechRecognition || window.webkitSpeechRecognition;
     let famRec = null;

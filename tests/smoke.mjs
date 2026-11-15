@@ -111,6 +111,12 @@ try {
         ['다음 주 제주도 2박 3일 여행 일정 짜줘', 'famAgent'],
     ];
     for (const [t, want] of R) await test(`입력 "${t}" → ${want}`, async () => eq(await route(t), want));
+    await test('입력 처리: 한 기능이 오류를 내도 다음으로 넘어감', async () => {
+        await page.evaluate(() => famRoute('시험 오류', 1, () => { throw new Error('boom'); }));
+        const r = await route('내일 오후 3시 치과');
+        await page.evaluate(() => { const i = famRoutes.findIndex(x => x.name === '시험 오류'); famRoutes.splice(i, 1); });
+        eq(r, 'famSchCard');
+    });
     await unspy();
     await test('비서 도구: 일정 추가 → 저장됨', async () => {
         const r = await page.evaluate(async () => { const before = Object.keys(window.__db).filter(k => k.startsWith('schedules/')).length; const x = await brRun('add_schedule', { date: '2026-12-23', end_date: '2026-12-27', memo: '시험 제주 여행', member: '공통' }); return { x, n: Object.keys(window.__db).filter(k => k.startsWith('schedules/')).length - before }; });
@@ -178,6 +184,10 @@ try {
     await test('index.html이 부르는 스크립트 파일이 모두 있음', async () => {
         const html = readFileSync(join(ROOT, 'index.html'), 'utf8'), miss = [...html.matchAll(/<script src="(js\/[^"]+)"/g)].map(m => m[1]).filter(f => !existsSync(join(ROOT, f)));
         eq(miss, [], '없는 파일');
+    });
+    await test('sw.js 캐시 목록에 스크립트가 모두 있음 (빠지면 오프라인·새 버전에서 안 뜸)', async () => {
+        const html = readFileSync(join(ROOT, 'index.html'), 'utf8'), sw = readFileSync(join(ROOT, 'sw.js'), 'utf8');
+        eq([...html.matchAll(/<script src="(js\/[^"]+)"/g)].map(m => m[1]).filter(f => !sw.includes(`'${f}'`)), [], 'sw.js에 없는 파일');
     });
 } finally { await browser.close(); }
 
