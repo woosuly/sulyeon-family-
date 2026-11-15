@@ -20,15 +20,15 @@ function flOpen() {
         ${flWatch.length ? flWatch.map(w => {
             const l = w.last || {}, prev = (w.hist || []).filter(x => x.low > 0).slice(-2, -1)[0];
             return `<div class="fam-box" style="margin:0 0 8px;padding:10px 12px">
-                <div style="display:flex;align-items:center;gap:6px"><b style="flex:1">${famEsc(w.from || '인천')} → ${famEsc(w.dest)}</b><small style="color:#64748b">${famEsc(w.when || '')}${w.nights ? ' · ' + w.nights + '박' : ''} · ${w.pax || 2}명</small></div>
+                <div style="display:flex;align-items:center;gap:6px"><b style="flex:1">${famEsc(w.from || '인천')} → ${famEsc(w.dest)}</b><small style="color:#64748b">${famEsc(w.when || '')}${w.nights ? ' · ' + w.nights + '박' : ''} · ${w.pax || 2}명${w.nv ? ` · ${+w.nv.dep.slice(4, 6)}/${+w.nv.dep.slice(6)}~${+w.nv.ret.slice(4, 6)}/${+w.nv.ret.slice(6)}` : ''}</small></div>
                 <div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span style="font-size:17px;font-weight:800">${l.low ? '1인 ' + flW(l.low) : (l.at ? '가격 못 찾음' : '확인 전')}</span>
                     ${prev && l.low ? `<small style="color:${l.low < prev.low ? '#047857' : l.low > prev.low ? '#b91c1c' : '#64748b'}">${l.low < prev.low ? '▼' : l.low > prev.low ? '▲' : ''}${flW(Math.abs(l.low - prev.low))}</small>` : ''}
                     <span style="margin-left:auto;color:#64748b">${flSpark(w.hist)}</span></div>
                 ${l.at ? `<div class="fam-note" style="margin:4px 0 0">${famEsc([l.airline, l.note].filter(Boolean).join(' · '))}<br><small>${new Date(l.at).toLocaleDateString('ko-KR')} 확인${l.src ? ' · ' + famEsc(l.src) : ''}${w.target ? ' · 목표 ' + flW(w.target) : ''}</small></div>` : ''}
-                <div class="fam-btns" style="margin-top:6px"><button class="fam-btn" onclick="flNow('${w.id}',this)">지금 확인</button><button class="fam-btn" onclick="flSearch('${w.id}')">검색 열기</button><button class="fam-btn" onclick="flForm('${w.id}')">수정</button></div>
+                <div class="fam-btns" style="margin-top:6px"><button class="fam-btn" onclick="flNow('${w.id}',this)">지금 확인</button><button class="fam-btn" onclick="flSearch('${w.id}',this)">네이버 항공권</button><button class="fam-btn" onclick="flForm('${w.id}')">수정</button></div>
             </div>`;
         }).join('') : '<div class="fam-note">가고 싶은 여행지를 넣어 두면 매주 월요일 아침 가격을 확인해, 많이 내리거나 목표가 아래로 오면 알려 드립니다.</div>'}
-        <div class="fam-note">AI가 웹검색으로 찾은 참고 가격입니다. 예약 전에는 [검색 열기]로 실제 가격을 확인하세요.</div>
+        <div class="fam-note">AI가 웹검색으로 찾은 참고 가격입니다. 예약 전에는 [네이버 항공권]으로 실제 가격을 확인하세요.</div>
         <div class="fam-btns"><button class="fam-btn pri" onclick="flForm()">＋ 여행지 추가</button></div>`);
 }
 function flForm(id) {
@@ -60,11 +60,33 @@ async function flNow(id, btn) {
     await db.collection('briefReq').add({ owner: famUser(), type: 'flight', fid: id, at: Date.now() });
     famToast('가격 확인 중… 1분 안에 알림이 옵니다');
 }
-function flSearch(id) {
+// [네이버 항공권] 열기: 출발·도착을 공항 코드로, 시기를 날짜로 바꿔 네이버 항공권 검색 화면을 바로 엶
+//   ('5월 초'처럼 날짜가 막연하면 AI가 그 시기의 적당한 출발일을 정함. 한 번 정한 값은 저장해 두고 다시 씀)
+const FL_IATA = { 인천: 'ICN', 서울: 'ICN', 김포: 'GMP', 청주: 'CJJ', 김해: 'PUS', 부산: 'PUS', 대구: 'TAE', 제주: 'CJU', 광주: 'KWJ', 무안: 'MWX', 양양: 'YNY' };
+async function flNaver(w) {
+    const key = [w.from, w.dest, w.when, w.nights].join('|');
+    if (w.nv && w.nv.key === key) return w.nv;
+    const r = await famCallAI('너는 항공권 검색 조건을 공항 코드와 날짜로 바꾸는 도우미다. JSON만 출력.',
+        `오늘 ${famYmd(new Date())}. 출발 "${w.from || '인천'}", 도착 "${w.dest}", 시기 "${w.when || ''}", ${w.nights ? w.nights + '박' : '박수 미정'}.
+{"o":"출발 공항 IATA 3자리 (서울·인천=ICN, 김포=GMP, 청주=CJJ)","d":"도착지 대표 공항 IATA (도시면 주 국제공항, 예: 도쿄=NRT, 오사카=KIX, 로마=FCO, 다낭=DAD, 제주=CJU)","dom":"둘 다 한국 공항이면 true","dep":"YYYYMMDD 출발일 (날짜가 있으면 그 날, '5월 초'처럼 막연하면 그 시기의 토요일, 시기가 없으면 한 달 뒤 토요일, 오늘 이후)","ret":"YYYYMMDD 돌아오는 날 (기간이 있으면 그 끝날, 없으면 출발+박수, 박수도 없으면 국내 2박·아시아 4박·그 외 7박)"}`, { maxTokens: 200 });
+    const t = r.text || '', j = JSON.parse(t.slice(t.indexOf('{'), t.lastIndexOf('}') + 1));
+    if (!/^[A-Z]{3}$/.test(j.o || '') || !/^[A-Z]{3}$/.test(j.d || '') || !/^\d{8}$/.test(j.dep || '') || !/^\d{8}$/.test(j.ret || '')) throw new Error('조건을 알아듣지 못함');
+    const nv = { key, o: j.o, d: j.d, dom: j.dom === true || j.dom === 'true', dep: j.dep, ret: j.ret };
+    db.collection('flightWatch').doc(w.id).update({ nv }).catch(() => {});
+    return nv;
+}
+async function flSearch(id, btn) {
     const w = flWatch.find(x => x.id === id); if (!w) return;
-    const url = 'https://www.google.com/travel/flights?q=' + encodeURIComponent(`${w.from || '인천'}에서 ${w.dest} 왕복 항공권 ${w.when || ''}`);
     const N = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.SeolyeonNative;
-    if (N && N.openUrl) N.openUrl({ url, pkg: '' }); else window.open(url, '_blank');
+    const open = url => { if (N && N.openUrl) N.openUrl({ url, pkg: '' }); else window.open(url, '_blank'); };
+    if (btn) { btn.disabled = true; btn.textContent = '여는 중…'; }
+    try {
+        const v = await flNaver(w), o = FL_IATA[(w.from || '').replace(/(공항|국제공항)$/, '')] || v.o;
+        open(`https://flight.naver.com/flights/${v.dom ? 'domestic' : 'international'}/${o}-${v.d}-${v.dep}/${v.d}-${o}-${v.ret}?adult=${w.pax || 2}&fareType=${v.dom ? 'YC' : 'Y'}`);
+    } catch (e) {
+        famToast('조건을 바꾸지 못해 네이버 항공권 첫 화면을 엽니다'); open('https://flight.naver.com/');
+    }
+    if (btn) { btn.disabled = false; btn.textContent = '네이버 항공권'; }
 }
 async function flDel(id) { if (!confirm('지울까요?')) return; await db.collection('flightWatch').doc(id).delete().catch(() => {}); flOpen(); }
 

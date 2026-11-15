@@ -368,8 +368,8 @@ async function runParcels() {
 //    월 09:00 주 1회 + 앱에서 '지금 확인'. AI 웹검색 기준 참고 가격 (실시간 최저가 아님)
 async function flightCheck(w) {
   const r = await ai('너는 항공권 가격 조사원이다. 웹검색 결과에 실제로 나온 가격만 쓰고, 못 찾으면 low를 0으로 한다. JSON만 출력.',
-    `${w.from || '인천'} → ${w.dest} 왕복 항공권, 여행 시기 ${w.when || '미정'}${w.nights ? ', ' + w.nights + '박' : ''}, 성인 ${w.pax || 2}명.
-지금 검색되는 1인 왕복 최저가 수준을 찾아 JSON만: {"low":원 단위 숫자(1인 왕복),"airline":"항공사·직항/경유","note":"한 줄 조언 (지금 살지, 더 볼지, 특가 시기)","src":"가격을 본 사이트"}`, true);
+    `${w.from || '인천'} → ${w.dest} 왕복 항공권, 여행 시기 ${w.when || '미정'}${w.nights ? ', ' + w.nights + '박' : ''}, 성인 ${w.pax || 2}명.${w.nv ? `\n날짜: ${w.nv.dep.slice(0, 4)}-${w.nv.dep.slice(4, 6)}-${w.nv.dep.slice(6)} 출발, ${w.nv.ret.slice(0, 4)}-${w.nv.ret.slice(4, 6)}-${w.nv.ret.slice(6)} 귀국 (${w.nv.o}→${w.nv.d})` : ''}
+한국 판매가 기준(네이버 항공권·스카이스캐너·인터파크·항공사 한국 사이트)으로 지금 검색되는 1인 왕복 최저가 수준을 찾아 JSON만: {"low":원 단위 숫자(1인 왕복),"airline":"항공사·직항/경유","note":"한 줄 조언 (지금 살지, 더 볼지, 특가 시기)","src":"가격을 본 사이트"}`, true);
   const j = JSON.parse((String(r).match(/\{[\s\S]*\}/) || ['{}'])[0]);
   return {low: Math.round(+j.low || 0), airline: String(j.airline || '').slice(0, 60), note: String(j.note || '').slice(0, 200), src: String(j.src || '').slice(0, 80), at: Date.now()};
 }
