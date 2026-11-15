@@ -283,17 +283,8 @@
                     dNum.textContent = dd;
                     row.appendChild(dNum);
 
-                    // 공휴일·기념일·교회 절기: 날짜 옆에 글자만 (공휴일 빨강, 나머지 어두운 네이비)
-                    const dayLbl = isCur ? (famHoli(ds) || famSpec(ds)) : '';
-                    if (dayLbl) {
-                        const hl = document.createElement('span'), isHoli = !!famHoli(ds);
-                        hl.style.cssText = `font-size:${narrow ? 8 : 9}px;font-weight:${isHoli ? 700 : 600};color:${isHoli ? '#ef4444' : '#2b3a55'};overflow:hidden;text-overflow:ellipsis;min-width:0;letter-spacing:-.2px`;
-                        hl.textContent = dayLbl.replace(/^✝\s*/, '✝'); hl.title = dayLbl;
-                        row.appendChild(hl);
-                    }
-
                     // 일요일 음력 (주차 레이블 제거, 음력만 유지)
-                    if (dayW === 0 && isCur && !narrow && !dayLbl) {
+                    if (dayW === 0 && isCur && !narrow) {
                         const lun = getLunarDate(dy, dm, dd);
                         const ls = document.createElement('span');
                         ls.style.cssText = 'font-size:9px;color:#c0ccda;overflow:hidden;text-overflow:ellipsis;';
@@ -355,6 +346,14 @@
                     const spacer = document.createElement('div');
                     spacer.style.flex = '1';
                     cell.appendChild(spacer);
+
+                    // 공휴일·기념일·교회 절기: 칸 아래쪽에 글자만 (공휴일 빨강, 나머지 어두운 네이비)
+                    if (isCur && (famHoli(ds) || famSpec(ds))) {
+                        const label = document.createElement('div'), isHoli = !!famHoli(ds);
+                        label.style.cssText = `font-size:${narrow ? 8 : 9}px;font-weight:${isHoli ? 700 : 600};color:${isHoli ? '#ef4444' : '#2b3a55'};line-height:1.3;margin-top:2px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.2px`;
+                        label.textContent = (famHoli(ds) || famSpec(ds)).replace(/^✝\s*/, '✝'); label.title = famHoli(ds) || famSpec(ds);
+                        cell.appendChild(label);
+                    }
 
 
                     grid.appendChild(cell);
