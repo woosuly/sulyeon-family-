@@ -87,6 +87,20 @@ async function agHanSave(url) {
     await db.collection('briefReq').add({ owner: agMe(), type: 'han', at: Date.now() });
     famSheetClose(); famToast(url ? '맞추는 중… 1분 안에 알림이 옵니다' : '연결을 끊었습니다');
 }
+// 예전 알림 제목('90일 남음', '2주 뒤 (07/01)')을 '만료 90일 전 (만료일 28.02.27)'처럼 기준 날짜가 보이게 한 번 바꿈
+let agRemFixed = false;
+function agRemTitleFix() {
+    if (agRemFixed) return; agRemFixed = true;
+    agRems.forEach(r => {
+        let t = r.title || '', m;
+        if (r.kind === 'doc' && (m = t.match(/^(.*) (\d+)일 남음 \((\d\d\.\d\d\.\d\d)\)$/))) t = `${m[1]} 만료 ${m[2]}일 전 (만료일 ${m[3]})`;
+        else if (r.kind === 'car' && (m = t.match(/^(.*) (2주 뒤|내일) \((\d\d)\/(\d\d)\)$/))) {
+            const due = new Date(r.at + (m[2] === '내일' ? 1 : 14) * 864e5);
+            t = `${m[1]} ${m[2] === '내일' ? '하루' : '2주'} 전 (${/보험/.test(m[1]) ? '만기일' : /검사/.test(m[1]) ? '검사일' : '점검일'} ${String(due.getFullYear()).slice(2)}.${m[3]}.${m[4]})`;
+        } else return;
+        db.collection('reminders').doc(r.id).update({ title: t }).catch(() => {});
+    });
+}
 async function agRemindDel(id) { await db.collection('reminders').doc(id).delete().catch(() => {}); }
 
 // ── 기억 노트 ─────────────────────────────────────────────
@@ -146,7 +160,7 @@ function agSetHtml() {
         ${typeof pcSetHtml === 'function' ? pcSetHtml() : ''}
         <div class="fs-row"><div><b>한씨네 일정</b><small>${(typeof famKeys === 'function' && famKeys().hanfeed) ? '연결됨 · 1시간마다 맞춤 (설연에 있는 생일은 제외)' : '한씨네 앱 관리자 설정의 주소를 붙여 넣기'}</small></div><button class="fam-btn" onclick="agHanForm()">설정</button></div>
         <div class="fs-row"><div><b>비서 실행 기록</b><small>실패·👎 요청 모아 보기 (복사해서 Claude에게)</small></div><button class="fam-btn" onclick="brRunsOpen()">보기</button></div>
-        <span class="fam-lbl">예정된 알림 ${rems.length}건</span>
+        <span class="fam-lbl">예정된 알림 ${rems.length}건 <small style="font-weight:500;color:#94a3b8">· 왼쪽 날짜·시각에 폰으로 알립니다</small></span>
         ${rems.length ? rems.map(r => `<div class="ag-li"><span>${famEsc(agFmt(r.at))}</span><b>${famEsc(r.title)}</b><button class="fam-x" onclick="agRemindDel('${r.id}').then(()=>famRenderSettings())">✕</button></div>`).join('') : '<div class="fam-note" style="margin:0">홈에서 "내일 8시에 ○○ 알려줘"라고 입력하세요.</div>'}
         <span class="fam-lbl">기억 노트 ${agNotes.length}건</span>
         ${agNotes.length ? agNotes.slice(0, 30).map(n => `<div class="ag-li"><span>${famEsc(n.by || '')}</span><b>${famEsc(n.text)}</b><button class="fam-x" onclick="agNoteDel('${n.id}').then(()=>famRenderSettings())">✕</button></div>`).join('') : '<div class="fam-note" style="margin:0">홈에서 "○○ 기억해줘"라고 입력하세요.</div>'}
@@ -165,7 +179,7 @@ function agSetHtml() {
     const start = () => {
         const me = agMe(); if (!me || agUnsubs.length) return;
         agUnsubs.push(db.collection('notes').onSnapshot(s => { agNotes = s.docs.map(d => d.data()).sort((a, b) => b.at - a.at); }, () => {}));
-        agUnsubs.push(db.collection('reminders').where('owner', '==', me).onSnapshot(s => { agRems = s.docs.map(d => d.data()); agRenderBar(); }, () => {}));
+        agUnsubs.push(db.collection('reminders').where('owner', '==', me).onSnapshot(s => { agRems = s.docs.map(d => d.data()); agRenderBar(); agRemTitleFix(); }, () => {}));
         agUnsubs.push(db.collection('briefs').where('owner', '==', me).onSnapshot(s => {
             const before = new Set(agBriefs.map(b => b.id + b.at));
             agBriefs = s.docs.map(d => d.data()).sort((a, b) => b.at - a.at);

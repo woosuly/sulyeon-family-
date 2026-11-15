@@ -140,7 +140,7 @@ async function carSave() {
         await db.collection('reminders').doc(id).delete().catch(() => {});
         if (!v[k]) continue;
         const at = new Date(v[k] + 'T09:00:00'); at.setDate(at.getDate() - days);
-        if (at.getTime() > Date.now()) await agRemindAdd({ id, at: at.getTime(), title: `${N[k]} ${days === 1 ? '내일' : '2주 뒤'} (${v[k].slice(5).replace('-', '/')})`, kind: 'car', owner: famUser() });
+        if (at.getTime() > Date.now()) await agRemindAdd({ id, at: at.getTime(), title: `${N[k]} ${days === 1 ? '하루' : '2주'} 전 (${{ insurance: '만기일', inspection: '검사일', service: '점검일' }[k]} ${v[k].slice(2).replace(/-/g, '.')})`, kind: 'car', owner: famUser() });
     }
     famSheetClose(); famToast('차량 정보를 저장하고 알림을 걸었습니다');
 }
