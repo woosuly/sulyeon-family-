@@ -112,3 +112,26 @@ function famMenu(anchor, items) {
     m.style.left = Math.max(10, Math.min(r.right - w, innerWidth - w - 10)) + 'px';
     setTimeout(() => document.addEventListener('click', function off(e) { if (!m.contains(e.target)) { m.remove(); document.removeEventListener('click', off, true); } }, true), 0);
 }
+
+// ── 달력 좌우 넘기기: 왼쪽으로 밀면 다음 달, 오른쪽으로 밀면 이전 달 (일정·가계부 달력) ──
+function famSwipe(el, go) {
+    if (!el || el.dataset.swipe) return; el.dataset.swipe = '1';
+    let x0 = 0, y0 = 0, t0 = 0, sx = null;
+    el.addEventListener('touchstart', e => { if (e.touches.length !== 1) return; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; t0 = Date.now();
+        sx = e.target.closest && e.target.closest('[data-hscroll], .cal-scroll-area'); }, { passive: true });
+    el.addEventListener('touchend', e => {
+        const t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0;
+        if (Date.now() - t0 > 700 || Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.6) return;
+        // 가로로 스크롤되는 영역이면 끝에 닿았을 때만 넘김
+        if (sx && sx.scrollWidth > sx.clientWidth + 2) { const atL = sx.scrollLeft <= 1, atR = sx.scrollLeft + sx.clientWidth >= sx.scrollWidth - 2; if ((dx < 0 && !atR) || (dx > 0 && !atL)) return; }
+        const dir = dx < 0 ? 1 : -1;
+        el.style.transition = 'transform .16s ease, opacity .16s ease'; el.style.transform = `translateX(${dir > 0 ? -28 : 28}px)`; el.style.opacity = '.35';
+        setTimeout(() => { go(dir); el.style.transition = 'none'; el.style.transform = `translateX(${dir > 0 ? 28 : -28}px)`;
+            requestAnimationFrame(() => { el.style.transition = 'transform .18s ease, opacity .18s ease'; el.style.transform = ''; el.style.opacity = ''; }); }, 150);
+    }, { passive: true });
+}
+document.addEventListener('DOMContentLoaded', () => {
+    famSwipe(document.getElementById('sch-grid'), d => typeof schNavigate === 'function' && schNavigate(d));
+    famSwipe(document.getElementById('asset-cal-grid'), d => typeof assetCalNavigate === 'function' && assetCalNavigate(d));
+});
+
