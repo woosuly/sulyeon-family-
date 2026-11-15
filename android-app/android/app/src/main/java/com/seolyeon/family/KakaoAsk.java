@@ -61,9 +61,9 @@ public class KakaoAsk {
         incoming(c, SMS + from, from, text);
     }
     static synchronized void incoming(Context c, String room, String from, String text) {
-        if (!on(c) || text == null || text.trim().isEmpty()) return;
+        if (text == null || text.trim().isEmpty()) return;
         boolean bt = btConnected(c);
-        if (btOnly(c) && !bt) return;          // 차·이어폰 연결 안 됐으면 아무것도 안 함 (카톡·문자 앱 알림만)
+        if (!on(c) || (btOnly(c) && !bt)) { notifyInbox(c, room, from, text); return; }   // 묻지 않는 때: 설연 알림으로만
         List<String[]> l = pend.get(room);
         if (l == null) { l = new ArrayList<>(); pend.put(room, l); }
         // 카톡이 같은 알림을 다시 올리는 경우 중복 제외
@@ -107,6 +107,23 @@ public class KakaoAsk {
                 .addAction(0, "괜찮아요", PendingIntent.getBroadcast(c, req + 1, clear, f));
         try { NotificationManagerCompat.from(c).notify("kakao-" + room, 2, b.build()); } catch (SecurityException ignored) { }
     }
+
+    /** 받는 방·연락처 문자가 오면 설연 알림 (앱을 열면 비서가 요약·일정·답장 초안 정리). 앱이 열려 있으면 바로 정리 */
+    static int msgN = 0;
+    static final List<String> msgLines = new ArrayList<>();
+    static synchronized void notifyInbox(Context c, String room, String from, String text) {
+        if (MainActivity.foreground) { SeolyeonNativePlugin.fireCardQueued(CardQueue.size(c)); return; }
+        msgN++;
+        String who = room.startsWith(SMS) ? room.substring(SMS.length()) + " 문자" : room.equals(from) || from == null || from.isEmpty() ? room : room + " · " + from;
+        msgLines.add(who + ": " + text);
+        while (msgLines.size() > 5) msgLines.remove(0);
+        java.util.Map<String, String> d = new java.util.HashMap<>();
+        d.put("k", "card"); d.put("id", ""); d.put("tag", "msg-pending");
+        d.put("title", "💬 새 메시지 " + msgN + "건 · 설연에서 정리");
+        d.put("body", android.text.TextUtils.join("\n", msgLines));
+        Notify.show(c, d);
+    }
+    static synchronized void resetInbox() { msgN = 0; msgLines.clear(); }
 
     /** 읽을 말 만들기 (읽은 건 지움) */
     static synchronized String take(String room) {

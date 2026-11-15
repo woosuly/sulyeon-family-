@@ -63,6 +63,7 @@ public class MainActivity extends BridgeActivity {
         foreground = true;
         // 앱을 열면 쌓인 알림 정리
         NotificationManagerCompat.from(this).cancelAll();
+        KakaoAsk.resetInbox();
     }
 
     @Override
