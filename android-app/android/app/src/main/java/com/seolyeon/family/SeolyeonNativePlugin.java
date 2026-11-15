@@ -531,8 +531,17 @@ public class SeolyeonNativePlugin extends Plugin {
         try {
             JSObject d = new JSObject();
             d.put("wx", call.getString("wx", "")); d.put("empty", call.getString("empty", ""));
-            d.put("items", call.getArray("items", new JSArray())); d.put("at", System.currentTimeMillis());
-            getContext().getSharedPreferences(GlanceWidget.PREF, Context.MODE_PRIVATE).edit().putString("data", d.toString()).apply();
+            d.put("items", call.getArray("items", new JSArray())); d.put("at", System.currentTimeMillis()); d.put("cards", call.getInt("cards", 0));
+            android.content.SharedPreferences sp = getContext().getSharedPreferences(GlanceWidget.PREF, Context.MODE_PRIVATE);
+            android.content.SharedPreferences.Editor ed = sp.edit().putString("data", d.toString());
+            JSObject w = call.getObject("w");   // {t, c, day, city, lat, lon} — 위치는 위젯이 직접 날씨를 받을 때 씀
+            if (w != null) {
+                org.json.JSONObject o = GlanceWidget.wx(getContext());
+                java.util.Iterator<String> ks = w.keys(); while (ks.hasNext()) { String k = ks.next(); o.put(k, w.get(k)); }
+                if (w.has("t")) o.put("at", System.currentTimeMillis());
+                ed.putString("wx", o.toString());
+            }
+            ed.apply();
             GlanceWidget.refreshAll(getContext());
         } catch (Exception ignored) { }
         call.resolve();

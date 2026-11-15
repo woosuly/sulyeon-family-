@@ -50,7 +50,10 @@ function wgPush(force) {
     let items = []; try { items = wgItems(); } catch (e) { return; }
     const ib = wgG('ibItems') || [], me = famUser();
     const cards = ib.filter(x => x.status === 'pending' && x.kind === 'card' && (!x.owner || x.owner === me)).length;
-    const data = { wx: wgWx(), empty: '오늘 챙길 일은 없어요 · 말로 맡겨 주세요', items, cards };
+    const fw = window.famWx, ls = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+    const w = { city: ls('userCityName') || '서울', lat: parseFloat(ls('userLat') || '37.5665'), lon: parseFloat(ls('userLon') || '126.978') };
+    if (fw && fw.temperature != null) Object.assign(w, { t: +fw.temperature, c: +fw.weathercode || 0, day: fw.is_day == null ? 1 : +fw.is_day });
+    const data = { wx: wgWx(), empty: '오늘 챙길 일은 없어요 · 말로 맡겨 주세요', items, cards, w };
     const key = JSON.stringify(data);
     if (!force && key === wgLast && Date.now() - wgLastAt < 10 * 60e3) return;
     wgLast = key; wgLastAt = Date.now();

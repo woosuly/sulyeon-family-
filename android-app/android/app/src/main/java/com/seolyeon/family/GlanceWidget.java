@@ -19,7 +19,8 @@ import java.util.Locale;
 
 /**
  * 설연 한눈에 (홈 화면 위젯)
- *  - 윗줄: 날짜 · 날씨 (앱이 마지막으로 받은 값)
+ *  - 위: 날씨(아이콘·기온·동네) + 시계·날짜 — 날씨는 앱이 보낸 값, 30분 넘으면 위젯이 Open-Meteo에서 직접 받음
+ *  - 배경: 낮 블루 / 밤 네이비 그라데이션
  *  - 큰 줄: 지금 가장 중요한 한 가지 — 2시간 안 일정 > 답장 대기 > 오늘 챙길 것 > 다음 일정
  *  - 4×2(기본): 아랫줄 바로가기 [일정] [가계부(확인 대기 수)] + 마이크 / 더 높이면 다음 일정
  *  - 4×1: 오른쪽 마이크만
@@ -30,7 +31,35 @@ import java.util.Locale;
 public class GlanceWidget extends AppWidgetProvider {
     static final String PREF = "widget";
 
-    @Override public void onUpdate(Context c, AppWidgetManager m, int[] ids) { for (int id : ids) render(c, m, id); }
+    @Override public void onUpdate(Context c, AppWidgetManager m, int[] ids) {
+        for (int id : ids) render(c, m, id);
+        JSONObject w = wx(c); double lat = w.optDouble("lat", Double.NaN), lon = w.optDouble("lon", Double.NaN);
+        if (Double.isNaN(lat) || Double.isNaN(lon) || System.currentTimeMillis() - w.optLong("at", 0) < 25 * 60000L) return;
+        final PendingResult pr = goAsync(); final Context ac = c.getApplicationContext();
+        new Thread(() -> {
+            try {
+                java.net.HttpURLConnection h = (java.net.HttpURLConnection) new java.net.URL("https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon + "&current=temperature_2m,weather_code,is_day&timezone=auto").openConnection();
+                h.setConnectTimeout(8000); h.setReadTimeout(8000);
+                java.io.InputStream in = h.getInputStream(); java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream(); byte[] buf = new byte[4096]; int n;
+                while ((n = in.read(buf)) > 0) bo.write(buf, 0, n); in.close();
+                JSONObject cur = new JSONObject(bo.toString("UTF-8")).getJSONObject("current");
+                w.put("t", cur.getDouble("temperature_2m")).put("c", cur.optInt("weather_code", 0)).put("day", cur.optInt("is_day", 1)).put("at", System.currentTimeMillis());
+                ac.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit().putString("wx", w.toString()).apply();
+                refreshAll(ac);
+            } catch (Exception ignored) { } finally { pr.finish(); }
+        }).start();
+    }
+
+    static JSONObject wx(Context c) {
+        try { return new JSONObject(c.getSharedPreferences(PREF, Context.MODE_PRIVATE).getString("wx", "{}")); } catch (Exception e) { return new JSONObject(); }
+    }
+    static String wxDesc(int c) { return c <= 0 ? "맑음" : c <= 2 ? "구름 조금" : c == 3 ? "흐림" : c <= 48 ? "안개" : c <= 67 ? "비" : c <= 77 ? "눈" : c <= 82 ? "소나기" : c <= 86 ? "눈" : "뇌우"; }
+    static int wxIcon(int c, boolean day) {
+        if (c <= 1) return day ? R.drawable.ic_wx_sun : R.drawable.ic_wx_moon;
+        if (c <= 48) return R.drawable.ic_wx_cloud;
+        if ((c >= 71 && c <= 77) || c == 85 || c == 86) return R.drawable.ic_wx_snow;
+        return R.drawable.ic_wx_rain;
+    }
     @Override public void onAppWidgetOptionsChanged(Context c, AppWidgetManager m, int id, Bundle o) { render(c, m, id); }
 
     static void refreshAll(Context c) {
@@ -71,22 +100,33 @@ public class GlanceWidget extends AppWidgetProvider {
         } catch (Exception ignored) { }
         items.sort((x, y) -> { int p = Integer.compare(x.optInt("p", 9), y.optInt("p", 9)); if (p != 0) return p; long ax = x.optLong("at", Long.MAX_VALUE), ay = y.optLong("at", Long.MAX_VALUE); return Long.compare(ax == 0 ? Long.MAX_VALUE : ax, ay == 0 ? Long.MAX_VALUE : ay); });
 
+        // 날씨 · 낮밤 배경 (앱이 보낸 값 또는 위젯이 30분마다 받은 값; 3시간 넘으면 기온은 숨김)
+        JSONObject w = wx(c); boolean fresh = w.has("t") && now - w.optLong("at", 0) < 3 * 3600000L;
+        int hr = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+        boolean day = fresh && w.has("day") ? w.optInt("day", 1) == 1 : hr >= 7 && hr < 18;
+        v.setInt(R.id.w_root, "setBackgroundResource", day ? R.drawable.wg_bg_day : R.drawable.wg_bg_night);
+        int code = w.optInt("c", 0); String city = w.optString("city", "");
+        v.setImageViewResource(R.id.w_wx_ic, fresh ? wxIcon(code, day) : (day ? R.drawable.ic_wx_sun : R.drawable.ic_wx_moon));
+        v.setTextViewText(R.id.w_temp, fresh ? Math.round(w.optDouble("t")) + "°" : "");
+        v.setTextViewText(R.id.w_place, fresh ? (city.isEmpty() ? "" : city + " · ") + wxDesc(code) : city);
         String date = new SimpleDateFormat("M.d E", Locale.KOREAN).format(now);
-        v.setTextViewText(R.id.w_top, wx.isEmpty() ? date : date + "  ·  " + wx);
+        String sm = fresh ? Math.round(w.optDouble("t")) + "° " + wxDesc(code) : wx;
+        v.setTextViewText(R.id.w_top, sm.isEmpty() ? date : date + "  ·  " + sm);
         JSONObject head = items.isEmpty() ? null : items.get(0);
         v.setTextViewText(R.id.w_main, head == null ? empty : withRel(head, now));
 
         // 높이에 따라: 4×1 → 오른쪽 마이크만 / 4×2 → 아랫줄 바로가기 / 더 높으면 다음 일정 1~2개 (시각 있는 것, 머리 줄 제외)
         Bundle op = m.getAppWidgetOptions(id); int h = op == null ? 0 : op.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0);
         boolean bar = h == 0 || h >= 100;
-        v.setViewVisibility(R.id.w_bar, bar ? View.VISIBLE : View.GONE);
+        for (int vid : new int[]{R.id.w_bar, R.id.w_wx, R.id.w_gap, R.id.w_div}) v.setViewVisibility(vid, bar ? View.VISIBLE : View.GONE);
         v.setViewVisibility(R.id.w_mic_s, bar ? View.GONE : View.VISIBLE);
+        v.setViewVisibility(R.id.w_top, bar ? View.GONE : View.VISIBLE);
         v.setTextViewText(R.id.w_badge, cards > 99 ? "99+" : String.valueOf(cards));
         v.setViewVisibility(R.id.w_badge, cards > 0 ? View.VISIBLE : View.GONE);
         List<JSONObject> next = new ArrayList<>();
         for (JSONObject o : items) if (o != head && o.optLong("at", 0) > now - 30 * 60e3 && o.optLong("at", 0) > 0) next.add(o);
         next.sort((x, y) -> Long.compare(x.optLong("at"), y.optLong("at")));
-        int lines = next.isEmpty() ? 0 : bar ? (h >= 200 ? 2 : h >= 160 ? 1 : 0) : (h >= 110 ? 2 : 0);
+        int lines = next.isEmpty() ? 0 : bar ? (h >= 260 ? 2 : h >= 225 ? 1 : 0) : 0;
         v.setViewVisibility(R.id.w_more, lines > 0 ? View.VISIBLE : View.GONE);
         if (lines > 0) {
             v.setTextViewText(R.id.w_l1, withRel(next.get(0), now));
