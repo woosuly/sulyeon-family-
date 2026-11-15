@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 위젯 색: 폰 테마(밝게/어둡게, 안드로이드 12+ 배경화면 색)를 따름 -->
+    <color name="w_bg">#EBFFFFFF</color>
+    <color name="w_fg">#FF1F2937</color>
+    <color name="w_sub">#FF64748B</color>
+    <color name="w_accent">#FF2B3A55</color>
+    <color name="w_on_accent">#FFFFFFFF</color>
+    <color name="w_line">#1F0F172A</color>
+</resources>

@@ -222,6 +222,7 @@
                 document.getElementById('weather-desc').textContent = userCityName;
                 return;
             }
+            window.famWx = cw;   // 홈 화면 위젯용
             const hour = new Date().getHours();
             const emoji = getWeatherEmoji(cw.weathercode, cw.is_day);
             const timeLabel = getTimeOfDay(hour);

@@ -525,6 +525,19 @@ public class SeolyeonNativePlugin extends Plugin {
         call.resolve();
     }
 
+    // ═══ 홈 화면 위젯에 보여 줄 후보 저장 → 위젯 다시 그림 ═══
+    @PluginMethod
+    public void widgetSet(PluginCall call) {
+        try {
+            JSObject d = new JSObject();
+            d.put("wx", call.getString("wx", "")); d.put("empty", call.getString("empty", ""));
+            d.put("items", call.getArray("items", new JSArray())); d.put("at", System.currentTimeMillis());
+            getContext().getSharedPreferences(GlanceWidget.PREF, Context.MODE_PRIVATE).edit().putString("data", d.toString()).apply();
+            GlanceWidget.refreshAll(getContext());
+        } catch (Exception ignored) { }
+        call.resolve();
+    }
+
     // ═══ 소리 우선권: 듣기·읽어주기 동안 음악을 잠깐 멈추고 끝나면 다시 재생 ═══
     private static android.media.AudioFocusRequest afr;
     @PluginMethod

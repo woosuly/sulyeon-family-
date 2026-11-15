@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 설연 한눈에: 날짜·날씨 + 지금 가장 중요한 한 가지 (+ 늘리면 다음 일정 2개) + 말로 하기 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/w_root" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="horizontal" android:gravity="center_vertical"
+    android:background="@drawable/widget_bg" android:paddingStart="18dp" android:paddingEnd="10dp"
+    android:paddingTop="10dp" android:paddingBottom="10dp">
+    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+        <TextView android:id="@+id/w_top" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:textColor="@color/w_sub" android:textSize="12.5sp" android:maxLines="1" android:ellipsize="end" android:fontFamily="sans-serif-medium" />
+        <TextView android:id="@+id/w_main" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2dp"
+            android:textColor="@color/w_fg" android:textSize="16sp" android:maxLines="1" android:ellipsize="end" android:fontFamily="sans-serif-medium" />
+        <LinearLayout android:id="@+id/w_more" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical"
+            android:layout_marginTop="8dp" android:visibility="gone">
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/w_line" />
+            <TextView android:id="@+id/w_l1" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp"
+                android:textColor="@color/w_fg" android:textSize="13.5sp" android:maxLines="1" android:ellipsize="end" />
+            <TextView android:id="@+id/w_l2" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp"
+                android:textColor="@color/w_fg" android:textSize="13.5sp" android:maxLines="1" android:ellipsize="end" />
+        </LinearLayout>
+    </LinearLayout>
+    <ImageView android:id="@+id/w_mic" android:layout_width="44dp" android:layout_height="44dp" android:layout_marginStart="8dp"
+        android:background="@drawable/widget_mic_bg" android:src="@drawable/ic_w_mic" android:padding="11dp"
+        android:contentDescription="말로 하기" />
+</LinearLayout>

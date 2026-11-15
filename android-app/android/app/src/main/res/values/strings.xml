@@ -5,4 +5,6 @@
     <string name="package_name">com.seolyeon.family</string>
     <string name="custom_url_scheme">com.seolyeon.family</string>
     <string name="sc_voice">말로 하기</string>
+    <string name="w_glance_desc">날씨와 지금 챙길 한 가지, 말로 하기</string>
+    <string name="w_mic_desc">누르면 설연이 바로 듣기 시작</string>
 </resources>

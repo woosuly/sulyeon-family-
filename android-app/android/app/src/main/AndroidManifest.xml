@@ -51,6 +51,15 @@
 
         <!-- 카드 결제 문자 읽기: 폰 알림 중 카드 승인·취소 문자만 골라 가계부 확인 대기로 -->
         <receiver android:name=".KakaoAskReceiver" android:exported="false" />
+        <!-- 홈 화면 위젯: 설연 한눈에 · 말로 하기 -->
+        <receiver android:name=".GlanceWidget" android:exported="true" android:label="설연 한눈에">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_glance_info" />
+        </receiver>
+        <receiver android:name=".MicWidget" android:exported="true" android:label="설연 말로 하기">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_mic_info" />
+        </receiver>
         <service android:name=".CardNotifListener"
             android:label="설연 카드 문자 기록"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
