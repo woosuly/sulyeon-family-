@@ -92,6 +92,7 @@ function lifeRoute(t) {
     if (/택배|배송/.test(t) && /(어디|언제|조회|현황|목록|왔|와|보여)/.test(t)) { parcelOpen(); return true; }
     if (/(로보락|로봇\s*청소기|청소기|청소)/.test(t) && /(시작|돌려|해\s*줘|켜|멈춰|정지|중지|충전|복귀|돌아가|열어|상태)/.test(t) && !/(일정|알려|기억)/.test(t)) { roborockOpen(t); return true; }
     if (/네이버\s*(주문|구매|쇼핑)\s*(내역|목록)?/.test(t)) { naverOrders(); return true; }
+    if (typeof dlRoute === 'function' && dlRoute(t)) return true;   // 컬리·배민 (delivery.js)
     return false;
 }
 

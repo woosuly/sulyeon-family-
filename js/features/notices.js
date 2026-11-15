@@ -14,7 +14,7 @@ function memToday() {
         const d = new Date(now); d.setFullYear(now.getFullYear() - k); const ds = famYmd(d);
         (typeof planData !== 'undefined' ? planData : []).filter(p => p.start && p.start <= ds && (p.end || p.start) >= ds).forEach(p => {
             const f = typeof tripFolder === 'function' ? tripFolder(p) : null, ph = f ? (f.photos || []) : [];
-            if (ph.length || (p.recap && p.recap.text)) out.push({ k, p, photo: ph.length ? ph[(now.getDate() + k) % ph.length] : '' });
+            out.push({ k, p, photo: ph.length ? ph[(now.getDate() + k) % ph.length] : '' });
         });
     }
     return out.slice(0, 1);
