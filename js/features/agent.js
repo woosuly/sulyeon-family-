@@ -7,7 +7,7 @@
 // ═══════════════════════════════════════════════════════════
 let agNotes = [], agRems = [], agBriefs = [], agUnsubs = [];
 const agMe = () => (typeof famUser === 'function' ? famUser() : '') || '';
-const agFmt = ms => { const d = new Date(ms); return `${d.getMonth() + 1}/${d.getDate()}(${'일월화수목금토'[d.getDay()]}) ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+const agFmt = ms => { const d = new Date(ms); return `${d.getFullYear() !== new Date().getFullYear() ? String(d.getFullYear()).slice(2) + '년 ' : ''}${d.getMonth() + 1}/${d.getDate()}(${'일월화수목금토'[d.getDay()]}) ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
 const agLocalInput = ms => { const d = new Date(ms - new Date().getTimezoneOffset() * 6e4); return d.toISOString().slice(0, 16); };
 
 // ── 말 거는 방식 판단 (assistant.js famRun에서 호출) ──
