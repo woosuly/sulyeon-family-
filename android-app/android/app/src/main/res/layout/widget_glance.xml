@@ -1,25 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 설연 한눈에: 날짜·날씨 + 지금 가장 중요한 한 가지 (+ 늘리면 다음 일정 2개) + 말로 하기 -->
+<!-- 설연 한눈에
+     윗줄: 설연 표시 · 날짜 · 날씨 / 큰 줄: 지금 가장 중요한 한 가지 / (높으면) 다음 일정
+     4×2 이상: 아랫줄 바로가기 [일정] [가계부(확인 대기 수)] ··· [말로 하기]
+     4×1: 오른쪽 말로 하기만 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/w_root" android:layout_width="match_parent" android:layout_height="match_parent"
-    android:orientation="horizontal" android:gravity="center_vertical"
-    android:background="@drawable/widget_bg" android:paddingStart="18dp" android:paddingEnd="10dp"
+    android:orientation="vertical" android:gravity="center_vertical"
+    android:background="@drawable/widget_bg" android:paddingStart="16dp" android:paddingEnd="10dp"
     android:paddingTop="10dp" android:paddingBottom="10dp">
-    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
-        <TextView android:id="@+id/w_top" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:textColor="@color/w_sub" android:textSize="12.5sp" android:maxLines="1" android:ellipsize="end" android:fontFamily="sans-serif-medium" />
-        <TextView android:id="@+id/w_main" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2dp"
-            android:textColor="@color/w_fg" android:textSize="16sp" android:maxLines="1" android:ellipsize="end" android:fontFamily="sans-serif-medium" />
-        <LinearLayout android:id="@+id/w_more" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical"
-            android:layout_marginTop="8dp" android:visibility="gone">
-            <FrameLayout android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/w_line" />
-            <TextView android:id="@+id/w_l1" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp"
-                android:textColor="@color/w_fg" android:textSize="13.5sp" android:maxLines="1" android:ellipsize="end" />
-            <TextView android:id="@+id/w_l2" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp"
-                android:textColor="@color/w_fg" android:textSize="13.5sp" android:maxLines="1" android:ellipsize="end" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@mipmap/ic_launcher_round" android:contentDescription="설연" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="5dp"
+                    android:text="설연" android:textColor="@color/w_fg" android:textSize="12.5sp" android:textStyle="bold" />
+                <TextView android:id="@+id/w_top" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                    android:textColor="@color/w_sub" android:textSize="12.5sp" android:maxLines="1" android:ellipsize="end" android:fontFamily="sans-serif-medium" />
+            </LinearLayout>
+            <TextView android:id="@+id/w_main" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="3dp"
+                android:textColor="@color/w_fg" android:textSize="16sp" android:maxLines="1" android:ellipsize="end" android:fontFamily="sans-serif-medium" />
+            <LinearLayout android:id="@+id/w_more" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical"
+                android:layout_marginTop="6dp" android:visibility="gone">
+                <FrameLayout android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/w_line" />
+                <TextView android:id="@+id/w_l1" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp"
+                    android:textColor="@color/w_fg" android:textSize="13.5sp" android:maxLines="1" android:ellipsize="end" />
+                <TextView android:id="@+id/w_l2" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="3dp"
+                    android:textColor="@color/w_fg" android:textSize="13.5sp" android:maxLines="1" android:ellipsize="end" />
+            </LinearLayout>
         </LinearLayout>
+        <ImageView android:id="@+id/w_mic_s" android:layout_width="44dp" android:layout_height="44dp" android:layout_marginStart="8dp"
+            android:background="@drawable/widget_mic_bg" android:src="@drawable/ic_w_mic" android:padding="11dp"
+            android:contentDescription="말로 하기" />
     </LinearLayout>
-    <ImageView android:id="@+id/w_mic" android:layout_width="44dp" android:layout_height="44dp" android:layout_marginStart="8dp"
-        android:background="@drawable/widget_mic_bg" android:src="@drawable/ic_w_mic" android:padding="11dp"
-        android:contentDescription="말로 하기" />
+    <LinearLayout android:id="@+id/w_bar" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal"
+        android:gravity="center_vertical" android:layout_marginTop="10dp" android:visibility="gone">
+        <LinearLayout android:id="@+id/w_go_sch" android:layout_width="wrap_content" android:layout_height="36dp" android:orientation="horizontal"
+            android:gravity="center_vertical" android:background="@drawable/widget_chip_bg" android:paddingStart="11dp" android:paddingEnd="13dp">
+            <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_w_cal" android:contentDescription="일정" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp"
+                android:text="일정" android:textColor="@color/w_fg" android:textSize="13.5sp" android:fontFamily="sans-serif-medium" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/w_go_led" android:layout_width="wrap_content" android:layout_height="36dp" android:layout_marginStart="8dp" android:orientation="horizontal"
+            android:gravity="center_vertical" android:background="@drawable/widget_chip_bg" android:paddingStart="11dp" android:paddingEnd="13dp">
+            <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_w_wallet" android:contentDescription="가계부" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp"
+                android:text="가계부" android:textColor="@color/w_fg" android:textSize="13.5sp" android:fontFamily="sans-serif-medium" />
+            <TextView android:id="@+id/w_badge" android:layout_width="wrap_content" android:layout_height="18dp" android:layout_marginStart="6dp"
+                android:minWidth="18dp" android:gravity="center" android:paddingStart="5dp" android:paddingEnd="5dp"
+                android:background="@drawable/widget_badge_bg" android:textColor="#FFFFFFFF" android:textSize="11sp" android:textStyle="bold" android:visibility="gone" />
+        </LinearLayout>
+        <FrameLayout android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" />
+        <ImageView android:id="@+id/w_mic" android:layout_width="44dp" android:layout_height="44dp"
+            android:background="@drawable/widget_mic_bg" android:src="@drawable/ic_w_mic" android:padding="11dp"
+            android:contentDescription="말로 하기" />
+    </LinearLayout>
 </LinearLayout>

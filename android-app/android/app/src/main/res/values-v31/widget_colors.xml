@@ -6,4 +6,6 @@
     <color name="w_accent">@android:color/system_accent1_600</color>
     <color name="w_on_accent">@android:color/system_accent1_0</color>
     <color name="w_line">#1F000000</color>
+    <color name="w_chip">@android:color/system_accent1_100</color>
+    <color name="w_icon">@android:color/system_accent1_600</color>
 </resources>

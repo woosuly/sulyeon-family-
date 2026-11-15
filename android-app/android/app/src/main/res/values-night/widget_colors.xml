@@ -6,4 +6,6 @@
     <color name="w_accent">#FFCBD5E1</color>
     <color name="w_on_accent">#FF0F172A</color>
     <color name="w_line">#26FFFFFF</color>
+    <color name="w_chip">#1FFFFFFF</color>
+    <color name="w_icon">#FFCBD5E1</color>
 </resources>

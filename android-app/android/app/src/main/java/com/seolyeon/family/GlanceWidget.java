@@ -21,7 +21,8 @@ import java.util.Locale;
  * 설연 한눈에 (홈 화면 위젯)
  *  - 윗줄: 날짜 · 날씨 (앱이 마지막으로 받은 값)
  *  - 큰 줄: 지금 가장 중요한 한 가지 — 2시간 안 일정 > 답장 대기 > 오늘 챙길 것 > 다음 일정
- *  - 4×2로 늘리면 다음 일정 2개
+ *  - 4×2(기본): 아랫줄 바로가기 [일정] [가계부(확인 대기 수)] + 마이크 / 더 높이면 다음 일정
+ *  - 4×1: 오른쪽 마이크만
  *  - 마이크: 바로 듣기 시작 / 나머지: 앱 열기
  *  앱(js/features/widget.js)이 SeolyeonNative.widgetSet 으로 후보 목록을 넣고, 고르기·남은 시간은 여기서 매번 계산
  *  후보: {text, at(시각 ms, 없으면 0), until(이때까지 보임), p(1 가장 급함 ~ 9), k(누르면 열 화면)}
@@ -55,10 +56,11 @@ public class GlanceWidget extends AppWidgetProvider {
         RemoteViews v = new RemoteViews(c.getPackageName(), R.layout.widget_glance);
         long now = System.currentTimeMillis();
         String raw = c.getSharedPreferences(PREF, Context.MODE_PRIVATE).getString("data", "{}");
-        String wx = "", empty = "말로 하기를 눌러 무엇이든 맡겨 보세요";
+        String wx = "", empty = "오늘 챙길 일은 없어요 · 말로 맡겨 주세요";
+        int cards = 0;
         List<JSONObject> items = new ArrayList<>();
         try {
-            JSONObject d = new JSONObject(raw); wx = d.optString("wx", ""); empty = d.optString("empty", empty);
+            JSONObject d = new JSONObject(raw); wx = d.optString("wx", ""); empty = d.optString("empty", empty); cards = d.optInt("cards", 0);
             JSONArray a = d.optJSONArray("items");
             for (int i = 0; a != null && i < a.length(); i++) {
                 JSONObject o = a.getJSONObject(i); long until = o.optLong("until", 0), at = o.optLong("at", 0);
@@ -74,17 +76,23 @@ public class GlanceWidget extends AppWidgetProvider {
         JSONObject head = items.isEmpty() ? null : items.get(0);
         v.setTextViewText(R.id.w_main, head == null ? empty : withRel(head, now));
 
-        // 크게 놓았으면 다음 일정 2개 (시각 있는 것, 머리 줄 제외)
+        // 높이에 따라: 4×1 → 오른쪽 마이크만 / 4×2 → 아랫줄 바로가기 / 더 높으면 다음 일정 1~2개 (시각 있는 것, 머리 줄 제외)
         Bundle op = m.getAppWidgetOptions(id); int h = op == null ? 0 : op.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0);
+        boolean bar = h == 0 || h >= 100;
+        v.setViewVisibility(R.id.w_bar, bar ? View.VISIBLE : View.GONE);
+        v.setViewVisibility(R.id.w_mic_s, bar ? View.GONE : View.VISIBLE);
+        v.setTextViewText(R.id.w_badge, cards > 99 ? "99+" : String.valueOf(cards));
+        v.setViewVisibility(R.id.w_badge, cards > 0 ? View.VISIBLE : View.GONE);
         List<JSONObject> next = new ArrayList<>();
         for (JSONObject o : items) if (o != head && o.optLong("at", 0) > now - 30 * 60e3 && o.optLong("at", 0) > 0) next.add(o);
         next.sort((x, y) -> Long.compare(x.optLong("at"), y.optLong("at")));
-        boolean big = h >= 110 && !next.isEmpty();
-        v.setViewVisibility(R.id.w_more, big ? View.VISIBLE : View.GONE);
-        if (big) {
+        int lines = next.isEmpty() ? 0 : bar ? (h >= 200 ? 2 : h >= 160 ? 1 : 0) : (h >= 110 ? 2 : 0);
+        v.setViewVisibility(R.id.w_more, lines > 0 ? View.VISIBLE : View.GONE);
+        if (lines > 0) {
             v.setTextViewText(R.id.w_l1, withRel(next.get(0), now));
-            v.setTextViewText(R.id.w_l2, next.size() > 1 ? withRel(next.get(1), now) : "");
-            v.setViewVisibility(R.id.w_l2, next.size() > 1 ? View.VISIBLE : View.GONE);
+            boolean two = lines > 1 && next.size() > 1;
+            v.setTextViewText(R.id.w_l2, two ? withRel(next.get(1), now) : "");
+            v.setViewVisibility(R.id.w_l2, two ? View.VISIBLE : View.GONE);
         }
 
         int f = PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE;
@@ -92,9 +100,16 @@ public class GlanceWidget extends AppWidgetProvider {
         if (head != null && !head.optString("k").isEmpty()) open.putExtra("push_k", head.optString("k")).putExtra("push_id", head.optString("id", ""));
         v.setOnClickPendingIntent(R.id.w_root, PendingIntent.getActivity(c, 7100 + id, open, f));
         v.setOnClickPendingIntent(R.id.w_mic, PendingIntent.getActivity(c, 7200 + id, voice(c), f));
+        v.setOnClickPendingIntent(R.id.w_mic_s, PendingIntent.getActivity(c, 7300 + id, voice(c), f));
+        v.setOnClickPendingIntent(R.id.w_go_sch, PendingIntent.getActivity(c, 7400 + id, go(c, "sched"), f));
+        v.setOnClickPendingIntent(R.id.w_go_led, PendingIntent.getActivity(c, 7500 + id, go(c, cards > 0 ? "card" : "ledger"), f));
         m.updateAppWidget(id, v);
     }
 
+    static Intent go(Context c, String k) {
+        return new Intent(c, MainActivity.class).setAction("com.seolyeon.family.GO_" + k).putExtra("push_k", k).putExtra("push_id", "")
+                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+    }
     static Intent voice(Context c) {
         return new Intent(c, MainActivity.class).setAction("com.seolyeon.family.VOICE")
                 .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);

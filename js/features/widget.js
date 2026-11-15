@@ -48,7 +48,9 @@ function wgItems() {
 function wgPush(force) {
     const N = wgN(); if (!N || !N.widgetSet || !famUser()) return;
     let items = []; try { items = wgItems(); } catch (e) { return; }
-    const data = { wx: wgWx(), empty: '오늘은 챙길 일정이 없습니다', items };
+    const ib = wgG('ibItems') || [], me = famUser();
+    const cards = ib.filter(x => x.status === 'pending' && x.kind === 'card' && (!x.owner || x.owner === me)).length;
+    const data = { wx: wgWx(), empty: '오늘 챙길 일은 없어요 · 말로 맡겨 주세요', items, cards };
     const key = JSON.stringify(data);
     if (!force && key === wgLast && Date.now() - wgLastAt < 10 * 60e3) return;
     wgLast = key; wgLastAt = Date.now();
