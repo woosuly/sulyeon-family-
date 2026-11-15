@@ -51,7 +51,9 @@ async function flSave(id, btn) {
     btn.disabled = true;
     try {
         if (id) await db.collection('flightWatch').doc(id).update(v);
-        else { id = 'fl_' + Date.now(); await db.collection('flightWatch').doc(id).set({ id, ...v, by: famUser(), at: Date.now(), hist: [] }); await flNow(id); }
+        else id = 'fl_' + Date.now(), await db.collection('flightWatch').doc(id).set({ id, ...v, by: famUser(), at: Date.now(), hist: [] });
+        await flNaver({ ...(flWatch.find(x => x.id === id) || {}), ...v, id }).catch(() => {});   // 날짜를 먼저 정해 두면 가격 확인도 그 날짜로
+        if (!flWatch.find(x => x.id === id && x.last)) await flNow(id);
         flOpen();
     } catch (e) { btn.disabled = false; famToast(e.message); }
 }
