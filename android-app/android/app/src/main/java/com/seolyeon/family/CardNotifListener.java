@@ -34,6 +34,8 @@ public class CardNotifListener extends NotificationListenerService {
             if (n == null || n.extras == null) return;
             Bundle x = n.extras;
             if ((n.flags & Notification.FLAG_GROUP_SUMMARY) != 0) return;   // '새 메시지 3개' 같은 묶음 요약은 건너뜀
+            String pkg = sbn.getPackageName();
+            if ((n.flags & Notification.FLAG_ONGOING_EVENT) == 0 && x.getCharSequence(Notification.EXTRA_TITLE) != null) MsgHub.seen(this, pkg);   // 설정의 '알림 받을 앱' 목록용 (앱 이름만)
             boolean smsApp = SMS_APPS.contains(sbn.getPackageName());
             CharSequence title = x.getCharSequence(Notification.EXTRA_TITLE);
             String from = title == null ? "" : title.toString();
@@ -68,6 +70,7 @@ public class CardNotifListener extends NotificationListenerService {
                 boolean group = conv != null || sub != null;
                 if (room == null || room.isEmpty()) return;
                 CardQueue.kakaoSeen(this, room, group);
+                MsgHub.remember(this, pkg, room, n);   // 답장 칸 기억 (말로 "OO방에 보내 줘")
                 boolean allow = CardQueue.kakaoAllowed(this, room);
                 CharSequence body = x.getCharSequence(Notification.EXTRA_TEXT);
                 if (body == null) return;
@@ -76,6 +79,30 @@ public class CardNotifListener extends NotificationListenerService {
                     CardQueue.add(this, t, sbn.getPostTime(), from, "kakao", room);
                 }
                 if (allow) KakaoAsk.incoming(this, room, from, t);   // 받는 방이면 "읽어드릴까요?" 팝업
+                return;
+            }
+
+            // 위챗·회사 메신저 등 '알림 받을 앱': 방 이름·보낸 사람·내용 → 보관함 (본인 화면에만)
+            if (!smsApp && MsgHub.allowed(this, pkg)) {
+                CharSequence conv = android.os.Build.VERSION.SDK_INT >= 28 ? x.getCharSequence(Notification.EXTRA_CONVERSATION_TITLE) : null;
+                String room = conv != null ? conv.toString() : from, app = MsgHub.label(this, pkg);
+                if (room == null || room.isEmpty()) return;
+                MsgHub.remember(this, pkg, room, n);
+                boolean any = false;
+                if (msgs != null && msgs.length > 0) {   // 대화형 알림: 보낸 사람이 따로 들어 있음
+                    for (Parcelable m : msgs) if (m instanceof Bundle) {
+                        CharSequence tx = ((Bundle) m).getCharSequence("text"), sd = ((Bundle) m).getCharSequence("sender");
+                        if (tx != null && tx.length() > 0) { CardQueue.add(this, tx.toString(), sbn.getPostTime(), sd != null ? sd.toString() : room, "app", room, app, pkg); any = true; }
+                    }
+                }
+                if (!any) {
+                    CharSequence body = x.getCharSequence(Notification.EXTRA_BIG_TEXT); if (body == null) body = x.getCharSequence(Notification.EXTRA_TEXT);
+                    if (body == null) return;
+                    String t = body.toString().replaceFirst("^\\[\\d+条\\]\\s*", "").replaceFirst("^\\[\\d+개?\\]\\s*", ""), who = room;
+                    java.util.regex.Matcher mm = java.util.regex.Pattern.compile("^(.{1,24}?)\\s?[:：]\\s(.+)$", java.util.regex.Pattern.DOTALL).matcher(t);
+                    if (mm.find()) { who = mm.group(1).trim(); t = mm.group(2).trim(); }   // 단체방: "보낸 사람: 내용"
+                    CardQueue.add(this, t, sbn.getPostTime(), who, "app", room, app, pkg);
+                }
                 return;
             }
 
@@ -88,6 +115,7 @@ public class CardNotifListener extends NotificationListenerService {
                 }
             }
             // 연락처에 저장된 사람의 문자면 "읽어드릴까요?" 팝업
+            if (smsApp) MsgHub.remember(this, pkg, from, n);
             if (smsApp && added == 0) { CharSequence body = x.getCharSequence(Notification.EXTRA_TEXT); if (body != null) KakaoAsk.incomingSms(this, from, body.toString()); }
             if (added > 0) {
                 int total = CardQueue.size(this);

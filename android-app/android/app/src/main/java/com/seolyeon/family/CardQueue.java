@@ -18,7 +18,7 @@ public class CardQueue {
     static final Pattern LOOKS_CARD = Pattern.compile("\\d{4}\\s*(승인|취소)[\\s\\S]*?[\\d,]+\\s*원|(승인|취소)[\\s\\S]*?\\d{4}[\\s\\S]*?[\\d,]+\\s*원");
 
     /** 인증번호·비밀번호 문자는 저장하지 않음 (폰 밖으로 나가지 않게) */
-    static final Pattern SECRET = Pattern.compile("인증\\s*번호|인증\\s*코드|인증요청|본인\\s*확인|OTP|otp|[Vv]erification|비밀번호|보안\\s*코드|확인\\s*코드");
+    static final Pattern SECRET = Pattern.compile("验证码|校验码|动态码|密码|인증\\s*번호|인증\\s*코드|인증요청|본인\\s*확인|OTP|otp|[Vv]erification|비밀번호|보안\\s*코드|확인\\s*코드");
     static boolean isSecret(String t) { return t == null || SECRET.matcher(t).find(); }
 
     static boolean looksCard(String t) {
@@ -32,19 +32,24 @@ public class CardQueue {
     static synchronized boolean add(Context c, String text, long ts, String from, String kind) { return add(c, text, ts, from, kind, ""); }
 
     /** room: 카톡 대화방 이름 (1:1이면 보낸 사람) */
-    static synchronized boolean add(Context c, String text, long ts, String from, String kind, String room) {
+    static synchronized boolean add(Context c, String text, long ts, String from, String kind, String room) { return add(c, text, ts, from, kind, room, "", ""); }
+
+    /** app·pkg: 위챗·회사 메신저 등 '알림 받을 앱'에서 온 메시지의 앱 이름과 패키지 */
+    static synchronized boolean add(Context c, String text, long ts, String from, String kind, String room, String app, String pkg) {
         try {
             SharedPreferences p = c.getSharedPreferences(PREF, Context.MODE_PRIVATE);
             JSONArray a = new JSONArray(p.getString(KEY, "[]"));
             String norm = text.replaceAll("\\s+", " ").trim();
             if (isSecret(norm)) return false;
-            for (int i = 0; i < a.length(); i++) if (norm.equals(a.getJSONObject(i).optString("text"))) return false;
+            String rm = room == null ? "" : room;
+            for (int i = 0; i < a.length(); i++) if (norm.equals(a.getJSONObject(i).optString("text")) && rm.equals(a.getJSONObject(i).optString("room"))) return false;
             JSONObject o = new JSONObject();
             o.put("text", norm);
             o.put("ts", ts);
             o.put("from", from == null ? "" : from);
             o.put("kind", kind);
-            o.put("room", room == null ? "" : room);
+            o.put("room", rm);
+            if (app != null && !app.isEmpty()) { o.put("app", app); o.put("pkg", pkg == null ? "" : pkg); }
             a.put(o);
             while (a.length() > MAX) a.remove(0);
             p.edit().putString(KEY, a.toString()).apply();

@@ -519,6 +519,36 @@ public class SeolyeonNativePlugin extends Plugin {
         call.resolve(r);
     }
 
+    // ═══ 알림 받을 앱(위챗·회사 메신저 등) · 알림 답장 칸으로 바로 보내기 ═══
+    @PluginMethod
+    public void msgApps(PluginCall call) {
+        JSObject r = new JSObject();
+        try {
+            r.put("allow", new JSArray(MsgHub.allow(getContext()).toString()));
+            r.put("seen", new JSArray(MsgHub.seenList(getContext()).toString()));
+            r.put("wechat", MsgHub.label(getContext(), MsgHub.WECHAT));
+        } catch (Exception ignored) { }
+        call.resolve(r);
+    }
+    @PluginMethod
+    public void setMsgApp(PluginCall call) {
+        MsgHub.setAllowed(getContext(), call.getString("pkg", ""), call.getBoolean("on", false));
+        call.resolve();
+    }
+    @PluginMethod
+    public void replyTargets(PluginCall call) {
+        JSObject r = new JSObject();
+        try { r.put("items", new JSArray(MsgHub.targetList().toString())); } catch (Exception ignored) { }
+        call.resolve(r);
+    }
+    @PluginMethod
+    public void replySend(PluginCall call) {
+        String[] err = { "" };
+        boolean ok = MsgHub.send(getContext(), call.getString("pkg", ""), call.getString("room", ""), call.getString("text", ""), err);
+        JSObject r = new JSObject(); r.put("sent", ok); r.put("err", err[0]);
+        call.resolve(r);
+    }
+
     @PluginMethod
     public void setKakaoRooms(PluginCall call) {
         try { CardQueue.setKakaoAllow(getContext(), new JSONArray(call.getArray("rooms", new JSArray()).toString())); } catch (Exception ignored) { }

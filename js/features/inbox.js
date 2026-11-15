@@ -93,7 +93,7 @@ async function ibDrain(opt) {
             const key = c ? c.key : 's_' + ibHash(raw);
             if (seen.has(key) || keys.has(key)) continue; keys.add(key);
             if (c) { if (ibCards[c.card]) cards.push({ ...c, raw, ts: it.ts || Date.now() }); else seen.add(key); }   // 지정 안 된 카드는 무시
-            else smss.push({ key, raw, from: it.from || '', ts: it.ts || Date.now(), kind: it.kind === 'kakao' ? 'kakao' : 'sms', room: it.room || '' });
+            else smss.push({ key, raw, from: it.from || '', ts: it.ts || Date.now(), kind: it.kind === 'kakao' ? 'kakao' : it.kind === 'app' ? 'app' : 'sms', room: it.room || '', app: it.app || '', pkg: it.pkg || '' });
         }
 
         // 3) 카드 → 가계부 확인 대기
@@ -124,9 +124,9 @@ async function ibDrain(opt) {
                 if (a.parcel && a.parcel.invoice && typeof parcelAdd === 'function') await parcelAdd({ ...a.parcel, item: a.parcel.item || '' }).catch(() => {});
                 if (a.bill && +a.bill.amount > 0 && typeof billSave === 'function') await billSave(a.bill, '문자').catch(() => {});
                 // 할 일이 없는 대화라도 받는 카톡방·연락처 사람의 메시지는 '메시지'로 남김 (설연 알림을 누르고 들어왔을 때 빈 화면이 되지 않게)
-                if (a.skip && ((s.kind === 'kakao' && s.room) || (s.kind === 'sms' && s.name)) && out) { a.skip = false; a.type = '메시지'; a.summary = `${s.kind === 'kakao' && s.room !== s.from ? s.room + ' · ' : ''}${s.name || s.from || ''}: ${s.raw.replace(/\s+/g, ' ').slice(0, 90)}`; }
+                if (a.skip && (((s.kind === 'kakao' || s.kind === 'app') && s.room) || (s.kind === 'sms' && s.name)) && out) { a.skip = false; a.type = '메시지'; a.summary = `${s.kind !== 'sms' && s.room !== s.from ? s.room + ' · ' : ''}${s.name || s.from || ''}: ${s.raw.replace(/\s+/g, ' ').slice(0, 90)}`; }
                 if (!a.skip) await db.collection('inbox').doc(s.key).set({
-                    id: s.key, kind: s.kind, owner: me, status: 'pending', at: Date.now(), ts: s.ts, from: s.from, name: s.name || '', number: s.number || '', room: s.room || '', raw: s.raw,
+                    id: s.key, kind: s.kind, owner: me, status: 'pending', at: Date.now(), ts: s.ts, from: s.from, name: s.name || '', number: s.number || '', room: s.room || '', raw: s.raw, app: s.app || '', pkg: s.pkg || '', replyKo: a.reply_ko || '',
                     type: a.type || '문자', summary: a.summary || '', schedule: a.schedule && a.schedule.date ? a.schedule : null, reply: a.reply || '',
                     shop: Array.isArray(a.shop) ? a.shop.filter(x => typeof x === 'string' && x.trim()).slice(0, 10) : [],
                     gj: a.gj && a.gj.person ? { person: String(a.gj.person).slice(0, 20), event: a.gj.event || '기타' } : null,
@@ -145,7 +145,7 @@ async function ibDrain(opt) {
 async function ibAskAI(list) {
     const today = typeof famYmd === 'function' ? famYmd(new Date()) : new Date().toISOString().slice(0, 10);
     const sys = `너는 정우설의 문자·카톡 비서다. 오늘은 ${today}. 받은 문자·카톡 목록을 보고 JSON 배열만 출력한다 (설명·코드블록 없이).
-각 문자마다 {"i":번호,"skip":true|false,"type":"주의|택배|예약|병원|고지서|일정|개인|기타","summary":"한 줄 요약(누가·무엇·언제)","schedule":{"date":"YYYY-MM-DD","time":"HH:MM 또는 빈칸","title":"일정 제목","place":"장소 또는 빈칸"} 또는 null,"reply":"답장 초안 또는 빈칸","shop":["장볼 물건"] 또는 [],"parcel":{"company":"택배사","invoice":"운송장 번호(숫자만)","item":"물건 이름 또는 빈칸"} 또는 null,"gj":{"person":"당사자 이름","event":"결혼|장례|돌·백일|생일·회갑·칠순|병문안|개업·이사|기타"} 또는 null,"due":{"date":"YYYY-MM-DD","time":"HH:MM 또는 빈칸","kind":"기프티콘|납부|무료취소|잔금|반납|만료|기타","what":"짧은 이름"} 또는 null,"bill":{"kind":"관리비|전기|가스|수도|통신|기타","ym":"YYYY-MM","amount":숫자} 또는 null}
+각 문자마다 {"i":번호,"skip":true|false,"type":"주의|택배|예약|병원|고지서|일정|개인|업무|기타","summary":"한 줄 요약(누가·무엇·언제)","schedule":{"date":"YYYY-MM-DD","time":"HH:MM 또는 빈칸","title":"일정 제목","place":"장소 또는 빈칸"} 또는 null,"reply":"답장 초안 또는 빈칸","reply_ko":"중국어 답장의 한국어 뜻 또는 빈칸","shop":["장볼 물건"] 또는 [],"parcel":{"company":"택배사","invoice":"운송장 번호(숫자만)","item":"물건 이름 또는 빈칸"} 또는 null,"gj":{"person":"당사자 이름","event":"결혼|장례|돌·백일|생일·회갑·칠순|병문안|개업·이사|기타"} 또는 null,"due":{"date":"YYYY-MM-DD","time":"HH:MM 또는 빈칸","kind":"기프티콘|납부|무료취소|잔금|반납|만료|기타","what":"짧은 이름"} 또는 null,"bill":{"kind":"관리비|전기|가스|수도|통신|기타","ym":"YYYY-MM","amount":숫자} 또는 null}
 규칙:
 - 스미싱·피싱 의심(모르는 번호가 링크만 보냄, 국제발신의 계정·연락처 등록/결제/택배 주소 확인 요구, 가족·지인 사칭, 단축 URL 클릭 유도 등)은 type:"주의", summary는 "스미싱 의심 — 링크 누르지 말 것"처럼 쓰고 reply는 반드시 빈칸.
 - 광고·홍보·단순 결제/배송완료 안내·스팸처럼 할 일이 없는 문자는 skip:true.
@@ -162,9 +162,12 @@ async function ibAskAI(list) {
   공지·보고형 대화방(모임·동호회·아파트·친목회 공지 등): 날짜가 있는 모임·행사·회비 납부는 schedule·due로, 참석 여부를 묻는 공지는 reply에 참석/불참 답 초안.
   축하·경조사 단체방: 승진·생일·출산·결혼·개업 소식이 처음 올라오면 type "경조사", gj에 당사자와 종류, reply에 정우설이 보낼 축하 한마디 초안(남들과 겹치지 않게 짧고 진심 있게). 부고는 위로 문구 초안과 빈소·발인 일정을 schedule에. 같은 소식에 이어지는 다른 사람들의 축하 메시지는 skip:true.
   인사·감탄·이모티콘·사진만 같은 잡담, 정우설과 상관없는 다른 사람끼리의 대화는 skip:true.
+- 위챗·회사 메신저 등 앱 메시지(대화방 표시 앞에 앱 이름): 업무 대화도 그대로 정리한다. 중국어 메시지는 summary를 한국어 번역으로 쓴다(뜻을 그대로, 보낸 사람 이름 포함).
+  점검·회의·보고 기한은 schedule·due로. 정우설에게 묻거나 요청하는 메시지에는 reply 초안을 받은 언어로 쓰고(중국어면 중국어, 직장 존댓말), 중국어 reply일 때만 reply_ko에 한국어 뜻을 쓴다.
+  단체방에서 다른 사람끼리 주고받는 업무 대화라도 공지·지시·일정·수치 보고처럼 알아 둘 내용이면 skip하지 않는다. 인사·"收到"·"好的"·"확인했습니다" 같은 짧은 응답은 skip:true.
 - 문자에 없는 내용은 지어내지 않는다.`;
     const who = s => s.name ? `${s.name}${s.number ? ' (연락처 등록됨)' : ''}` : (s.from || '알 수 없음');
-    const user = list.map((s, i) => `[${i}] ${s.kind === 'kakao' ? '카톡 · 대화방: ' + (s.room || '') + ' · ' : '문자 · '}보낸사람: ${who(s)} | 받은시각: ${new Date(s.ts).toLocaleString('ko-KR')}\n${s.raw}`).join('\n\n');
+    const user = list.map((s, i) => `[${i}] ${s.kind === 'kakao' ? '카톡 · 대화방: ' + (s.room || '') + ' · ' : s.kind === 'app' ? (s.app || '메신저') + ' · 대화방: ' + (s.room || '') + ' · ' : '문자 · '}보낸사람: ${who(s)} | 받은시각: ${new Date(s.ts).toLocaleString('ko-KR')}\n${s.raw}`).join('\n\n');
     const r = await famCallAI(sys, user, { maxTokens: 3000 });
     const m = String(r.text || '').match(/\[[\s\S]*\]/);
     return m ? JSON.parse(m[0]) : null;
@@ -197,6 +200,7 @@ function ibOpen() {
         history.pushState({ ib: 1 }, '', '');
     }
     ibRender();
+    ibTargetsLoad().then(() => { if (ibTargets.size) ibRender(); });
 }
 function ibClose() { const m = document.getElementById('ib-modal'); if (m) m.remove(); }
 const ibWon = n => (n < 0 ? '-' : '') + Math.abs(n).toLocaleString('ko-KR') + '원';
@@ -220,10 +224,10 @@ function ibRender() {
             const sc = s.schedule;
             return `<div class="ib-item">
             <div class="ib-row"><em class="ib-tag${s.type === '주의' ? ' warn' : ''}">${famEsc(s.type || '문자')}</em><span class="ib-name">${famEsc(s.summary || s.raw.slice(0, 60))}</span></div>
-            <div class="ib-sub">${s.kind === 'kakao' ? '카톡 · ' + famEsc(s.room && s.room !== s.from ? s.room + ' · ' : '') : ''}${famEsc(s.name || s.from || '')} · ${new Date(s.ts).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+            <div class="ib-sub">${s.kind === 'kakao' || s.kind === 'app' ? famEsc((s.kind === 'kakao' ? '카톡' : s.app || '메신저') + ' · ') + famEsc(s.room && s.room !== s.from ? s.room + ' · ' : '') : ''}${famEsc(s.name || s.from || '')} · ${new Date(s.ts).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
             <details class="ib-raw"><summary>원문</summary>${famEsc(s.raw)}</details>
             ${sc ? `<div class="ib-sch">${fi('calendar')}<span>${ibMD(sc.date)}${sc.time ? ' ' + famEsc(sc.time) : ''} ${famEsc(sc.title || '')}${sc.place ? ' · ' + famEsc(sc.place) : ''}</span><button class="fam-btn pri" onclick="ibSchOk('${s.id}')">일정 등록</button></div>` : ''}
-            ${s.reply ? `<textarea id="ibr-${s.id}" class="fam-in ib-reply" rows="2">${famEsc(s.reply)}</textarea>` : ''}
+            ${s.reply ? `<textarea id="ibr-${s.id}" class="fam-in ib-reply" rows="2">${famEsc(s.reply)}</textarea>${s.replyKo ? `<div class="ib-sub">뜻: ${famEsc(s.replyKo)}</div>` : ''}` : ''}
             ${s.gj ? (() => { const h = typeof fmGjFor === 'function' ? fmGjFor(s.gj.person + ' ' + (s.summary || '')) : []; return `<div class="ib-sch">${fi('book')}<span>${famEsc(s.gj.person)} ${famEsc(s.gj.event)}${h.length ? '<br><small class="ib-sub">지난 기록: ' + h.map(g => `${String(g.date).slice(0, 7)} ${g.event} ${g.dir} ${(+g.amt).toLocaleString('ko-KR')}원`).map(famEsc).join(' · ') + '</small>' : '<br><small class="ib-sub">주고받은 기록 없음</small>'}</span><button class="fam-btn pri" onclick="fmGjForm(null,{person:${JSON.stringify(s.gj.person).replace(/"/g, '&quot;')},event:${JSON.stringify(s.gj.event).replace(/"/g, '&quot;')}})">장부 기록</button></div>`; })() : ''}
             ${s.due ? `<div class="ib-sch">${fi('clock')}<span>${ibMD(s.due.date)}${s.due.time ? ' ' + famEsc(s.due.time) : ''} ${famEsc(s.due.kind)}${s.due.what ? ' · ' + famEsc(s.due.what) : ''}<br><small class="ib-sub">${famEsc(ibDueWhen(s.due).label)}</small></span><button class="fam-btn pri" onclick="ibDueOk('${s.id}')">알림 받기</button></div>` : ''}
             ${s.shop && s.shop.length ? `<div class="ib-sch">${fi('cart')}<span>장보기: ${s.shop.map(famEsc).join(', ')}</span><button class="fam-btn pri" onclick="ibShopOk('${s.id}')">장보기 추가</button></div>` : ''}
@@ -235,8 +239,21 @@ function ibRender() {
 const ibGet = id => ibItems.find(x => x.id === id);
 // 답장 보내기: 문자는 받은 번호로 문자 앱, 카톡은 카톡 친구 선택 화면으로 (전송은 직접)
 const ibReplyText = id => (document.getElementById('ibr-' + id) || {}).value || '';
+// 알림 답장 칸으로 바로 보낼 수 있는 방 (카톡·위챗 등, 최근 24시간 안에 메시지가 온 방)
+let ibTargets = new Set();
+async function ibTargetsLoad() { const N = ibN(); if (!N || !N.replyTargets) return; try { ibTargets = new Set(((await N.replyTargets()).items || []).map(t => t.pkg + '|' + t.room)); } catch (e) {} }
+const ibPkgOf = s => s.kind === 'kakao' ? 'com.kakao.talk' : s.pkg || '';
+async function ibDirect(id) {
+    const s = ibGet(id), text = ibReplyText(id).trim(); if (!s || !text) return;
+    const where = `${s.kind === 'kakao' ? '카톡' : s.app || '메신저'} '${s.room}'`;
+    if (!confirm(`${where}에 보낼까요?\n\n${text}`)) return;
+    const r = await ibN().replySend({ pkg: ibPkgOf(s), room: s.room, text }).catch(e => ({ sent: false, err: e.message }));
+    if (r.sent) { famToast(where + '에 보냈습니다'); ibSkip(id); } else famToast('보내지 못했습니다: ' + (r.err || ''));
+}
 function ibSendBtns(s) {
     const N = ibN(), b = [];
+    if (N && N.replySend && s.room && ibTargets.has(ibPkgOf(s) + '|' + s.room)) b.push(`<button class="fam-btn pri" onclick="ibDirect('${s.id}')">바로 보내기</button>`);
+    else if (s.kind === 'app' && s.pkg && N && N.openApp) b.push(`<button class="fam-btn" onclick="famCopy(ibReplyText('${s.id}'));ibN().openApp({pkg:'${s.pkg}'})">복사 후 ${famEsc(s.app || '앱')} 열기</button>`);
     if (s.number && N && N.smsTo) b.push(`<button class="fam-btn" onclick="ibN().smsTo({number:'${s.number}',text:ibReplyText('${s.id}')})">문자로</button>`);
     if (N && N.kakaoShare) b.push(`<button class="fam-btn" onclick="ibN().kakaoShare({text:ibReplyText('${s.id}')})">카톡으로</button>`);
     if (s.number && N && N.dial) b.push(`<button class="fam-btn" onclick="ibN().dial({number:'${s.number}'})">전화</button>`);
@@ -306,6 +323,7 @@ function ibSetHtml() {
         <div class="fam-note" style="margin:0 0 8px">카드 결제는 가계부 확인 대기로, 택배·예약 등은 요약·일정·답장 초안으로 올립니다. 인증번호 문자는 저장하지 않습니다.</div>
         <div id="ib-state" class="fs-perm">권한 확인 중…</div>
         ${ibN().kakaoRooms ? `<div class="fs-row"><div><b>카톡 받을 방</b><small id="ib-rooms">불러오는 중…</small></div><button class="fam-btn" onclick="ibRoomsOpen()">방 고르기</button></div>` : ''}
+        ${ibN().msgApps ? `<div class="fs-row"><div><b>알림 받을 앱</b><small>위챗·회사 메신저 등 · 본인 화면에만</small></div><button class="fam-btn" onclick="ibAppsOpen()">앱 고르기</button></div>` : ''}
         <div class="fs-row"><div><b>문자 안 받을 사람</b><small>${ibBlockList().length ? ibBlockList().length + '명 · 광고는 AI가 걸러냄' : '없음 · 광고는 AI가 걸러냄'}</small></div><button class="fam-btn" onclick="ibBlockOpen()">편집</button></div>
         ${typeof kkSetHtml === 'function' ? kkSetHtml() : ''}
         <div class="fs-row"><div><b>가계부에 넣을 카드</b><small>끝 4자리와 사용자 (예: 1089 정우설)</small></div></div>
@@ -377,6 +395,17 @@ async function ibRoomToggle(room, on) {
     on ? a.add(room) : a.delete(room); await N.setKakaoRooms({ rooms: [...a] }); famToast(on ? room + ' 받기' : room + ' 안 받기');
 }
 // ── 문자: 안 받을 번호·발신자 (이 폰에만 저장) ──
+// 알림 받을 앱 고르기: 최근 알림을 보낸 앱(이름만 기록) 중에서 체크 — 위챗은 처음부터 켜짐
+const IB_SKIP_PKGS = /^(com\.kakao\.talk|com\.samsung\.android\.messaging|com\.google\.android\.apps\.messaging|com\.android\.(mms|messaging|systemui|vending)|com\.seolyeon\.family|android)$/;
+async function ibAppsOpen() {
+    const N = ibN(); if (!N || !N.msgApps) return;
+    const r = await N.msgApps().catch(() => ({})), allow = new Set(r.allow || []), list = (r.seen || []).filter(a => !IB_SKIP_PKGS.test(a.pkg));
+    if (!list.some(a => a.pkg === 'com.tencent.mm')) list.unshift({ pkg: 'com.tencent.mm', label: r.wechat || '위챗' });
+    allow.forEach(p => { if (!list.some(a => a.pkg === p)) list.push({ pkg: p, label: p }); });
+    famSheet(`<div class="fam-h"><b>알림 받을 앱</b><button class="fam-x" onclick="famSheetClose()">✕</button></div>
+        <div class="fam-note" style="margin:0 0 8px">체크한 앱의 메시지 알림을 요약·번역하고 일정을 뽑습니다. 본인 화면에만 보입니다. 목록은 최근 알림을 보낸 앱입니다 (회사 메신저가 없으면 메시지가 한 번 온 뒤 다시 여세요).</div>
+        ${list.map(a => `<label class="fs-tog"><div><b>${famEsc(a.label || a.pkg)}</b><small>${famEsc(a.pkg)}</small></div><input type="checkbox" ${allow.has(a.pkg) ? 'checked' : ''} onchange="ibN().setMsgApp({pkg:'${famEsc(a.pkg)}',on:this.checked})"></label>`).join('')}`);
+}
 function ibBlockList() { return ibLS('ibBlock') || []; }
 function ibBlocked(s, blk) { const n = (s.number || '').replace(/[^\d]/g, ''); return blk.some(b => { const d = String(b).replace(/[^\d]/g, ''); return (d.length >= 4 && n && n.endsWith(d)) || (s.name && s.name === b) || (s.from && s.from === b); }); }
 function ibSendersNote(list) {

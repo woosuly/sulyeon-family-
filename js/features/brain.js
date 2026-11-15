@@ -37,6 +37,7 @@ function brSnapshot() {
 const brS = (props, req) => ({ type: 'object', properties: props, required: req || [] });
 const brStr = d => ({ type: 'string', description: d }), brNum = d => ({ type: 'number', description: d });
 const BR_TOOLS = [
+    { name: 'list_messages', description: '받은 카톡·문자·위챗·회사 메신저 메시지 정리본 (확인 대기 중인 것, 요약·번역 포함). "오늘 위챗 뭐 왔어?", "그린센터 방 소식" 등', params: brS({ app: brStr('선택: 카톡|문자|위챗|앱 이름'), room: brStr('선택: 대화방·보낸 사람 이름 일부') }, []) },
     { name: 'list_schedules', description: '기간 안의 가족 일정 조회', params: brS({ from: brStr('YYYY-MM-DD'), to: brStr('YYYY-MM-DD'), keyword: brStr('선택: 내용·장소 검색어') }, ['from', 'to']) },
     { name: 'free_days', description: '기간 안에서 일정이 없는 날·주말·공휴일 찾기 (여행·산행 날짜 고를 때)', params: brS({ from: brStr('YYYY-MM-DD'), to: brStr('YYYY-MM-DD') }, ['from', 'to']) },
     { name: 'query_ledger', description: '가계부 조회: 기간 합계, 분류별 합계, 큰 지출. keyword로 가맹점·내용 검색', params: brS({ from: brStr('YYYY-MM-DD'), to: brStr('YYYY-MM-DD'), type: brStr('지출|수입|전체'), keyword: brStr('선택'), member: brStr('정우설|한미연|공통|전체') }, ['from', 'to']) },
@@ -55,7 +56,7 @@ const BR_TOOLS = [
     { name: 'add_parcel', description: '택배 운송장 등록 (자동 조회·도착 알림)', params: brS({ invoice: brStr('운송장 번호'), company: brStr('택배사'), item: brStr('선택: 물건') }, ['invoice']) },
     { name: 'watch_flight', description: '항공권 가격 지켜보기 등록 (매주 확인·알림)', params: brS({ dest: brStr('도착 도시'), from: brStr('출발 공항, 기본 인천'), when: brStr('여행 시기'), nights: brNum('몇 박'), target: brNum('선택: 1인 왕복 목표가(원)') }, ['dest', 'when']) },
     { name: 'propose_ledger', description: '가계부 기록 확인 카드 띄우기 (사용자가 눌러야 저장)', params: brS({ text: brStr('예: 점심 김밥천국 12000 카드') }, ['text']) },
-    { name: 'draft_message', description: '가족 채팅·문자·카톡 보낼 말 초안 카드 (사용자가 눌러야 전송)', params: brS({ to: brStr('아내|남편|가족채팅|사람 이름'), text: brStr('보낼 내용') }, ['text']) },
+    { name: 'draft_message', description: '가족 채팅·문자·카톡·위챗 보낼 말 초안 카드 (사용자가 [보내기]를 눌러야 전송). 최근 메시지가 온 카톡방·위챗방이면 그 방으로 바로 보내는 버튼이 생김', params: brS({ to: brStr('아내|남편|가족채팅|사람 이름|대화방 이름'), text: brStr('보낼 내용 (받는 사람 언어로: 중국인이면 중국어)') }, ['text']) },
     { name: 'open_app', description: '화면·앱 열기: 길찾기, 음악, 영상, 택배, 산행기록, 항공권, 저축 화면 등', params: brS({ what: brStr('navigate|music|video|parcels|hikelog|flights|save|schedule|ledger|travel|map|kurly(컬리 담기 목록, 장보기에 먼저 add_shopping)|baemin(배민 앱, arg에 메뉴)'), arg: brStr('목적지·검색어 등') }, ['what']) },
 ];
 
@@ -65,6 +66,14 @@ async function brRun(name, a) {
     a = a || {};
     const me = famUser() || '정우설';
     switch (name) {
+        case 'list_messages': {
+            const ap = String(a.app || ''), rm = String(a.room || '');
+            const L = (brG('ibItems') || []).filter(x => x.status === 'pending' && x.kind !== 'card').filter(x => {
+                const appName = x.kind === 'kakao' ? '카톡' : x.kind === 'app' ? (x.app || '') : '문자';
+                return (!ap || appName.includes(ap) || ap.includes(appName)) && (!rm || [x.room, x.name, x.from].some(v => String(v || '').includes(rm)));
+            }).sort((p, q) => q.ts - p.ts).slice(0, 30);
+            return { count: L.length, items: L.map(x => ({ app: x.kind === 'kakao' ? '카톡' : x.kind === 'app' ? x.app : '문자', room: x.room || '', from: x.name || x.from || '', at: new Date(x.ts).toLocaleString('ko-KR'), type: x.type, summary: x.summary, schedule: x.schedule || null, reply_draft: x.reply || '' })) };
+        }
         case 'list_schedules': {
             const k = (a.keyword || '').toLowerCase();
             const r = (brG('schData') || []).filter(s => s.date >= a.from && s.date <= a.to && (!k || String(s.memo + ' ' + (s.place || '')).toLowerCase().includes(k)))
@@ -207,10 +216,26 @@ async function brRun(name, a) {
 let brUi = [], brSrc = [];
 
 // 메시지 초안: 가족 채팅은 확인 후 전송, 그 밖엔 카톡·문자로 넘기기
-function brDraftCard(to, text) {
+// 받는 사람과 이름이 맞는 카톡·위챗 방 (최근 24시간 안에 메시지가 와서 알림 답장 칸이 있는 방)
+async function brTargetFor(to) {
+    const N = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.SeolyeonNative; if (!to || !N || !N.replyTargets) return null;
+    const k = s => String(s || '').replace(/[\s·.,()\[\]]/g, '').toLowerCase(), t = k(to).replace(/(님|씨|한테|에게|방)$/, '');
+    if (!t) return null;
+    const list = ((await N.replyTargets().catch(() => ({}))).items || []);
+    return list.find(x => k(x.room) === t) || list.find(x => k(x.room).includes(t) || t.includes(k(x.room))) || null;
+}
+async function brDirectSend(id, pkg, room, btn) {
+    const text = document.getElementById(id).value.trim(); if (!text) return;
+    btn.disabled = true;
+    const r = await Capacitor.Plugins.SeolyeonNative.replySend({ pkg, room, text }).catch(e => ({ sent: false, err: e.message }));
+    if (r.sent) { famToast(`'${room}'에 보냈습니다`); btn.closest('.ff-card') && btn.closest('.ff-card').remove(); }
+    else { btn.disabled = false; famToast('보내지 못했습니다: ' + (r.err || '')); }
+}
+async function brDraftCard(to, text) {
     const fam = !to || /(아내|남편|여보|가족|채팅|미연|우설)/.test(to), id = 'dm' + Date.now();
-    famFeedAdd(`<h5>✉️ ${famEsc(to || '가족 채팅')}에게 보낼 초안</h5><textarea id="${id}" class="fam-in" rows="3" style="width:100%">${famEsc(text)}</textarea>
-        <div class="fam-btns">${fam ? `<button class="fam-btn pri" onclick="famChatSend(document.getElementById('${id}').value);this.closest('.ff-card').remove()">가족 채팅으로 보내기</button>` : ''}
+    const tg = fam ? null : await brTargetFor(to);
+    famFeedAdd(`<h5>✉️ ${famEsc(tg ? `${tg.app} '${tg.room}'` : to || '가족 채팅')}에게 보낼 초안</h5><textarea id="${id}" class="fam-in" rows="3" style="width:100%">${famEsc(text)}</textarea>
+        <div class="fam-btns">${tg ? `<button class="fam-btn pri" onclick="brDirectSend('${id}',${JSON.stringify(tg.pkg).replace(/"/g, '&quot;')},${JSON.stringify(tg.room).replace(/"/g, '&quot;')},this)">${famEsc(tg.app)}로 보내기</button>` : ''}${fam ? `<button class="fam-btn pri" onclick="famChatSend(document.getElementById('${id}').value);this.closest('.ff-card').remove()">가족 채팅으로 보내기</button>` : ''}
         <button class="fam-btn" onclick="(window.Capacitor&&Capacitor.Plugins.SeolyeonNative&&Capacitor.Plugins.SeolyeonNative.kakaoShare?Capacitor.Plugins.SeolyeonNative.kakaoShare({text:document.getElementById('${id}').value}):famShare(document.getElementById('${id}').value))">카톡으로</button>
         <button class="fam-btn" onclick="brCopy(document.getElementById('${id}').value)">복사</button></div>`);
 }
