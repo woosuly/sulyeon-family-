@@ -1,0 +1,45 @@
+# 자동 점검 → 통과하면 웹(GitHub Pages) 배포
+#   점검: tests/smoke.mjs (가짜 Firebase·가짜 안드로이드로 앱을 띄워 홈 입력·음성·메시지·위젯·화면 전환 등을 돌려 봄)
+#   점검이 실패하면 배포하지 않음 → 휴대폰 앱 화면은 마지막으로 통과한 버전 그대로
+#   (저장소 Settings → Pages → Source 를 'GitHub Actions'로 해 두어야 이 배포가 실제로 쓰임)
+name: 점검·웹 배포
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore: ['android-app/**', 'functions/**', '.github/workflows/apk.yml']
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: 점검 도구 설치
+        run: mkdir -p /tmp/pw && cd /tmp/pw && npm init -y >/dev/null && npm i playwright@1.63.0 && npx playwright install --with-deps chromium
+      - name: 자동 점검
+        run: NODE_PATH=/tmp/pw/node_modules node tests/smoke.mjs
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.d.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: 웹 파일 모으기
+        run: mkdir _site && cp -r index.html sw.js manifest.json icon-192.png icon-512.png css js _site/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: d
+        uses: actions/deploy-pages@v4
