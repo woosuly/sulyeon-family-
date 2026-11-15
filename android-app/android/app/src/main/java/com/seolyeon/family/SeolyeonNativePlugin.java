@@ -44,7 +44,8 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 /** 알림이 잘 오도록 휴대폰 설정 화면을 열어 주는 기능 */
 @CapacitorPlugin(name = "SeolyeonNative",
     permissions = { @Permission(alias = "sms", strings = { Manifest.permission.READ_SMS }),
-                    @Permission(alias = "contacts", strings = { Manifest.permission.READ_CONTACTS }) })
+                    @Permission(alias = "contacts", strings = { Manifest.permission.READ_CONTACTS }),
+                    @Permission(alias = "calendar", strings = { Manifest.permission.READ_CALENDAR }) })
 public class SeolyeonNativePlugin extends Plugin {
     private static SeolyeonNativePlugin instance;
     private static String pendK = null, pendId = null;
@@ -369,6 +370,65 @@ public class SeolyeonNativePlugin extends Plugin {
     }
 
     // ═══ 연락처 · 전화 · 문자 · 카톡 보내기 ═══
+
+    // ═══ 폰 캘린더 (삼성·구글 등 폰에 연결된 모든 캘린더) 읽기 ═══
+    /** {ask} → {granted, calendars:[{id,name,account,type,color}]} */
+    @PluginMethod
+    public void calList(PluginCall call) {
+        if (getPermissionState("calendar") != PermissionState.GRANTED) {
+            if (Boolean.TRUE.equals(call.getBoolean("ask", false))) requestPermissionForAlias("calendar", call, "calPermCb");
+            else { JSObject r = new JSObject(); r.put("granted", false); call.resolve(r); }
+            return;
+        }
+        doCalList(call);
+    }
+    @PermissionCallback
+    private void calPermCb(PluginCall call) {
+        if (getPermissionState("calendar") == PermissionState.GRANTED) doCalList(call);
+        else { JSObject r = new JSObject(); r.put("granted", false); call.resolve(r); }
+    }
+    private void doCalList(PluginCall call) {
+        JSArray out = new JSArray();
+        String[] p = { android.provider.CalendarContract.Calendars._ID, android.provider.CalendarContract.Calendars.CALENDAR_DISPLAY_NAME,
+            android.provider.CalendarContract.Calendars.ACCOUNT_NAME, android.provider.CalendarContract.Calendars.ACCOUNT_TYPE,
+            android.provider.CalendarContract.Calendars.CALENDAR_COLOR, android.provider.CalendarContract.Calendars.VISIBLE };
+        try (Cursor c = getContext().getContentResolver().query(android.provider.CalendarContract.Calendars.CONTENT_URI, p, null, null, null)) {
+            while (c != null && c.moveToNext()) {
+                JSObject o = new JSObject();
+                o.put("id", c.getLong(0)); o.put("name", c.getString(1)); o.put("account", c.getString(2)); o.put("type", c.getString(3));
+                o.put("color", String.format("#%06X", 0xFFFFFF & c.getInt(4))); o.put("visible", c.getInt(5) == 1);
+                out.put(o);
+            }
+        } catch (Exception e) { call.reject(e.getMessage()); return; }
+        JSObject r = new JSObject(); r.put("granted", true); r.put("calendars", out); call.resolve(r);
+    }
+    /** {from, to (ms), ids:[캘린더 id]} → {events:[{key, eid, cal, title, start, end, allDay, loc}]} 반복 일정은 날짜별로 펼침 */
+    @PluginMethod
+    public void calEvents(PluginCall call) {
+        if (getPermissionState("calendar") != PermissionState.GRANTED) { call.reject("no-permission"); return; }
+        long from = call.getLong("from", System.currentTimeMillis()), to = call.getLong("to", from + 180L * 86400000L);
+        java.util.Set<String> ids = new java.util.HashSet<>();
+        try { JSArray a = call.getArray("ids", new JSArray()); for (int i = 0; i < a.length(); i++) ids.add(String.valueOf(a.get(i))); } catch (Exception ignored) { }
+        android.net.Uri.Builder b = android.provider.CalendarContract.Instances.CONTENT_URI.buildUpon();
+        android.content.ContentUris.appendId(b, from); android.content.ContentUris.appendId(b, to);
+        String[] p = { android.provider.CalendarContract.Instances.EVENT_ID, android.provider.CalendarContract.Instances.CALENDAR_ID,
+            android.provider.CalendarContract.Instances.TITLE, android.provider.CalendarContract.Instances.BEGIN, android.provider.CalendarContract.Instances.END,
+            android.provider.CalendarContract.Instances.ALL_DAY, android.provider.CalendarContract.Instances.EVENT_LOCATION,
+            android.provider.CalendarContract.Instances.STATUS };
+        JSArray out = new JSArray();
+        try (Cursor c = getContext().getContentResolver().query(b.build(), p, null, null, android.provider.CalendarContract.Instances.BEGIN + " ASC")) {
+            while (c != null && c.moveToNext() && out.length() < 1500) {
+                String cal = String.valueOf(c.getLong(1));
+                if (!ids.isEmpty() && !ids.contains(cal)) continue;
+                if (c.getInt(7) == android.provider.CalendarContract.Instances.STATUS_CANCELED) continue;
+                JSObject o = new JSObject();
+                o.put("eid", c.getLong(0)); o.put("cal", cal); o.put("title", c.getString(2)); o.put("start", c.getLong(3)); o.put("end", c.getLong(4));
+                o.put("allDay", c.getInt(5) == 1); o.put("loc", c.getString(6)); o.put("key", c.getLong(0) + "_" + c.getLong(3));
+                out.put(o);
+            }
+        } catch (Exception e) { call.reject(e.getMessage()); return; }
+        JSObject r = new JSObject(); r.put("events", out); call.resolve(r);
+    }
 
     /** 번호들을 연락처 이름으로 바꿈 {numbers:[...]} → {names:{번호:이름}} (ask:true면 권한 요청) */
     @PluginMethod

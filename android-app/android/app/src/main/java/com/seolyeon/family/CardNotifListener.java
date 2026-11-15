@@ -22,6 +22,10 @@ public class CardNotifListener extends NotificationListenerService {
             "com.samsung.android.messaging", "com.google.android.apps.messaging",
             "com.android.mms", "com.android.messaging");
 
+    /** 네이버 앱 (예약 알림이 오는 곳) */
+    private static final List<String> NAVER_APPS = Arrays.asList(
+            "com.nhn.android.search", "com.nhn.android.nmap", "com.nhn.android.calendar", "com.naver.booking");
+
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
         try {
@@ -45,6 +49,17 @@ public class CardNotifListener extends NotificationListenerService {
                 if (m instanceof Bundle) addCs(texts, ((Bundle) m).getCharSequence("text"));
             }
 
+            // 네이버(앱·지도·캘린더) 예약 확정·변경·취소 알림 → 비서가 일정 후보로 정리
+            if (NAVER_APPS.contains(sbn.getPackageName())) {
+                StringBuilder all = new StringBuilder(from);
+                for (String t : texts) all.append(' ').append(t);
+                String t = all.toString();
+                if (t.contains("예약") && t.matches("(?s).*(확정|완료|접수|변경|취소|방문|이용일|일시).*") && !CardQueue.isSecret(t)) {
+                    CardQueue.add(this, "[네이버 예약] " + t, sbn.getPostTime(), "네이버", "sms");
+                    KakaoAsk.notifyInbox(this, "네이버 예약", "네이버 예약", t);
+                }
+                return;
+            }
             // 카톡: 허용한 대화방, 또는 1:1 대화의 예약·택배 같은 알림톡만 받음
             if ("com.kakao.talk".equals(sbn.getPackageName())) {
                 CharSequence sub = x.getCharSequence(Notification.EXTRA_SUB_TEXT);
