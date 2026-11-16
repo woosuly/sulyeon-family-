@@ -55,6 +55,9 @@ async function boot(browser, native) {
         if (u.host === 'www.gstatic.com' && u.pathname.includes('firebase-app-compat')) return r.fulfill({ status: 200, contentType: 'application/javascript', body: readFileSync(join(ROOT, 'tests/mock-firebase.js')) });
         if (u.host === 'www.gstatic.com') return r.fulfill({ status: 200, contentType: 'application/javascript', body: '' });
         if (u.pathname.includes('chart')) return r.fulfill({ status: 200, contentType: 'application/javascript', body: 'window.Chart=function(){return{destroy(){},update(){},data:{datasets:[]},options:{}}};window.Chart.register=function(){};' });
+        // 지오코딩 가짜 응답: 다낭(도시) / 홍천 비발디파크(장소)
+        if (u.host.startsWith('geocoding-api')) { const n = u.searchParams.get('name') || ''; return r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ results: /da nang|다낭/i.test(n) ? [{ name: '다낭', latitude: 16.07, longitude: 108.22, country_code: 'VN', country: '베트남', admin1: '다낭', population: 750000 }] : /hongcheon|홍천/i.test(n) ? [{ name: '홍천군', latitude: 37.69, longitude: 127.88, country_code: 'KR', country: '대한민국', admin1: '강원도', population: 70000 }] : [] }) }); }
+        if (u.host.startsWith('nominatim')) { const q = u.searchParams.get('q') || ''; return r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify(/비발디/.test(q) ? [{ lat: '37.65', lon: '127.68', display_name: '비발디파크, 홍천군, 강원특별자치도, 대한민국', address: { country_code: 'kr', country: '대한민국', state: '강원특별자치도', county: '홍천군' } }] : /다낭/.test(q) ? [{ lat: '35.1', lon: '129.0', display_name: '다낭식당, 부산, 대한민국', address: { country_code: 'kr', country: '대한민국', city: '부산' } }] : []) }); }
         if (u.host.includes('open-meteo')) return r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ current_weather: { temperature: 11, weathercode: 0, is_day: 1, windspeed: 3 }, current: { temperature_2m: 11, weather_code: 0, is_day: 1 }, hourly: { time: [], temperature_2m: [], weathercode: [], precipitation_probability: [] }, daily: { time: [], weathercode: [], temperature_2m_max: [], temperature_2m_min: [], sunrise: [], sunset: [] } }) });
         if (r.request().resourceType() === 'image' || r.request().resourceType() === 'font' || r.request().resourceType() === 'stylesheet') return r.abort();
         return r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: '{}' });
@@ -126,6 +129,16 @@ try {
     await test('여행 노트: 출장(해외 포함)은 💼 출장으로 따로', async () => {
         const r = await page.evaluate(() => ({ k: mapKind({ subType: '출장', mType: '해외' }), f: MAP_KIND.some(x => x[0] === '출장'), c: !!MAP_COLOR['출장'], ic: getTypeIcon('출장') }));
         eq(r, { k: '출장', f: true, c: true, ic: '💼' });
+    });
+    await test('여행 노트 위치: AI 정리 → 도시 좌표 (해외는 엉뚱한 국내 가게로 안 감)', async () => {
+        const r = await page.evaluate(async () => {
+            const ai = window.famCallAI;
+            window.famCallAI = async (sys, user) => ({ text: /\|다낭 가족여행/.test(user) ? '[{"i":0,"place":"","city":"Da Nang","cityKo":"다낭","cc":"vn"}]' : '[{"i":0,"place":"비발디파크","city":"Hongcheon","cityKo":"홍천","cc":"kr"}]' });
+            const a = await mapGeocode('다낭 가족여행 3박', false), b = await mapGeocode('홍천 비발디 캠핑', true);
+            window.famCallAI = ai; return { a, b };
+        });
+        eq([r.a.cc, r.a.city, Math.round(r.a.lat)], ['vn', '다낭', 16], '다낭');
+        eq([r.b.cc, r.b.sido, r.b.city, Math.round(r.b.lng * 10)], ['kr', '강원', '홍천', 1277], '홍천 비발디파크');
     });
     await test('비서 도구: 일정 추가 → 저장됨', async () => {
         const r = await page.evaluate(async () => { const before = Object.keys(window.__db).filter(k => k.startsWith('schedules/')).length; const x = await brRun('add_schedule', { date: '2026-12-23', end_date: '2026-12-27', memo: '시험 제주 여행', member: '공통' }); return { x, n: Object.keys(window.__db).filter(k => k.startsWith('schedules/')).length - before }; });
