@@ -123,6 +123,10 @@ try {
         eq(r, 'famSchCard');
     });
     await unspy();
+    await test('여행 노트: 출장(해외 포함)은 💼 출장으로 따로', async () => {
+        const r = await page.evaluate(() => ({ k: mapKind({ subType: '출장', mType: '해외' }), f: MAP_KIND.some(x => x[0] === '출장'), c: !!MAP_COLOR['출장'], ic: getTypeIcon('출장') }));
+        eq(r, { k: '출장', f: true, c: true, ic: '💼' });
+    });
     await test('비서 도구: 일정 추가 → 저장됨', async () => {
         const r = await page.evaluate(async () => { const before = Object.keys(window.__db).filter(k => k.startsWith('schedules/')).length; const x = await brRun('add_schedule', { date: '2026-12-23', end_date: '2026-12-27', memo: '시험 제주 여행', member: '공통' }); return { x, n: Object.keys(window.__db).filter(k => k.startsWith('schedules/')).length - before }; });
         ok(r.n >= 1, '일정 문서가 생기지 않음 ' + JSON.stringify(r.x));

@@ -6,9 +6,9 @@
 //   travelRecs/{YYYY-MM}: items[], at, by, ai  (이달의 추천, 한 달에 한 번 만들어 두 폰이 같이 봄)
 // ═══════════════════════════════════════════════════════════
 const MAP_LIB = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/';
-const MAP_KIND = [['all', '전체'], ['여행', '✈️ 여행'], ['캠핑', '⛺ 캠핑'], ['등산', '⛰️ 등산'], ['기타', '📌 기타'], ['wish', '⭐ 가볼 곳']];
-const mapKind = p => ['여행', '캠핑', '등산'].includes(p.subType) ? p.subType : '기타';
-const MAP_COLOR = { 여행: '#2563eb', 캠핑: '#16a34a', 등산: '#a16207', 기타: '#64748b', wish: '#f59e0b' };
+const MAP_KIND = [['all', '전체'], ['여행', '✈️ 여행'], ['캠핑', '⛺ 캠핑'], ['등산', '⛰️ 등산'], ['출장', '💼 출장'], ['기타', '📌 기타'], ['wish', '⭐ 가볼 곳']];
+const mapKind = p => ['여행', '캠핑', '등산', '출장'].includes(p.subType) ? p.subType : '기타';   // 출장(국내·해외)은 💼 보라색 핀으로 따로
+const MAP_COLOR = { 여행: '#2563eb', 캠핑: '#16a34a', 등산: '#a16207', 출장: '#7c3aed', 기타: '#64748b', wish: '#f59e0b' };
 const SIDO = [['서울', /서울/], ['부산', /부산/], ['대구', /대구/], ['인천', /인천/], ['광주', /광주광역/], ['대전', /대전/], ['울산', /울산/], ['세종', /세종/], ['경기', /경기/], ['강원', /강원/],
     ['충북', /충청북|충북/], ['충남', /충청남|충남/], ['전북', /전라북|전북/], ['전남', /전라남|전남/], ['경북', /경상북|경북/], ['경남', /경상남|경남/], ['제주', /제주/]];
 // 시·도 타일 배치 (실제 위치를 대략 따름)
@@ -173,7 +173,8 @@ function statRender(fill) {
     const sido = {}; withCc.filter(x => x.geo.cc === 'kr' && x.geo.sido).forEach(x => { sido[x.geo.sido] = (sido[x.geo.sido] || 0) + 1; });
     const cities = new Set(withCc.map(x => x.geo.cc + '|' + (x.geo.city || x.name)));
     const plans = v.filter(x => x.src === 'plan').map(x => x.obj), nights = p => Math.max(0, Math.round((new Date((p.end || p.start) + 'T00:00:00') - new Date(p.start + 'T00:00:00')) / 864e5));
-    const days = plans.reduce((a, p) => a + nights(p) + 1, 0), camp = plans.filter(p => p.subType === '캠핑').reduce((a, p) => a + Math.max(1, nights(p)), 0);
+    const trip = plans.filter(p => p.subType !== '출장'), biz = plans.filter(p => p.subType === '출장');
+    const days = trip.reduce((a, p) => a + nights(p) + 1, 0), bizDays = biz.reduce((a, p) => a + nights(p) + 1, 0), camp = plans.filter(p => p.subType === '캠핑').reduce((a, p) => a + Math.max(1, nights(p)), 0);
     const hl = (typeof hikeLogs !== 'undefined' ? hikeLogs : []);
     const hikes = hl.filter(h => mapF.year === 'all' || String(h.date).startsWith(mapF.year)).length + plans.filter(p => p.subType === '등산' && !hl.some(h => h.planId === p.id)).length;
     const abroad = Object.keys(ctry).filter(c => c !== 'kr'), sidoN = Object.keys(sido).length;
@@ -187,7 +188,8 @@ function statRender(fill) {
             <div><b>${sidoN}<small>/17</small></b><span>국내 시·도</span></div>
             <div><b>${days}<small>일</small></b><span>여행·여가 일수</span></div>
             <div><b>${camp}<small>박</small></b><span>캠핑</span></div>
-            <div><b>${hikes}<small>회</small></b><span>산행</span></div></div>
+            <div><b>${hikes}<small>회</small></b><span>산행</span></div>${biz.length ? `
+            <div><b>${biz.length}<small>회</small></b><span>출장 ${bizDays}일</span></div>` : ''}</div>
         <div class="map-st" id="stat-st"></div>
         <div class="st-sec"><h5>국내 시·도 <small>${sidoN}곳 다녀옴</small></h5>
             <div class="sido-grid">${Object.entries(SIDO_GRID).map(([s, [c, r]]) => `<div class="sido ${sido[s] ? 'on' : ''}" style="grid-column:${c};grid-row:${r}">${s}${sido[s] ? `<i>${sido[s]}</i>` : ''}</div>`).join('')}</div>
