@@ -135,3 +135,23 @@ document.addEventListener('DOMContentLoaded', () => {
     famSwipe(document.getElementById('asset-cal-grid'), d => typeof assetCalNavigate === 'function' && assetCalNavigate(d));
 });
 
+
+// ── 앱 안 알림음·진동: 휴대폰 소리 모드를 따름 ──
+//   앱 안에서 내는 소리(웹 오디오)는 미디어 소리로 나가서 휴대폰을 진동·무음으로 해도 울림 → 소리 모드를 물어보고 결정
+//   안드로이드 앱: 소리 모드일 때만 '딩동', 진동이면 진동만, 무음이면 아무것도 안 함 (예전 앱은 소리 없이 진동만)
+//   브라우저(PWA)는 소리 모드를 알 수 없어 예전처럼 소리 + 진동
+async function famChime() {
+    const C = window.Capacitor, N = C && C.Plugins && C.Plugins.SeolyeonNative, native = !!(C && C.isNativePlatform && C.isNativePlatform());
+    let mode = native ? 1 : 2;
+    if (native && N && N.ringerMode) { try { mode = (await N.ringerMode()).mode; } catch (e) {} }
+    if (mode >= 1) { try { if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]); } catch (e) {} }
+    if (mode < 2) return mode;
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)(), osc = ctx.createOscillator(), gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.setValueAtTime(880, ctx.currentTime); osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+        osc.start(); osc.stop(ctx.currentTime + 0.5);
+    } catch (e) {}
+    return mode;
+}

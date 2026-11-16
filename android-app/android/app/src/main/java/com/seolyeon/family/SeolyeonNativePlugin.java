@@ -513,6 +513,13 @@ public class SeolyeonNativePlugin extends Plugin {
         } catch (Exception e) { call.reject(String.valueOf(e.getMessage())); }
     }
 
+    /** 휴대폰 소리 모드 {mode: 0 무음, 1 진동, 2 소리} — 앱 안 알림음을 휴대폰 설정에 맞추려고 */
+    @PluginMethod
+    public void ringerMode(PluginCall call) {
+        android.media.AudioManager am = (android.media.AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
+        JSObject r = new JSObject(); r.put("mode", am == null ? 2 : am.getRingerMode()); call.resolve(r);
+    }
+
     /** 전화 앱에 번호를 넣어 열기 (통화는 직접 누름) */
     @PluginMethod
     public void dial(PluginCall call) {

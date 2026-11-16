@@ -30,7 +30,7 @@ const NATIVE = `(() => {
     replyTargets: () => ({ items: window.__targets }), replySend: () => ({ sent: true }), takeLaunchPush: () => ({}),
     cardState: () => ({}), lookupContacts: () => ({ names: {} }), apkInfo: () => ({ version: '1.37' }),
     findContact: a => ({ items: (a.names || []).includes('wife') ? [{ name: 'wife', number: '010-1234-5678', q: 'wife' }] : (a.names || []).includes('장모님') ? [{ name: '장모님', number: '010-2222-3333', q: '장모님' }] : [] }),
-    callNumber: () => ({ direct: true })
+    callNumber: () => ({ direct: true }), ringerMode: () => ({ mode: window.__ringer == null ? 2 : window.__ringer })
   };
   const mk = name => new Proxy({}, { get: (t, k) => {
     if (typeof k === 'symbol' || k === 'then' || k === 'toJSON') return undefined;
@@ -195,6 +195,15 @@ try {
         ok(r.includes('이번 달 지출 120만 원'), '팝업 내용 ' + r);
         await page.evaluate(() => { vaHide(); famAnswerHook('x', '손으로 친 요청'); });
         ok(await page.evaluate(() => document.getElementById('va-pop').style.display !== 'flex'), '말로 묻지 않았는데 팝업이 뜸');
+    });
+    await test('알림음: 휴대폰이 진동·무음이면 소리 안 냄', async () => {
+        const r = await page.evaluate(async () => {
+            let n = 0; const AC = window.AudioContext; window.AudioContext = function () { n++; return new AC(); };
+            const out = {};
+            for (const m of [0, 1, 2]) { window.__ringer = m; n = 0; await famChime(); out[m] = n; }
+            window.AudioContext = AC; return out;
+        });
+        eq(r, { 0: 0, 1: 0, 2: 1 }, '모드별 소리 횟수');
     });
     await test('위젯: 데이터 보내기', async () => {
         await page.evaluate(() => { window.__nativeCalls.length = 0; wgPush(true); });

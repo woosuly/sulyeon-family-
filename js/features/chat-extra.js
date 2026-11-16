@@ -367,21 +367,8 @@
             // 권한 최신 확인
             chatNotifPermission = ('Notification' in window) && Notification.permission === 'granted';
 
-            // ① 진동 (기기 설정 따름)
-            try { if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]); } catch(e) {}
-
-            // ② 알림음 (기기 소리 설정 따름)
-            try {
-                const ctx  = new (window.AudioContext || window.webkitAudioContext)();
-                const osc  = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain); gain.connect(ctx.destination);
-                osc.frequency.setValueAtTime(880, ctx.currentTime);
-                osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.1);
-                gain.gain.setValueAtTime(0.3, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-                osc.start(); osc.stop(ctx.currentTime + 0.5);
-            } catch(e) {}
+            // ① ② 진동·알림음: 휴대폰 소리 모드(소리·진동·무음)를 따름 (ui.js famChime)
+            famChime();
 
             // ③ 앱 내 토스트 팝업
             showChatToast(msg, sender);
