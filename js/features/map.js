@@ -19,6 +19,50 @@ let wishes = [], wishUnsub = null, recDoc = null, recBusy = false;
 const mapNoGeo = new Set();   // 이번에 못 찾은 곳 (같은 곳을 반복 검색하지 않음)
 const flag = cc => cc && cc.length === 2 ? String.fromCodePoint(...[...cc.toUpperCase()].map(c => 0x1F1A5 + c.charCodeAt(0))) : '🏳️';
 
+// ── 구글 지도: 설정한 키가 있으면 지도·위성·지형 화면과 위치 찾기를 구글로 (키는 가족 공유 config/aiShared.gmaps) ──
+//   키 제한(필수): 웹사이트 woosuly.github.io/* 에서만, API는 Maps JavaScript·Geocoding만, 하루 한도 설정 → 무료 범위를 넘지 않게
+const gmKey = () => (typeof famKeys === 'function' && famKeys().gmaps) || '';
+let gmMarkers = [], gmInfo = null, gmGeocoder = null;
+function gmLoad() {
+    if (window.google && google.maps && google.maps.Map) return Promise.resolve();
+    if (gmLoad._p) return gmLoad._p;
+    gmLoad._p = new Promise((ok, no) => {
+        window.__gmReady = () => ok();
+        window.gm_authFailure = () => { famToast('구글 지도 키가 맞지 않거나 이 주소에서 쓸 수 없게 막혀 있습니다'); };
+        const sc = document.createElement('script');
+        sc.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(gmKey())}&language=ko&region=KR&callback=__gmReady`;
+        sc.async = true; sc.onerror = () => { gmLoad._p = null; no(new Error('구글 지도를 불러오지 못했습니다 (키·인터넷 확인)')); };
+        document.head.appendChild(sc);
+    });
+    return gmLoad._p;
+}
+// 구글 결과 → {lat,lng,cc,country,sido,city,label}
+function gmParse(r) {
+    const c = (t, short) => { const x = (r.address_components || []).find(a => a.types.includes(t)); return x ? (short ? x.short_name : x.long_name) : ''; };
+    const cc = c('country', true).toLowerCase(), adm1 = c('administrative_area_level_1'), loc = c('locality') || c('administrative_area_level_2') || c('sublocality_level_1') || adm1;
+    const ll = r.geometry.location;
+    return { lat: ll.lat(), lng: ll.lng(), cc, country: c('country'), sido: mapSido(cc, adm1 + ' ' + r.formatted_address), city: loc, label: r.formatted_address };
+}
+async function gmFind(q, cc, n) {   // 구글 위치 후보 (cc: 나라 제한)
+    await gmLoad(); gmGeocoder = gmGeocoder || new google.maps.Geocoder();
+    try { const { results } = await gmGeocoder.geocode({ address: q, ...(cc ? { componentRestrictions: { country: cc } } : {}), language: 'ko' }); return (results || []).slice(0, n || 1).map(gmParse); }
+    catch (e) { return []; }
+}
+async function gmReverse(ll) {
+    await gmLoad(); gmGeocoder = gmGeocoder || new google.maps.Geocoder();
+    try { const { results } = await gmGeocoder.geocode({ location: ll, language: 'ko' }); return results && results[0] ? gmParse(results[0]) : null; } catch (e) { return null; }
+}
+function gmKeyForm() {
+    const el = document.getElementById('map-gkey'); if (!el) return;
+    el.style.display = 'block';
+    el.innerHTML = `<div class="fam-note" style="margin:0 0 6px">구글 지도 키를 넣으면 <b>지도·위성·지형</b> 화면과 <b>정확한 위치 찾기</b>를 구글로 합니다. 키 만드는 방법은 설연에게 물어보세요.</div>
+        <div style="display:flex;gap:6px"><input id="map-gkey-in" class="fam-in" style="flex:1;-webkit-text-security:disc" placeholder="AIza…" autocomplete="off" value="${famEsc(gmKey())}"><button class="fam-btn pri" onclick="gmKeySave()">저장</button></div>`;
+}
+function gmKeySave() {
+    const v = (document.getElementById('map-gkey-in') || {}).value || '';
+    famSetKey('gmaps', v.trim()); famToast(v.trim() ? '저장했습니다. 지도를 다시 엽니다' : '키를 지웠습니다');
+    gmLoad._p = null; setTimeout(() => mapOpen('map'), 900);
+}
 function mapLoadLib() {
     if (window.L) return Promise.resolve();
     return new Promise((ok, no) => {
@@ -69,6 +113,11 @@ async function mapOsm(q, kr, n) {   // OSM 장소 후보
 }
 const mapSido = (cc, txt) => cc === 'kr' ? (SIDO.find(([, re]) => re.test(txt || '')) || [''])[0] : '';
 async function mapResolve(q, kr, nm) {
+    if (gmKey()) {   // 구글: AI가 정리한 '장소, 도시'로 나라를 제한해서 찾고, 없으면 도시, 그래도 없으면 제목 그대로
+        const cc = nm && nm.cc ? nm.cc : kr ? 'kr' : '';
+        const qs = [nm && nm.place ? `${nm.place}, ${nm.cityKo || nm.city}` : '', nm ? nm.cityKo || nm.city : '', nm ? nm.city : '', q.replace(MAP_TRIM, '')].map(x => String(x || '').trim()).filter((x, i, a) => x && a.indexOf(x) === i);
+        for (const t of qs) { const g = (await gmFind(t, cc, 1))[0]; if (g) { delete g.label; return { ...g, city: (nm && nm.cityKo) || g.city, q, v: 3 }; } }
+    }
     if (nm && nm.city) {
         const cs = (await mapCity(nm.city, nm.cc)).concat(nm.cityKo && nm.cityKo !== nm.city ? await mapCity(nm.cityKo, nm.cc) : []);
         const c = cs.sort((a, b) => b.pop - a.pop)[0];
@@ -88,6 +137,7 @@ async function mapResolve(q, kr, nm) {
 }
 async function mapGeocode(q, kr) { const nm = (await mapNorm([{ k: 'q', text: q, kr }])).q; return mapResolve(q, kr, nm); }
 async function mapReverse(g) {
+    if (gmKey()) { const r = await gmReverse({ lat: g.lat, lng: g.lng }); if (r) { delete r.label; return { ...g, ...r, lat: g.lat, lng: g.lng }; } }
     try {
         const j = await (await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&zoom=10&accept-language=ko&lat=${g.lat}&lon=${g.lng}`)).json();
         if (j && j.address) return { ...g, ...mapAddr(j.address, j.display_name) };
@@ -149,28 +199,60 @@ function mapPopup(x) {
     return `${ph ? `<img src="${famEsc(ph)}" class="map-ph">` : ''}<b>${getTypeIcon(p.subType)} ${famEsc(p.loc)}</b><br><small>${famEsc(p.start)}${p.end && p.end !== p.start ? ' ~ ' + famEsc(p.end.slice(5)) : ''}${cost ? ' · 💰 ' + svW(cost) : ''}</small>
         <div class="map-pop-btns"><button onclick="mapClose();famGoPlan('${famEsc(p.id)}')">기록 보기</button><button onclick="mapFix('${famEsc(p.id)}')">📍 위치 고치기</button></div>`;
 }
+const mapIsG = () => !!(mapObj && mapObj.__g);
+function mapView(lat, lng, z) { if (!mapObj) return; if (mapIsG()) { mapObj.setCenter({ lat, lng }); mapObj.setZoom(z); } else mapObj.setView([lat, lng], z); }
+function mapResize() { if (mapObj && !mapIsG()) mapObj.invalidateSize(); }
+function mapDestroy() { if (!mapObj) return; if (mapIsG()) { gmMarkers.forEach(m => m.setMap(null)); gmMarkers = []; } else mapObj.remove(); mapObj = null; }
+const gmPin = (color, faded) => 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="34" height="34"><circle cx="17" cy="17" r="15" fill="${color}" fill-opacity="${faded ? .55 : 1}" stroke="#fff" stroke-width="2.5"/></svg>`);
 function mapDraw(fit) {
     if (!mapObj) return;
     const list = mapItems(), pts = [];
-    if (mapLayer) mapLayer.remove();
-    mapLayer = L.layerGroup().addTo(mapObj);
-    list.filter(x => x.geo).forEach(x => {
-        const ic = x.src === 'hike' ? '⛰️' : x.src === 'wish' ? '⭐' : getTypeIcon(x.obj.subType);
-        const icon = L.divIcon({ className: 'map-pin' + (x.src === 'wish' ? ' wish' : ''), html: `<span style="background:${MAP_COLOR[x.kind]}">${ic}</span>`, iconSize: [30, 30], iconAnchor: [15, 15] });
-        L.marker([x.geo.lat, x.geo.lng], { icon, opacity: x.future ? .55 : 1 }).bindPopup(mapPopup(x), { maxWidth: 220 }).addTo(mapLayer);
-        pts.push([x.geo.lat, x.geo.lng]);
-    });
+    if (mapIsG()) {
+        gmMarkers.forEach(m => m.setMap(null)); gmMarkers = [];
+        gmInfo = gmInfo || new google.maps.InfoWindow({ maxWidth: 240 });
+        list.filter(x => x.geo).forEach(x => {
+            const ic = x.src === 'hike' ? '⛰️' : x.src === 'wish' ? '⭐' : getTypeIcon(x.obj.subType);
+            const m = new google.maps.Marker({ position: { lat: x.geo.lat, lng: x.geo.lng }, map: mapObj, title: x.name,
+                icon: { url: gmPin(MAP_COLOR[x.kind], x.future), scaledSize: new google.maps.Size(34, 34), anchor: new google.maps.Point(17, 17), labelOrigin: new google.maps.Point(17, 18) },
+                label: { text: ic, fontSize: '15px' } });
+            m.addListener('click', () => { gmInfo.setContent(`<div class="gm-pop">${mapPopup(x)}</div>`); gmInfo.open({ anchor: m, map: mapObj }); });
+            gmMarkers.push(m); pts.push({ lat: x.geo.lat, lng: x.geo.lng });
+        });
+    } else {
+        if (mapLayer) mapLayer.remove();
+        mapLayer = L.layerGroup().addTo(mapObj);
+        list.filter(x => x.geo).forEach(x => {
+            const ic = x.src === 'hike' ? '⛰️' : x.src === 'wish' ? '⭐' : getTypeIcon(x.obj.subType);
+            const icon = L.divIcon({ className: 'map-pin' + (x.src === 'wish' ? ' wish' : ''), html: `<span style="background:${MAP_COLOR[x.kind]}">${ic}</span>`, iconSize: [30, 30], iconAnchor: [15, 15] });
+            L.marker([x.geo.lat, x.geo.lng], { icon, opacity: x.future ? .55 : 1 }).bindPopup(mapPopup(x), { maxWidth: 220 }).addTo(mapLayer);
+            pts.push({ lat: x.geo.lat, lng: x.geo.lng });
+        });
+    }
     const got = list.filter(x => x.geo && x.src !== 'wish'), dom = got.filter(x => x.kr).length, wn = list.filter(x => x.src === 'wish').length, miss = list.filter(x => x.noGeo && x.src === 'plan');
     const st = document.getElementById('map-st');
-    if (st && !mapBusy) st.innerHTML = `${got.length}곳 · 국내 ${dom} · 해외 ${got.length - dom}${wn ? ` · ⭐ 가볼 곳 ${wn}` : ''}${miss.length ? ` · <a onclick="mapMissing()">위치 못 찾은 곳 ${miss.length}</a>` : ''}`;
-    if (fit) { if (pts.length > 1) mapObj.fitBounds(pts, { padding: [40, 40], maxZoom: 11 }); else if (pts.length) mapObj.setView(pts[0], 10); }
+    if (st && !mapBusy && !mapPickFor) st.innerHTML = `${got.length}곳 · 국내 ${dom} · 해외 ${got.length - dom}${wn ? ` · ⭐ 가볼 곳 ${wn}` : ''}${miss.length ? ` · <a onclick="mapMissing()">위치 못 찾은 곳 ${miss.length}</a>` : ''}`;
+    if (fit && pts.length) {
+        if (pts.length === 1) mapView(pts[0].lat, pts[0].lng, 10);
+        else if (mapIsG()) { const b = new google.maps.LatLngBounds(); pts.forEach(p => b.extend(p)); mapObj.fitBounds(b, 40); google.maps.event.addListenerOnce(mapObj, 'idle', () => { if (mapObj.getZoom() > 11) mapObj.setZoom(11); }); }
+        else mapObj.fitBounds(pts.map(p => [p.lat, p.lng]), { padding: [40, 40], maxZoom: 11 });
+    }
     return list;
 }
 async function mapInitMap() {
     const box = document.getElementById('map-box'); if (!box) return;
+    mapDestroy();
+    if (gmKey()) {
+        try {
+            await gmLoad(); box.innerHTML = '';
+            mapObj = new google.maps.Map(box, { center: { lat: 36.4, lng: 127.8 }, zoom: 7, gestureHandling: 'greedy', streetViewControl: false, fullscreenControl: false,
+                mapTypeControl: true, mapTypeControlOptions: { mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain'], style: google.maps.MapTypeControlStyle.DROPDOWN_MENU } });
+            mapObj.__g = true;
+            mapObj.addListener('click', e => { if (mapPickFor) mapPickAt({ lat: e.latLng.lat(), lng: e.latLng.lng() }); });
+            mapRefresh(); return;
+        } catch (e) { famToast(e.message + ' · 기본 지도로 엽니다'); }
+    }
     try { await mapLoadLib(); } catch (e) { box.innerHTML = `<div class="tk-empty">⚠️ ${famEsc(e.message)}</div>`; return; }
     box.innerHTML = '';
-    if (mapObj) { mapObj.remove(); mapObj = null; }
     mapObj = L.map(box, { zoomControl: true }).setView([36.4, 127.8], 7);
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(mapObj);
     mapObj.on('click', e => { if (mapPickFor) mapPickAt(e.latlng); });
@@ -190,14 +272,15 @@ function mapOpen(tab) {
         <div class="mv" id="mv-map">
             <div class="map-chips">${MAP_KIND.map(([k, n]) => `<button class="${mapF.kind === k ? 'on' : ''}" onclick="mapF.kind='${k}';document.querySelectorAll('.map-chips button').forEach(b=>b.classList.toggle('on',b===this));mapDraw(true)">${n}</button>`).join('')}
                 <label><input type="checkbox" ${mapF.plan ? 'checked' : ''} onchange="mapF.plan=this.checked;mapRefresh()"> 예정 포함</label>
-                <button onclick="mapRegeoAll()" title="직접 고친 곳은 그대로">📍 위치 다시 찾기</button></div>
+                <button onclick="mapRegeoAll()" title="직접 고친 곳은 그대로">📍 위치 다시 찾기</button><button onclick="gmKeyForm()" title="구글 지도 키">🔑 구글</button></div>
+            <div id="map-gkey" style="display:none;padding:6px 10px"></div>
             <div id="map-box"><div class="tk-empty"><span class="fam-spin"></span>지도를 불러오는 중…</div></div>
             <div class="map-st" id="map-st"></div>
         </div>
         <div class="mv mv-scroll" id="mv-stat"></div>
         <div class="mv mv-scroll" id="mv-wish"></div>`;
     o.style.display = 'flex'; history.pushState({ mapOv: 1 }, '', '');
-    if (mapObj) { mapObj.remove(); mapObj = null; }
+    mapDestroy();
     mapTabGo(tab || 'map', true);
 }
 function mapTabGo(t, force) {
@@ -205,7 +288,7 @@ function mapTabGo(t, force) {
     document.querySelectorAll('.map-seg button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
     ['map', 'stat', 'wish'].forEach(k => { const el = document.getElementById('mv-' + k); if (el) el.style.display = k === t ? 'flex' : 'none'; });
     const ys = document.getElementById('map-year'); if (ys) ys.style.visibility = t === 'wish' ? 'hidden' : '';
-    if (t === 'map') { if (!mapObj) mapInitMap(); else { setTimeout(() => mapObj.invalidateSize(), 50); if (force) mapRefresh(); } }
+    if (t === 'map') { if (!mapObj) mapInitMap(); else { setTimeout(mapResize, 50); if (force) mapRefresh(); } }
     if (t === 'stat') statRender(true);
     if (t === 'wish') wishRender();
 }
@@ -353,9 +436,10 @@ async function mapFixSearch(id) {
     const x = mapFixTarget(id), el = document.getElementById('mf-list'), q = (document.getElementById('mf-q') || {}).value || ''; if (!x || !el || !q.trim()) return;
     el.innerHTML = '<div class="fam-note"><span class="fam-spin"></span> 찾는 중…</div>';
     const nm = (await mapNorm([{ k: 'q', text: q, kr: x.kr }])).q;
-    const [cs, os] = await Promise.all([mapCity(nm ? nm.city : q, nm && nm.cc, 5), mapOsm(nm && nm.place ? nm.place + (x.kr ? '' : ' ' + nm.city) : q, x.kr, 4)]);
+    const gs = gmKey() ? await gmFind(nm && nm.place ? `${nm.place}, ${nm.cityKo || nm.city}` : q, (nm && nm.cc) || (x.kr ? 'kr' : ''), 5).then(a => a.length ? a : gmFind(q, '', 5)) : [];
+    const [cs, os] = gs.length ? [[], []] : await Promise.all([mapCity(nm ? nm.city : q, nm && nm.cc, 5), mapOsm(nm && nm.place ? nm.place + (x.kr ? '' : ' ' + nm.city) : q, x.kr, 4)]);
     if (nm && nm.cityKo && !cs.length) cs.push(...await mapCity(nm.cityKo, nm.cc, 5));
-    mapCands = [...os.map(o => ({ lat: o.lat, lng: o.lng, cc: o.cc, country: o.country, sido: o.sido, city: o.city || (nm && nm.cityKo) || '', label: o.label.split(',').slice(0, 3).join(','), sub: '장소' })),
+    mapCands = [...gs.map(o => ({ ...o, label: o.label, sub: '구글' })), ...os.map(o => ({ lat: o.lat, lng: o.lng, cc: o.cc, country: o.country, sido: o.sido, city: o.city || (nm && nm.cityKo) || '', label: o.label.split(',').slice(0, 3).join(','), sub: '장소' })),
         ...cs.map(c => ({ lat: c.lat, lng: c.lng, cc: c.cc, country: c.country, sido: mapSido(c.cc, c.admin + ' ' + c.city), city: c.city, label: [c.city, c.admin, c.country].filter(Boolean).join(', '), sub: '도시' }))];
     el.innerHTML = mapCands.length ? mapCands.map((c, i) => `<div class="fam-row" style="cursor:pointer" onclick="mapFixPick('${famEsc(id)}',${i})"><span style="flex:1;min-width:0">${flag(c.cc)} ${famEsc(c.label)}</span><small style="color:#94a3b8">${c.sub}</small></div>`).join('')
         : '<div class="fam-note">찾지 못했습니다. 이름을 바꾸거나 지도에서 직접 고르세요.</div>';
@@ -364,7 +448,7 @@ async function mapFixSave(id, g) {
     const x = mapFixTarget(id); if (!x) return;
     g = { ...g, q: x.name, manual: true }; delete g.label; delete g.sub;
     try { await mapSaveGeo(x, g); mapNoGeo.delete(x.src + x.id); famToast('위치를 고쳤습니다'); } catch (e) { famToast(e.message); return; }
-    if (mapObj) { mapDraw(false); mapObj.setView([g.lat, g.lng], 11); }
+    if (mapObj) { if (mapIsG() && gmInfo) gmInfo.close(); mapDraw(false); mapView(g.lat, g.lng, 11); }
     if (mapTab === 'stat') statRender(false);
 }
 function mapFixPick(id, i) { const c = mapCands[i]; if (!c) return; famSheetClose(); mapFixSave(id, c); }

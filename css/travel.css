@@ -136,3 +136,5 @@ html[data-theme="dark"] .st-tiles div,html[data-theme="dark"] .st-sec{background
 .plan-bar select.plan-filter-btn{-webkit-appearance:none;appearance:none;background-image:none;outline:none}
 .plan-bar select.plan-filter-btn option{color:#1e293b;background:#fff}
 @media (max-width:599px){.plan-bar{-webkit-mask-image:linear-gradient(to right,#000 88%,transparent);mask-image:linear-gradient(to right,#000 88%,transparent);padding-right:24px}}
+
+.gm-pop{font-size:13px;line-height:1.45}.gm-pop .map-pop-btns button{margin-top:6px}

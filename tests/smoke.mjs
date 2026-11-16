@@ -140,6 +140,23 @@ try {
         eq([r.a.cc, r.a.city, Math.round(r.a.lat)], ['vn', '다낭', 16], '다낭');
         eq([r.b.cc, r.b.sido, r.b.city, Math.round(r.b.lng * 10)], ['kr', '강원', '홍천', 1277], '홍천 비발디파크');
     });
+    await test('여행 노트: 위치 고치기 창이 지도 화면 위에 뜸', async () => {
+        const z = await page.evaluate(() => { mapOpen('stat'); famSheet('<b>x</b>'); const r = [getComputedStyle(document.getElementById('fam-sheet')).zIndex, getComputedStyle(document.getElementById('map-ov')).zIndex].map(Number); famSheetClose(); mapClose(); return r; });
+        ok(z[0] > z[1], `시트 ${z[0]} ≤ 지도 ${z[1]}`);
+    });
+    await test('여행 노트 위치: 구글 키가 있으면 구글로 찾음', async () => {
+        const r = await page.evaluate(async () => {
+            const fk = window.famKeys, ai = window.famCallAI;
+            window.famKeys = () => ({ ...fk(), gmaps: 'test' });
+            window.famCallAI = async () => ({ text: '[{"i":0,"place":"","city":"Rome","cityKo":"로마","cc":"it"}]' });
+            const comp = [{ types: ['country'], short_name: 'IT', long_name: '이탈리아' }, { types: ['locality'], short_name: 'Roma', long_name: '로마' }];
+            window.google = { maps: { Map: function () {}, Geocoder: function () { this.geocode = async o => ({ results: o.componentRestrictions && o.componentRestrictions.country === 'it' ? [{ address_components: comp, formatted_address: '이탈리아 로마', geometry: { location: { lat: () => 41.9, lng: () => 12.5 } } }] : [] }); } } };
+            const g = await mapGeocode('로마 신혼여행', false);
+            window.famKeys = fk; window.famCallAI = ai; delete window.google;
+            return g;
+        });
+        eq([r.v, r.cc, r.city, r.country], [3, 'it', '로마', '이탈리아']);
+    });
     await test('비서 도구: 일정 추가 → 저장됨', async () => {
         const r = await page.evaluate(async () => { const before = Object.keys(window.__db).filter(k => k.startsWith('schedules/')).length; const x = await brRun('add_schedule', { date: '2026-12-23', end_date: '2026-12-27', memo: '시험 제주 여행', member: '공통' }); return { x, n: Object.keys(window.__db).filter(k => k.startsWith('schedules/')).length - before }; });
         ok(r.n >= 1, '일정 문서가 생기지 않음 ' + JSON.stringify(r.x));
