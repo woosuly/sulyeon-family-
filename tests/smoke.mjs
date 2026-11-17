@@ -207,6 +207,19 @@ try {
         ok(r.inbox.some(x => x.room === 'wife' && x.type === '메시지'), '카톡 메시지가 확인 대기에 없음');
         ok(r.inbox.some(x => x.kind === 'app' && x.app === '위챗'), '위챗 메시지가 확인 대기에 없음');
     });
+    await test('메시지 받기: 정리 중에 또 부르면 끝날 때까지 기다림 + 보이스톡 알림은 버림', async () => {
+        const r = await page.evaluate(async () => {
+            window.famCallAI = async () => { await new Promise(r => setTimeout(r, 400)); return { text: '[{"i":0,"skip":true}]' }; };
+            window.__queue.push({ text: '보이스톡 통화 중', ts: Date.now(), from: '정우량', kind: 'kakao', room: 'wife' });
+            window.__queue.push({ text: '오늘 늦어?', ts: Date.now() + 1, from: 'wife', kind: 'kakao', room: 'wife' });
+            const before = Object.keys(window.__db).filter(k => k.startsWith('msgLog/')).length;
+            const p1 = ibDrain(); const p2 = ibDrain();   // 앱 시작 정리 + 알림 눌러 정리
+            await p2;
+            const logs = Object.keys(window.__db).filter(k => k.startsWith('msgLog/')).map(k => window.__db[k].text);
+            return { same: p1 === p2, added: logs.length - before, voice: logs.some(t => /보이스톡/.test(t)) };
+        });
+        ok(r.same, '두 번째 호출이 기다리지 않음'); eq(r.added, 1, '기록 수'); ok(!r.voice, '보이스톡 알림이 기록됨');
+    });
     await test('바로 보내기: 와이프 → wife 카톡방', async () => {
         const r = await page.evaluate(async () => { window.__targets = [{ pkg: 'com.kakao.talk', app: '카카오톡', room: 'wife', ts: Date.now() }]; return brTargetFor('와이프'); });
         ok(r && r.room === 'wife', '대상 못 찾음');

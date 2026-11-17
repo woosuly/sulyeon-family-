@@ -84,12 +84,23 @@ async function ibLogSave(list, me) {
         const b = db.batch(); let n = 0; old.forEach(d => { if (d.data().owner === me) { b.delete(d.ref); n++; } }); if (n) await b.commit();
     } catch (e) {}
 }
-async function ibDrain(opt) {
+// 정리는 한 번에 하나만: 이미 정리 중이면 그 정리가 끝날 때까지 기다림
+//   (알림을 눌러 앱이 열릴 때 시작 정리와 겹치면 '확인 대기'가 빈 채로 먼저 열리던 문제)
+let ibDrainP = null;
+function ibDrain(opt) {
+    if (!ibDrainP) ibDrainP = ibDrainRun(opt).finally(() => { ibDrainP = null; if (document.getElementById('ib-modal')) ibRender(); });
+    return ibDrainP;
+}
+// 카톡 통화 상태 알림은 메시지가 아님
+const IB_NOISE = /^(보이스톡|페이스톡|그룹콜)\s*(해요|연결\s*중|통화\s*중|종료|취소|부재중|.*\d{1,2}:\d{2})|^부재중\s*(보이스톡|페이스톡)/;
+async function ibDrainRun(opt) {
     opt = opt || {};
     const N = ibN(), me = typeof famUser === 'function' ? famUser() : '';
-    if (!N || !N.cardQueueTake || ibBusy || !me) return;
-    if (!(window.firebase && firebase.auth && firebase.auth().currentUser)) return;   // 로그인 전에는 꺼내지 않음 (잃어버리지 않게)
-    ibBusy = true;
+    if (!N || !N.cardQueueTake || !me) return;
+    // 로그인 전에는 꺼내지 않음 (잃어버리지 않게) — 알림을 눌러 막 열린 때는 로그인을 15초까지 기다림
+    for (let i = 0; i < 30 && !(window.firebase && firebase.auth && firebase.auth().currentUser); i++) await new Promise(r => setTimeout(r, 500));
+    if (!(window.firebase && firebase.auth && firebase.auth().currentUser)) return;
+    ibBusy = true; if (document.getElementById('ib-modal')) ibRender();
     try {
         // 1) 폰 보관함 + (허용 시) 받은 문자함에서 놓친 문자 → 버퍼에 먼저 저장
         let buf = ibLS('ibBuf') || [];
@@ -132,7 +143,7 @@ async function ibDrain(opt) {
         // 최근 보낸 사람 기록(문자만, 설정에서 '안 받을 사람' 고를 때) + 안 받기로 한 번호·이름은 AI로 보내지 않고 버림
         ibSendersNote(smss.filter(s => s.kind === 'sms'));
         const blk = ibBlockList();
-        for (let i = smss.length - 1; i >= 0; i--) if (smss[i].kind === 'sms' && ibBlocked(smss[i], blk)) { seen.add(smss[i].key); smss.splice(i, 1); }
+        for (let i = smss.length - 1; i >= 0; i--) if ((smss[i].kind === 'sms' && ibBlocked(smss[i], blk)) || (smss[i].kind === 'kakao' && IB_NOISE.test(String(smss[i].raw || '').trim()))) { seen.add(smss[i].key); smss.splice(i, 1); }
         await ibLogSave(smss, me);
         for (let i = 0; i < smss.length; i += 15) {
             const part = smss.slice(i, i + 15);
@@ -226,7 +237,7 @@ const ibWon = n => (n < 0 ? '-' : '') + Math.abs(n).toLocaleString('ko-KR') + '�
 const ibMD = d => { const p = String(d || '').split('-'); return p.length === 3 ? `${+p[1]}/${+p[2]}` : d; };
 function ibRender() {
     const b = document.getElementById('ib-body'); if (!b) return;
-    if (!ibItems.length) { b.innerHTML = '<div class="ib-empty">확인할 항목이 없습니다.</div>'; return; }
+    if (!ibItems.length) { b.innerHTML = ibBusy ? '<div class="ib-empty"><span class="fam-spin"></span> 새 메시지를 정리하는 중…</div>' : '<div class="ib-empty">확인할 항목이 없습니다.</div>'; return; }
     const cards = ibItems.filter(x => x.kind === 'card'), smss = ibItems.filter(x => x.kind !== 'card');
     const cats = c => EXP_CATS.map(x => `<option ${x === c ? 'selected' : ''}>${x}</option>`).join('');
     let h = '';
